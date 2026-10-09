@@ -209,10 +209,12 @@ def test_llm_connection(
     """
     enforce_llm_test_rate_limit(admin_id)
 
-    # Resolve the api key + routing pin: typed-in wins; else the stored row.
+    # A typed key is enough for Tes koneksi on a form that is not saved yet.
+    # An empty routing pin is "do not pin", not "load the stored row". Only a
+    # blank key needs the saved config (edit form: leave the key field empty).
     api_key = (data.api_key or "").strip()
     route_order = (data.route_order or "").strip() or None
-    if not api_key or route_order is None:
+    if not api_key:
         obj = db.scalar(
             select(LlmConfig)
             .options(load_only(LlmConfig.id, LlmConfig.api_key_enc, LlmConfig.route_order))
@@ -220,16 +222,15 @@ def test_llm_connection(
         )
         if obj is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "LlmConfig not found")
-        if not api_key:
-            try:
-                api_key = decrypt_json(obj.api_key_enc)["api_key"]
-            except Exception:
-                return LlmConfigTestOut(
-                    ok=False, model=data.model,
-                    error="stored api_key could not be decrypted",
-                )
-            if route_order is None:
-                route_order = obj.route_order
+        try:
+            api_key = decrypt_json(obj.api_key_enc)["api_key"]
+        except Exception:
+            return LlmConfigTestOut(
+                ok=False, model=data.model,
+                error="stored api_key could not be decrypted",
+            )
+        if data.route_order is None:
+            route_order = (obj.route_order or "").strip() or None
 
     try:
         result = chat_complete(
