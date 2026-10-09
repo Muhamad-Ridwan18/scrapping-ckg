@@ -46,6 +46,10 @@ celery_app.conf.update(
             "task": "cron.dispatch_school_due",
             "schedule": 60.0,
         },
+        "simpus-dispatch-due-every-minute": {
+            "task": "simpus.dispatch_due",
+            "schedule": 60.0,
+        },
         # Pre-warm the Conflict Analysis + GD Puasa dashboard caches daily so
         # users hit a warm cache instead of paying the cold-cache decrypt scan.
         "warm-reports-daily-0500": {

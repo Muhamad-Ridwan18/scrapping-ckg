@@ -16,7 +16,9 @@ import {
   deletePuskesmas,
   getPuskesmas,
   listPuskesmas,
+  getSimpusSchedule,
   saveSimpusApi,
+  saveSimpusSchedule,
   setCredentials,
   clearSimpusApi,
   updatePuskesmas,
@@ -30,6 +32,8 @@ import type {
   PuskesmasDetail,
   PuskesmasCreateInput,
   PuskesmasUpdateInput,
+  SimpusSchedule,
+  SimpusScheduleInput,
 } from "@/lib/api/types";
 
 export const puskesmasKeys = {
@@ -202,6 +206,24 @@ export function useSaveSimpusApi() {
     }) => saveSimpusApi(id, input),
     onSuccess: (updated) => {
       qc.setQueryData(puskesmasKeys.detail(updated.id), updated);
+    },
+  });
+}
+
+export function useSimpusSchedule(id: string | undefined) {
+  return useQuery({
+    queryKey: id ? [...puskesmasKeys.detail(id), "simpus-schedule"] : ["puskesmas", "simpus-schedule", "noop"],
+    queryFn: () => getSimpusSchedule(id!),
+    enabled: !!id,
+  });
+}
+
+export function useSaveSimpusSchedule(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: SimpusScheduleInput) => saveSimpusSchedule(id, input),
+    onSuccess: (saved: SimpusSchedule) => {
+      qc.setQueryData([...puskesmasKeys.detail(id), "simpus-schedule"], saved);
     },
   });
 }

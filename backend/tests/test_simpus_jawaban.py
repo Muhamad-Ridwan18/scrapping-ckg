@@ -1,7 +1,10 @@
+from datetime import date
+
 import pytest
 
 from app.schemas.puskesmas import SimpusApiIn, _validate_simpus_api_url
 from app.services.simpus_jawaban import jawaban_endpoint, jawaban_to_asik_blob
+from app.tasks.simpus_import import schedule_window
 
 
 def test_jawaban_endpoint_appends_path():
@@ -43,6 +46,12 @@ def test_simpus_api_in_strips_token():
 def test_simpus_api_in_allows_blank_token_for_url_only_update():
     data = SimpusApiIn(api_url="https://ckg.example.com", token="  ")
     assert data.token == ""
+
+
+def test_schedule_window_is_inclusive_lookback():
+    today = date(2026, 10, 9)
+    assert schedule_window(today, 1) == (today, today)
+    assert schedule_window(today, 3) == (date(2026, 10, 7), today)
 
 
 def test_jawaban_maps_ppm_to_label():

@@ -1,11 +1,14 @@
-import { http } from "./client";
+import { asApiError, http } from "./client";
 import {
   PageSchema,
   PuskesmasOut,
   PuskesmasDetailOut,
+  SimpusScheduleOut,
   CredOut,
   type Puskesmas,
   type PuskesmasDetail,
+  type SimpusSchedule,
+  type SimpusScheduleInput,
   type PuskesmasCreateInput,
   type PuskesmasUpdateInput,
   type CredInput,
@@ -53,6 +56,24 @@ export async function saveSimpusApi(
 ): Promise<PuskesmasDetail> {
   const { data } = await http.put(`/puskesmas/${id}/simpus`, input);
   return PuskesmasDetailOut.parse(data);
+}
+
+export async function getSimpusSchedule(id: string): Promise<SimpusSchedule | null> {
+  try {
+    const { data } = await http.get(`/puskesmas/${id}/simpus-schedule`);
+    return SimpusScheduleOut.parse(data);
+  } catch (err) {
+    if (asApiError(err).status === 404) return null;
+    throw err;
+  }
+}
+
+export async function saveSimpusSchedule(
+  id: string,
+  input: SimpusScheduleInput,
+): Promise<SimpusSchedule> {
+  const { data } = await http.put(`/puskesmas/${id}/simpus-schedule`, input);
+  return SimpusScheduleOut.parse(data);
 }
 
 export async function clearSimpusApi(id: string): Promise<PuskesmasDetail> {

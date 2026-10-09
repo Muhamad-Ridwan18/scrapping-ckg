@@ -4,10 +4,11 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { SimpusConnectIn, type SimpusConnectInput } from "@/lib/api/types";
+import { format, parseISO } from "date-fns";
+import { SimpusConnectIn, SimpusScheduleIn, type SimpusConnectInput, type SimpusScheduleInput } from "@/lib/api/types";
 import { applyApiErrorToForm } from "@/lib/api/form-errors";
 import { asApiError } from "@/lib/api/client";
-import { useClearSimpusApi, useSaveSimpusApi } from "@/lib/hooks/use-puskesmas";
+import { useClearSimpusApi, useSaveSimpusApi, useSaveSimpusSchedule, useSimpusSchedule } from "@/lib/hooks/use-puskesmas";
 import { useStartSimpusImport } from "@/lib/hooks/use-scrape";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,6 +42,23 @@ export function SimpusImportCard({
   const save = useSaveSimpusApi();
   const clear = useClearSimpusApi();
   const start = useStartSimpusImport(puskesmasId);
+  const scheduleQuery = useSimpusSchedule(puskesmasId);
+  const saveSchedule = useSaveSimpusSchedule(puskesmasId);
+  const scheduleForm = useForm<SimpusScheduleInput>({
+    resolver: zodResolver(SimpusScheduleIn),
+    defaultValues: { hour: 1, minute: 0, lookback_days: 1, enabled: false },
+  });
+
+  useEffect(() => {
+    const saved = scheduleQuery.data;
+    if (!saved) return;
+    scheduleForm.reset({
+      hour: saved.hour,
+      minute: saved.minute,
+      lookback_days: saved.lookback_days,
+      enabled: saved.enabled,
+    });
+  }, [scheduleQuery.data, scheduleForm]);
   const form = useForm<SimpusConnectInput>({
     resolver: zodResolver(SimpusConnectIn),
     defaultValues: {
@@ -200,6 +218,78 @@ export function SimpusImportCard({
               Hapus
             </Button>
           )}
+        </div>
+
+        <div className="space-y-3 border-t border-[var(--border)] pt-4">
+          <div className="flex items-center gap-2">
+            <input
+              id="simpus-auto"
+              type="checkbox"
+              checked={scheduleForm.watch("enabled")}
+              onChange={(e) =>
+                scheduleForm.setValue("enabled", e.target.checked, { shouldDirty: true })
+              }
+            />
+            <Label htmlFor="simpus-auto" className="cursor-pointer">
+              Tarik otomatis setiap hari
+            </Label>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="simpus-hour">Jam</Label>
+              <Input
+                id="simpus-hour"
+                type="number"
+                min={0}
+                max={23}
+                {...scheduleForm.register("hour", { valueAsNumber: true })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="simpus-minute">Menit</Label>
+              <Input
+                id="simpus-minute"
+                type="number"
+                min={0}
+                max={59}
+                {...scheduleForm.register("minute", { valueAsNumber: true })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="simpus-lookback">Lookback (hari)</Label>
+              <Input
+                id="simpus-lookback"
+                type="number"
+                min={1}
+                max={14}
+                {...scheduleForm.register("lookback_days", { valueAsNumber: true })}
+              />
+            </div>
+          </div>
+          <p className="text-xs text-[var(--muted-foreground)]">
+            Waktu Jakarta. Lookback 1 = hari ini saja. Tombol Tarik jawaban tetap
+            bisa dipakai kapan saja. Jadwal scrape ASIK, merge, dan sync tidak berubah.
+          </p>
+          {scheduleQuery.data?.enabled && scheduleQuery.data.next_run_at && (
+            <p className="text-xs text-[var(--muted-foreground)]">
+              Berikutnya: {format(parseISO(scheduleQuery.data.next_run_at), "dd MMM yyyy HH:mm")}
+            </p>
+          )}
+          <Button
+            type="button"
+            variant="outline"
+            disabled={saveSchedule.isPending}
+            onClick={scheduleForm.handleSubmit(async (values) => {
+              try {
+                await saveSchedule.mutateAsync(values);
+                toast.success(values.enabled ? "Jadwal tarik diaktifkan" : "Jadwal tarik disimpan");
+              } catch (err) {
+                toast.error(asApiError(err).message);
+              }
+            })}
+          >
+            Simpan jadwal
+          </Button>
         </div>
       </CardContent>
     </Card>

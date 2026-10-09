@@ -74,6 +74,22 @@ export const SimpusConnectIn = z.object({
 });
 export type SimpusConnectInput = z.infer<typeof SimpusConnectIn>;
 
+export const SimpusScheduleIn = z.object({
+  hour: z.number().int().min(0).max(23),
+  minute: z.number().int().min(0).max(59),
+  lookback_days: z.number().int().min(1).max(14),
+  enabled: z.boolean(),
+});
+export type SimpusScheduleInput = z.infer<typeof SimpusScheduleIn>;
+
+export const SimpusScheduleOut = SimpusScheduleIn.extend({
+  id: z.string().uuid(),
+  puskesmas_id: z.string().uuid(),
+  next_run_at: z.string(),
+  last_fired_at: z.string().nullable(),
+});
+export type SimpusSchedule = z.infer<typeof SimpusScheduleOut>;
+
 const _BASE_DOMAIN_RE =
   /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
 

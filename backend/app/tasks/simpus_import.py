@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import redis
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, load_only
 
 from app.celery_app import celery_app
@@ -15,9 +17,11 @@ from app.config import settings
 from app.core.security import decrypt_json, encrypt_json
 from app.crud import patient as patient_crud
 from app.crud import scrape_job as scrape_job_crud
+from app.crud.cron_config import compute_next_run_at
 from app.database import SessionLocal
 from app.models.puskesmas import Puskesmas
-from app.models.scrape_job import ScrapeJob, ScrapeStatus
+from app.models.scrape_job import ScrapeJob, ScrapeKind, ScrapeStatus, TriggererType
+from app.models.simpus_schedule import SimpusSchedule
 from app.services.simpus_jawaban import SimpusApiError, iter_jawaban, jawaban_to_asik_blob
 
 log = logging.getLogger(__name__)
@@ -47,6 +51,98 @@ def _publish(rc: redis.Redis, job_id: str, line: str) -> None:
         rc.publish(_stream_chan(job_id), line)
     except Exception:
         pass
+
+
+def schedule_window(today: date, lookback_days: int) -> tuple[date, date]:
+    days = max(1, min(14, lookback_days))
+    return today - timedelta(days=days - 1), today
+
+
+@celery_app.task(name="simpus.dispatch_due")
+def dispatch_due() -> int:
+    """Fire enabled SIMPUS schedules whose next_run_at has passed.
+
+    Each fire enqueues one jawaban import over the lookback window ending today
+    (Jakarta). An import already running for that puskesmas is left alone; the
+    next fire is still moved to tomorrow so this does not retry every minute.
+    """
+    fired = 0
+    now = datetime.now(UTC)
+    db_ids: Session = SessionLocal()
+    try:
+        schedule_ids = list(
+            db_ids.scalars(
+                select(SimpusSchedule.id).where(
+                    SimpusSchedule.enabled.is_(True),
+                    SimpusSchedule.next_run_at <= now,
+                )
+            ).all()
+        )
+    finally:
+        db_ids.close()
+
+    today = now.astimezone(ZoneInfo("Asia/Jakarta")).date()
+    for schedule_id in schedule_ids:
+        db: Session = SessionLocal()
+        try:
+            cfg = db.scalar(
+                select(SimpusSchedule)
+                .where(SimpusSchedule.id == schedule_id)
+                .with_for_update(skip_locked=True)
+            )
+            if cfg is None or not cfg.enabled or cfg.next_run_at > now:
+                continue
+            date_from, date_to = schedule_window(today, cfg.lookback_days)
+            puskesmas_id = cfg.puskesmas_id
+            hour, minute = cfg.hour, cfg.minute
+            cfg.next_run_at = compute_next_run_at(hour, minute, from_=now)
+            cfg.last_fired_at = now
+            try:
+                job = scrape_job_crud.create(
+                    db,
+                    puskesmas_id=puskesmas_id,
+                    kind=ScrapeKind.SIMPUS,
+                    date_filter=date_to.isoformat(),
+                    triggered_by_id=puskesmas_id,
+                    triggered_by_type=TriggererType.CRON,
+                )
+            except IntegrityError:
+                db.rollback()
+                db2 = SessionLocal()
+                try:
+                    again = db2.scalar(
+                        select(SimpusSchedule).where(SimpusSchedule.id == schedule_id)
+                    )
+                    if again is not None:
+                        again.next_run_at = compute_next_run_at(hour, minute, from_=now)
+                        again.last_fired_at = now
+                        db2.commit()
+                finally:
+                    db2.close()
+                log.info("simpus schedule skip pk=%s — import already running", puskesmas_id)
+                continue
+            db.commit()
+            try:
+                celery_app.send_task(
+                    "simpus.import_jawaban",
+                    args=[str(job.id)],
+                    kwargs={
+                        "tanggal_dari": date_from.isoformat(),
+                        "tanggal_sampai": date_to.isoformat(),
+                    },
+                )
+            except Exception as exc:
+                scrape_job_crud.mark_failed(
+                    db, job, f"broker unreachable: {exc}"[:2000], datetime.now(UTC)
+                )
+                continue
+            fired += 1
+        except Exception:
+            db.rollback()
+            log.exception("simpus schedule failed id=%s", schedule_id)
+        finally:
+            db.close()
+    return fired
 
 
 def _parse_date(value: object) -> date | None:
