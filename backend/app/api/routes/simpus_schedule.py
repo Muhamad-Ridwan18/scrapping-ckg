@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -54,11 +54,21 @@ def put_simpus_schedule(
             status.HTTP_400_BAD_REQUEST,
             "URL dan token SIMPUS harus diisi sebelum jadwal diaktifkan",
         )
-    if body.create_new and (not asik_url or not has_asik or not asik_alamat):
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST,
-            "URL ASIK, akun ASIK, dan alamat default harus diisi sebelum mendaftarkan pasien baru",
-        )
+    if body.create_new:
+        missing = [
+            label
+            for label, ok in (
+                ("URL ASIK", asik_url),
+                ("akun ASIK", has_asik),
+                ("alamat default", asik_alamat),
+            )
+            if not ok
+        ]
+        if missing:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                f"{', '.join(missing)} harus diisi sebelum mendaftarkan pasien baru",
+            )
     obj = crud.upsert(
         db,
         puskesmas_id=puskesmas_id,
