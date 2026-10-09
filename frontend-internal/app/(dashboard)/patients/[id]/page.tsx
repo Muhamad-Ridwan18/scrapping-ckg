@@ -50,6 +50,7 @@ export default function PatientDetailPage({
   const canSync =
     !!p &&
     (p.has_merged_data ||
+      (p.from_simpus && p.has_asik_data) ||
       (ALLOW_EPUS_ONLY_SYNC && p.match_status === "epus_only" && p.has_epus_data));
   // Create-in-ASIK: an epus_only + Tandai-CKG patient not yet in ASIK (no merged
   // data). Registers them into ASIK from scratch, then fills — same job/log UI as
@@ -74,9 +75,11 @@ export default function PatientDetailPage({
                 onClick={handleSyncAsik}
                 disabled={startSync.isPending}
                 title={
-                  p.has_merged_data
-                    ? "Sync merged_data ke ASIK"
-                    : "Sync data EPUS-saja (dikonversi otomatis ke bentuk ASIK) ke ASIK"
+                  p.from_simpus && !p.has_merged_data
+                    ? "Isi form ASIK dari jawaban SIMPUS"
+                    : p.has_merged_data
+                      ? "Sync merged_data ke ASIK"
+                      : "Sync data EPUS-saja (dikonversi otomatis ke bentuk ASIK) ke ASIK"
                 }
               >
                 <Upload className="h-4 w-4" />

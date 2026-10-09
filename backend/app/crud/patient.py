@@ -372,6 +372,7 @@ def _upsert_asik(
     if existing_ids:
         values: dict[str, Any] = {
             "scraped_asik_data": encrypted,
+            "from_simpus": False,
             "match_status": case(
                 (
                     Patient.scraped_epus_data.isnot(None),
@@ -412,6 +413,7 @@ def _upsert_asik(
         gid = uuid.uuid4()
         twin_values: dict[str, Any] = {
             "scraped_asik_data": encrypted,
+            "from_simpus": False,
             "match_status": MatchStatus.MATCHED,
             "match_group_id": gid,
             "updated_at": func.now(),
@@ -441,6 +443,7 @@ def _upsert_asik(
         excluded = stmt.excluded
         set_dict: dict[str, Any] = {
             "scraped_asik_data": excluded.scraped_asik_data,
+            "from_simpus": False,
             "scraped_epus_data": case(
                 (Patient.scraped_epus_data.is_(None), excluded.scraped_epus_data),
                 else_=Patient.scraped_epus_data,
@@ -490,6 +493,7 @@ def _upsert_asik(
     excluded = stmt.excluded
     set_dict: dict[str, Any] = {
         "scraped_asik_data": excluded.scraped_asik_data,
+        "from_simpus": False,
         "nama": case((excluded.nama != "", excluded.nama), else_=Patient.nama),
         "match_status": case(
             (
@@ -589,7 +593,7 @@ def upsert_simpus_visit(
     ruangan: str,
     is_sekolah: bool,
     has_mandiri: bool,
-) -> str:
+) -> tuple[str, uuid.UUID]:
     """Insert or replace the ASIK-shaped blob for one SIMPUS visit.
 
     Umum uses ruangan "" and sekolah uses ruangan "sekolah", so the two
@@ -605,11 +609,15 @@ def upsert_simpus_visit(
         "scraped_asik_data": encrypted,
         "has_mandiri": has_mandiri,
         "is_ckg_sekolah": True if is_sekolah else None,
+        "from_simpus": True,
+        "asik_synced_at": None,
     }
     stmt = pg_insert(Patient).values(**insert_values)
     excluded = stmt.excluded
     set_dict: dict[str, Any] = {
         "scraped_asik_data": excluded.scraped_asik_data,
+        "from_simpus": True,
+        "asik_synced_at": None,
         "nama": case((excluded.nama != "", excluded.nama), else_=Patient.nama),
         "match_status": case(
             (
@@ -634,11 +642,11 @@ def upsert_simpus_visit(
                 Patient.puskesmas_id, Patient.nik, Patient.filter_date, Patient.ruangan,
             ],
             set_=set_dict,
-        ).returning(literal_column("xmax = 0").label("inserted"))
+        ).returning(Patient.id, literal_column("xmax = 0").label("inserted"))
     )
     db.flush()
     row = result.one()
-    return "inserted" if row.inserted else "updated"
+    return ("inserted" if row.inserted else "updated", row.id)
 
 
 def decrypt_field(obj: Patient, kind: ScrapeKind) -> Any | None:

@@ -110,7 +110,7 @@ def start_sync(
         .options(load_only(
             Patient.id, Patient.puskesmas_id, Patient.nik, Patient.nama,
             Patient.match_status, Patient.merged_data, Patient.merged_at,
-            Patient.scraped_epus_data,
+            Patient.scraped_epus_data, Patient.scraped_asik_data, Patient.from_simpus,
         ))
         .where(Patient.id == patient_id)
     )
@@ -125,7 +125,8 @@ def start_sync(
         and patient.match_status == MatchStatus.EPUS_ONLY
         and patient.scraped_epus_data is not None
     )
-    if not has_merged and not epus_only_eligible:
+    simpus_eligible = bool(patient.from_simpus and patient.scraped_asik_data is not None)
+    if not has_merged and not epus_only_eligible and not simpus_eligible:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
             "Patient has no merged_data — sync requires matched + AI-merged data",

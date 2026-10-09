@@ -37,6 +37,7 @@ from app.models.scrape_job import ScrapeKind, TriggererType
 from app.models.sync_job import SyncJob, SyncStatus
 from app.services.asik_defaults import build_default_values_map
 from app.services.epus_to_asik import epus_to_asik
+from app.services.simpus_jawaban import simpus_blob_to_sync_preview
 from app.tasks.merge import _values_equal
 from app.tasks.scrape import (
     STDOUT_DRAIN_JOIN_TIMEOUT_SECONDS,
@@ -182,6 +183,13 @@ def _build_config(
         # entirely on the happy path.
         "captcha_solver": captcha_solver,
     }
+
+
+def _count_preview_forms(preview: dict) -> int:
+    return sum(
+        1 for value in preview.values()
+        if isinstance(value, dict) and any(item is not None and item != "" for item in value.values())
+    )
 
 
 def _count_merged_forms(merged: Any) -> int:
@@ -660,7 +668,8 @@ def run_sync(self, job_id: str, headless: bool = True) -> None:
             .options(load_only(
                 Patient.id, Patient.puskesmas_id, Patient.nik, Patient.nama,
                 Patient.match_status, Patient.merged_data,
-                Patient.scraped_epus_data, Patient.filter_date,
+                Patient.scraped_epus_data, Patient.scraped_asik_data,
+                Patient.from_simpus, Patient.filter_date,
             ))
             .where(Patient.id == job.patient_id)
         )
@@ -676,7 +685,8 @@ def run_sync(self, job_id: str, headless: bool = True) -> None:
             and patient.match_status == MatchStatus.EPUS_ONLY
             and patient.scraped_epus_data is not None
         )
-        if patient.merged_data is None and not epus_only_fallback:
+        simpus_sync = bool(patient.from_simpus and patient.scraped_asik_data is not None)
+        if patient.merged_data is None and not epus_only_fallback and not simpus_sync:
             sync_job_crud.mark_failed(
                 db, job,
                 "patient has no merged_data (sync requires matched + AI-merged data)",
@@ -703,7 +713,26 @@ def run_sync(self, job_id: str, headless: bool = True) -> None:
             sync_job_crud.mark_failed(db, job, "asik_url not set", datetime.now(UTC))
             return
 
-        if epus_only_fallback:
+        if simpus_sync:
+            try:
+                asik_blob = patient_crud.decrypt_field(patient, ScrapeKind.ASIK)
+            except Exception as exc:
+                sync_job_crud.mark_failed(
+                    db, job, f"scraped_asik_data could not be decrypted: {exc}",
+                    datetime.now(UTC),
+                )
+                return
+            merged = simpus_blob_to_sync_preview(
+                asik_blob if isinstance(asik_blob, dict) else None
+            )
+            forms_total = _count_preview_forms(merged)
+            if forms_total == 0:
+                sync_job_crud.mark_failed(
+                    db, job, "jawaban SIMPUS tidak punya form yang bisa diisi ke ASIK",
+                    datetime.now(UTC),
+                )
+                return
+        elif epus_only_fallback:
             try:
                 epus = patient_crud.decrypt_field(patient, ScrapeKind.EPUS)
             except Exception as exc:
@@ -771,6 +800,97 @@ def run_sync(self, job_id: str, headless: bool = True) -> None:
         except Exception:
             pass
         raise
+    finally:
+        db.close()
+
+
+@celery_app.task(name="simpus.sync_asik")
+def sync_simpus_patients(
+    puskesmas_id: str,
+    patient_ids: list[str],
+    triggered_by_id: str,
+    triggered_by_type: str = "cron",
+) -> None:
+    """Push SIMPUS jawaban into ASIK, one patient at a time, one login.
+
+    Called after a jawaban import. Only CKG umum rows are passed in. A patient
+    must already exist in ASIK on that visit date; this fills forms, it does
+    not register a new ASIK patient. Per-patient failures stay on their SyncJob.
+    """
+    if not patient_ids:
+        return
+    db = SessionLocal()
+    redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
+    try:
+        pk_uuid = uuid.UUID(puskesmas_id)
+        puskesmas = db.scalar(
+            select(Puskesmas)
+            .options(load_only(Puskesmas.id, Puskesmas.asik_url, Puskesmas.asik_cred))
+            .where(Puskesmas.id == pk_uuid)
+        )
+        if puskesmas is None or not puskesmas.asik_url:
+            log.info("simpus sync skipped pk=%s — asik url missing", puskesmas_id)
+            return
+        creds = puskesmas_crud.get_cred_decrypted(puskesmas, "asik")
+        if creds is None:
+            log.info("simpus sync skipped pk=%s — asik credentials missing", puskesmas_id)
+            return
+        try:
+            trigger = TriggererType(triggered_by_type)
+        except ValueError:
+            trigger = TriggererType.CRON
+        try:
+            actor = uuid.UUID(triggered_by_id)
+        except ValueError:
+            actor = pk_uuid
+        captcha_solver = _build_captcha_solver(db)
+        base_url_full = f"https://{puskesmas.asik_url}"
+        for raw_id in patient_ids:
+            pid = uuid.UUID(raw_id)
+            patient = db.scalar(
+                select(Patient)
+                .options(load_only(
+                    Patient.id, Patient.puskesmas_id, Patient.nik, Patient.nama,
+                    Patient.filter_date, Patient.from_simpus, Patient.scraped_asik_data,
+                ))
+                .where(Patient.id == pid, Patient.from_simpus.is_(True))
+            )
+            if patient is None or patient.scraped_asik_data is None:
+                continue
+            try:
+                blob = patient_crud.decrypt_field(patient, ScrapeKind.ASIK)
+            except Exception:
+                log.warning("simpus sync decrypt failed patient=%s", pid)
+                continue
+            preview = simpus_blob_to_sync_preview(blob if isinstance(blob, dict) else None)
+            forms_total = _count_preview_forms(preview)
+            if forms_total == 0:
+                continue
+            try:
+                job = sync_job_crud.create(
+                    db,
+                    puskesmas_id=pk_uuid,
+                    patient_id=pid,
+                    triggered_by_id=actor,
+                    triggered_by_type=trigger,
+                )
+            except IntegrityError:
+                db.rollback()
+                continue
+            _execute_sync(
+                db=db,
+                redis_client=redis_client,
+                job=job,
+                patient=patient,
+                base_url_full=base_url_full,
+                creds=creds,
+                captcha_solver=captcha_solver,
+                merged=preview,
+                forms_total=forms_total,
+                headless=True,
+                celery_task_id=raw_id,
+                cancel_key_str=_cancel_key(str(job.id)),
+            )
     finally:
         db.close()
 

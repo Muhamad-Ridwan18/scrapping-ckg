@@ -31,6 +31,7 @@ export const PatientOut = z.object({
   has_asik_data: z.boolean(),
   has_epus_data: z.boolean(),
   has_merged_data: z.boolean(),
+  from_simpus: z.boolean().optional().default(false),
   merged_at: z.string().nullable(),
   filter_date: z.string(),
   ruangan: z.string(),

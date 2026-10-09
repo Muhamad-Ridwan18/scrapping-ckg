@@ -18,6 +18,7 @@ class PatientOut(BaseModel):
     has_asik_data: bool
     has_epus_data: bool
     has_merged_data: bool
+    from_simpus: bool = False
     merged_at: datetime | None
     filter_date: date
     ruangan: str

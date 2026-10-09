@@ -174,7 +174,7 @@ def import_jawaban(
             .options(
                 load_only(
                     ScrapeJob.id, ScrapeJob.puskesmas_id, ScrapeJob.status,
-                    ScrapeJob.kind,
+                    ScrapeJob.kind, ScrapeJob.triggered_by_id, ScrapeJob.triggered_by_type,
                 )
             )
             .where(ScrapeJob.id == uuid.UUID(job_id))
@@ -209,7 +209,8 @@ def import_jawaban(
         scrape_job_crud.mark_running(db, job, self.request.id or "", started)
         _publish(rc, job_id, "[run] menarik jawaban CKG dari SIMPUS")
 
-        scraped = inserted = updated = skipped = 0
+        scraped = inserted = updated = skipped = sekolah = 0
+        umum_ids: list[str] = []
         cancel_key = _cancel_key(job_id)
         api_url = puskesmas.simpus_api_url
         for row in iter_jawaban(
@@ -245,7 +246,7 @@ def import_jawaban(
             is_sekolah = row.get("jenis") == "sekolah"
             blob = jawaban_to_asik_blob(row_nik, jawaban)
             has_mandiri = bool(blob.get("pemeriksaan_mandiri"))
-            outcome = patient_crud.upsert_simpus_visit(
+            outcome, patient_id = patient_crud.upsert_simpus_visit(
                 db,
                 puskesmas_id=job.puskesmas_id,
                 nik=row_nik,
@@ -262,6 +263,10 @@ def import_jawaban(
                 inserted += 1
             else:
                 updated += 1
+            if is_sekolah:
+                sekolah += 1
+            else:
+                umum_ids.append(str(patient_id))
 
         finished = datetime.now(UTC)
         note = f"dilewati {skipped}" if skipped else None
@@ -279,6 +284,38 @@ def import_jawaban(
             rc, job_id,
             f"[ok] {scraped} kunjungan, {inserted} baru, {updated} diperbarui",
         )
+        if sekolah:
+            _publish(
+                rc, job_id,
+                f"[info] {sekolah} kunjungan sekolah disimpan, belum ada isi form sekolah di ASIK",
+            )
+        if umum_ids:
+            asik_ready = db.scalar(
+                select(Puskesmas.id).where(
+                    Puskesmas.id == job.puskesmas_id,
+                    Puskesmas.asik_url.isnot(None),
+                    Puskesmas.asik_cred.isnot(None),
+                )
+            )
+            if asik_ready is None:
+                _publish(
+                    rc, job_id,
+                    "[skip] URL atau akun ASIK belum diisi, jawaban umum tidak dikirim ke ASIK",
+                )
+            else:
+                _publish(
+                    rc, job_id,
+                    f"[run] mengirim {len(umum_ids)} kunjungan umum ke ASIK",
+                )
+                celery_app.send_task(
+                    "simpus.sync_asik",
+                    kwargs={
+                        "puskesmas_id": str(job.puskesmas_id),
+                        "patient_ids": umum_ids,
+                        "triggered_by_id": str(job.triggered_by_id),
+                        "triggered_by_type": job.triggered_by_type.value,
+                    },
+                )
     except SimpusApiError as exc:
         db.rollback()
         if job is not None:

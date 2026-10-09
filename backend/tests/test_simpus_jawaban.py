@@ -3,7 +3,11 @@ from datetime import date
 import pytest
 
 from app.schemas.puskesmas import SimpusApiIn, _validate_simpus_api_url
-from app.services.simpus_jawaban import jawaban_endpoint, jawaban_to_asik_blob
+from app.services.simpus_jawaban import (
+    jawaban_endpoint,
+    jawaban_to_asik_blob,
+    simpus_blob_to_sync_preview,
+)
 from app.tasks.simpus_import import schedule_window
 
 
@@ -68,3 +72,6 @@ def test_jawaban_maps_ppm_to_label():
     assert "Talasemia" in label
     assert value == "Ya"
     assert "PPM00000208" not in blocks[0]["form_data"]
+    preview = simpus_blob_to_sync_preview(blob)
+    assert list(preview) == [blocks[0]["layanan"]]
+    assert preview[blocks[0]["layanan"]][label] == "Ya"

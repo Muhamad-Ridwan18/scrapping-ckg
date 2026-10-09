@@ -268,7 +268,10 @@ export function SimpusImportCard({
           </div>
           <p className="text-xs text-[var(--muted-foreground)]">
             Waktu Jakarta. Lookback 1 = hari ini saja. Tombol Tarik jawaban tetap
-            bisa dipakai kapan saja. Jadwal scrape ASIK, merge, dan sync tidak berubah.
+            bisa dipakai kapan saja. Setelah tarik, kunjungan CKG umum dikirim ke
+            ASIK bila URL dan akun ASIK sudah diisi. Pasien harus sudah terdaftar
+            di ASIK pada tanggal kunjungan itu. Jadwal scrape ASIK, merge, dan
+            sync yang lama tidak berubah.
           </p>
           {scheduleQuery.data?.enabled && scheduleQuery.data.next_run_at && (
             <p className="text-xs text-[var(--muted-foreground)]">

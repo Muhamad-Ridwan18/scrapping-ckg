@@ -192,6 +192,37 @@ def jawaban_to_asik_blob(nik: str, jawaban: dict) -> dict:
     }
 
 
+def simpus_blob_to_sync_preview(blob: dict | None) -> dict[str, dict]:
+    """Turn a SIMPUS ASIK blob into the form→field map the ASIK sync runner fills.
+
+    The runner already accepts this shape (`asik_preview`): each key is a
+    layanan name, each value is label→answer. Both nakes and mandiri blocks
+    are included. Later blocks do not overwrite a label already set.
+    """
+    if not isinstance(blob, dict):
+        return {}
+    out: dict[str, dict] = {}
+    for key in ("pelayanan_nakes", "pemeriksaan_mandiri"):
+        blocks = blob.get(key) or []
+        if not isinstance(blocks, list):
+            continue
+        for block in blocks:
+            if not isinstance(block, dict):
+                continue
+            layanan = block.get("layanan")
+            fields = block.get("form_data")
+            if not isinstance(layanan, str) or not layanan or not isinstance(fields, dict):
+                continue
+            bucket = out.setdefault(layanan, {})
+            for label, value in fields.items():
+                if not isinstance(label, str) or label in bucket:
+                    continue
+                if value is None or value == "":
+                    continue
+                bucket[label] = value
+    return {name: fields for name, fields in out.items() if fields}
+
+
 def fetch_jawaban_page(
     api_url: str,
     token: str,

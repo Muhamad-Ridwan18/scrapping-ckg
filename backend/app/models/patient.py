@@ -84,6 +84,12 @@ class Patient(UUIDPKMixin, TimestampMixin, SoftDeleteMixin, Base):
     asik_synced_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    # True when scraped_asik_data was written by the SIMPUS jawaban import.
+    # An ASIK scrape that replaces the blob clears it. Sync uses this to push
+    # the SIMPUS answers into ASIK without an ePus merge.
+    from_simpus: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="false",
+    )
 
     puskesmas: Mapped["Puskesmas"] = relationship()
 
