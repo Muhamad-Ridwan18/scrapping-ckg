@@ -23,6 +23,9 @@ class ScrapeKind(str, enum.Enum):
     # date-less program filtered by school × class. Writes to the separate
     # school_patients table, not patients. See models/school_patient.py.
     ASIK_SEKOLAH = "asik_sekolah"
+    # JSON pull from a SIMPUS / JAKSIMPUS GET /api/v1/ckg/jawaban endpoint.
+    # Writes patients in ASIK form shape. Not a browser scrape.
+    SIMPUS = "simpus"
 
 
 class ScrapeStatus(str, enum.Enum):

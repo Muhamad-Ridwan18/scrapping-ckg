@@ -47,6 +47,19 @@ export async function deletePuskesmas(id: string): Promise<void> {
   await http.delete(`/puskesmas/${id}`);
 }
 
+export async function saveSimpusApi(
+  id: string,
+  input: { api_url: string; token: string },
+): Promise<PuskesmasDetail> {
+  const { data } = await http.put(`/puskesmas/${id}/simpus`, input);
+  return PuskesmasDetailOut.parse(data);
+}
+
+export async function clearSimpusApi(id: string): Promise<PuskesmasDetail> {
+  const { data } = await http.delete(`/puskesmas/${id}/simpus`);
+  return PuskesmasDetailOut.parse(data);
+}
+
 export type CredKind = "epus" | "asik";
 
 export async function setCredentials(

@@ -13,6 +13,8 @@ import {
   listScrapeJobs,
   startPatientScrape,
   startScrape,
+  startSimpusImport,
+  type SimpusImportInput,
   type ScrapeJobListQuery,
 } from "@/lib/api/scrape";
 import type {
@@ -72,6 +74,23 @@ export function useStartScrape(puskesmasId: string) {
       kind: ScrapeKind;
       input: ScrapeStartInput;
     }) => startScrape(puskesmasId, kind, input),
+    onSuccess: (job) => {
+      qc.setQueryData(scrapeKeys.detail(job.id), job);
+      qc.setQueriesData<Page<ScrapeJob>>(
+        { queryKey: scrapeKeys.lists() },
+        (old) =>
+          old
+            ? { ...old, items: [job, ...old.items], total: old.total + 1 }
+            : old,
+      );
+    },
+  });
+}
+
+export function useStartSimpusImport(puskesmasId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: SimpusImportInput) => startSimpusImport(puskesmasId, input),
     onSuccess: (job) => {
       qc.setQueryData(scrapeKeys.detail(job.id), job);
       qc.setQueriesData<Page<ScrapeJob>>(

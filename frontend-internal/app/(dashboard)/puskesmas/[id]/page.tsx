@@ -25,6 +25,7 @@ import { Pagination } from "@/components/common/pagination";
 import { ErrorState } from "@/components/common/error-state";
 import { EmptyState } from "@/components/common/empty-state";
 import { CredentialsDialog } from "@/components/puskesmas/credentials-dialog";
+import { SimpusImportCard } from "@/components/puskesmas/simpus-import-card";
 import { StartScrapeDialog } from "@/components/scrape/start-scrape-dialog";
 import { ScrapeStatusBadge } from "@/components/scrape/scrape-status-badge";
 import { CronConfigCard } from "@/components/cron/cron-config-card";
@@ -114,6 +115,12 @@ export default function PuskesmasDetailPage({
           );
         })}
       </div>
+
+      <SimpusImportCard
+        puskesmasId={id}
+        apiUrl={detail.data?.simpus_api_url}
+        tokenSet={detail.data?.is_simpus_token_set}
+      />
 
       <div className="grid gap-4 md:grid-cols-2">
         <CronConfigCard puskesmasId={id} />

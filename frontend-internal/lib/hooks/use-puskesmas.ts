@@ -16,7 +16,9 @@ import {
   deletePuskesmas,
   getPuskesmas,
   listPuskesmas,
+  saveSimpusApi,
   setCredentials,
+  clearSimpusApi,
   updatePuskesmas,
   type CredKind,
   type PuskesmasListQuery,
@@ -184,6 +186,32 @@ export function useDeletePuskesmas() {
               }
             : old,
       );
+    },
+  });
+}
+
+export function useSaveSimpusApi() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      input,
+    }: {
+      id: string;
+      input: { api_url: string; token: string };
+    }) => saveSimpusApi(id, input),
+    onSuccess: (updated) => {
+      qc.setQueryData(puskesmasKeys.detail(updated.id), updated);
+    },
+  });
+}
+
+export function useClearSimpusApi() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => clearSimpusApi(id),
+    onSuccess: (updated) => {
+      qc.setQueryData(puskesmasKeys.detail(updated.id), updated);
     },
   });
 }

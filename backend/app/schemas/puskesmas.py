@@ -3,8 +3,9 @@ import re
 import uuid
 from datetime import datetime
 from typing import Annotated
+from urllib.parse import urlparse
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, model_validator
+from pydantic import AfterValidator, BaseModel, ConfigDict, field_validator, model_validator
 
 _BASE_URL_RE = re.compile(
     r"^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$"
@@ -49,6 +50,42 @@ def _validate_base_url(v: str) -> str:
 
 
 BaseUrl = Annotated[str, AfterValidator(_validate_base_url)]
+
+
+def _validate_simpus_api_url(v: str) -> str:
+    """Public http(s) origin or the jawaban endpoint itself.
+
+    The import worker calls this URL from the server, so loopback, private
+    IPs, and internal suffixes are rejected the same way as scrape targets.
+    A Cloudflare (or similar) hostname in front of a local SIMPUS is allowed.
+    """
+    parsed = urlparse(v.strip())
+    if parsed.scheme not in ("http", "https") or not parsed.hostname:
+        raise ValueError("must be an http(s) URL with a host")
+    if parsed.username or parsed.password:
+        raise ValueError("credentials in the URL are not allowed")
+    if parsed.query or parsed.fragment:
+        raise ValueError("query and fragment are not allowed")
+    host = parsed.hostname.lower()
+    if _is_ip_literal(host):
+        ip = ipaddress.ip_address(host)
+        if (
+            ip.is_private
+            or ip.is_loopback
+            or ip.is_link_local
+            or ip.is_reserved
+            or ip.is_multicast
+            or ip.is_unspecified
+        ):
+            raise ValueError("private or reserved IP addresses are not allowed")
+    if host in _BLOCKED_HOSTS or host.endswith(_INTERNAL_SUFFIXES):
+        raise ValueError("internal/reserved hostnames are not allowed")
+    port = f":{parsed.port}" if parsed.port else ""
+    path = parsed.path.rstrip("/")
+    return f"{parsed.scheme}://{host}{port}{path}"
+
+
+SimpusApiUrl = Annotated[str, AfterValidator(_validate_simpus_api_url)]
 
 
 class AsikAlamatLevel(BaseModel):
@@ -102,6 +139,16 @@ class CredOut(BaseModel):
     password: str
 
 
+class SimpusApiIn(BaseModel):
+    api_url: SimpusApiUrl
+    token: str = ""
+
+    @field_validator("token")
+    @classmethod
+    def _strip_token(cls, v: str) -> str:
+        return v.strip()
+
+
 class PuskesmasOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -117,3 +164,5 @@ class PuskesmasOut(BaseModel):
 class PuskesmasDetailOut(PuskesmasOut):
     is_epus_cred_set: bool
     is_asik_cred_set: bool
+    simpus_api_url: str | None = None
+    is_simpus_token_set: bool = False

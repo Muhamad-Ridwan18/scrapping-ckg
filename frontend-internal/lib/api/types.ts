@@ -60,8 +60,19 @@ export type Puskesmas = z.infer<typeof PuskesmasOut>;
 export const PuskesmasDetailOut = PuskesmasOut.extend({
   is_epus_cred_set: z.boolean(),
   is_asik_cred_set: z.boolean(),
+  simpus_api_url: z.string().nullable().optional(),
+  is_simpus_token_set: z.boolean().optional(),
 });
 export type PuskesmasDetail = z.infer<typeof PuskesmasDetailOut>;
+
+export const SimpusConnectIn = z.object({
+  api_url: z.string().trim().min(1, "URL wajib diisi"),
+  token: z.string(),
+  tanggal_dari: z.string(),
+  tanggal_sampai: z.string(),
+  jenis: z.enum(["", "umum", "sekolah"]),
+});
+export type SimpusConnectInput = z.infer<typeof SimpusConnectIn>;
 
 const _BASE_DOMAIN_RE =
   /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
@@ -245,7 +256,7 @@ export const LlmUsageBucket = z.object({
 export type LlmUsageBucketT = z.infer<typeof LlmUsageBucket>;
 
 // Scrape
-export type ScrapeKind = "asik" | "epus" | "asik_sekolah";
+export type ScrapeKind = "asik" | "epus" | "asik_sekolah" | "simpus";
 export type ScrapeStatus =
   | "pending"
   | "running"
@@ -260,7 +271,7 @@ export const ScrapeJobOut = z.object({
   patient_id: z.string().uuid().nullable(),
   patient_nik: z.string().nullable(),
   patient_name: z.string().nullable(),
-  kind: z.enum(["asik", "epus", "asik_sekolah"]),
+  kind: z.enum(["asik", "epus", "asik_sekolah", "simpus"]),
   date_filter: z.string().nullable(),
   status: z.enum(["pending", "running", "success", "failed", "cancelled"]),
   triggered_by_id: z.string().uuid(),

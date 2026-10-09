@@ -1,8 +1,9 @@
 import datetime as _dt
 import uuid
 from datetime import datetime
+from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 
 from app.models.scrape_job import ScrapeKind, ScrapeStatus, TriggererType
 
@@ -14,6 +15,26 @@ class ScrapeStart(BaseModel):
 
 class PatientScrapeStart(BaseModel):
     headless: bool = True
+
+
+class SimpusImportStart(BaseModel):
+    jenis: Literal["umum", "sekolah"] | None = None
+    nik: str | None = None
+    tanggal: _dt.date | None = None
+    tanggal_dari: _dt.date | None = None
+    tanggal_sampai: _dt.date | None = None
+
+    @model_validator(mode="after")
+    def _range_order(self) -> "SimpusImportStart":
+        if (
+            self.tanggal_dari
+            and self.tanggal_sampai
+            and self.tanggal_dari > self.tanggal_sampai
+        ):
+            raise ValueError("tanggal_dari harus sebelum atau sama dengan tanggal_sampai")
+        if self.nik is not None:
+            self.nik = self.nik.strip() or None
+        return self
 
 
 class ScrapeJobOut(BaseModel):

@@ -15,6 +15,7 @@ celery_app = Celery(
         "app.tasks.create_patient",
         "app.tasks.gdp_report",
         "app.tasks.loop_agent",
+        "app.tasks.simpus_import",
     ],
 )
 

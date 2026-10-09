@@ -578,6 +578,69 @@ def patch_mandiri_from_scrape(
     return "updated"
 
 
+def upsert_simpus_visit(
+    db: Session,
+    *,
+    puskesmas_id: uuid.UUID,
+    nik: str,
+    nama: str,
+    encrypted: bytes,
+    parsed_date: date,
+    ruangan: str,
+    is_sekolah: bool,
+    has_mandiri: bool,
+) -> str:
+    """Insert or replace the ASIK-shaped blob for one SIMPUS visit.
+
+    Umum uses ruangan "" and sekolah uses ruangan "sekolah", so the two
+    programs on the same NIK and date stay on separate rows.
+    """
+    insert_values: dict[str, Any] = {
+        "puskesmas_id": puskesmas_id,
+        "nik": nik,
+        "nama": nama,
+        "match_status": MatchStatus.ASIK_ONLY,
+        "filter_date": parsed_date,
+        "ruangan": ruangan,
+        "scraped_asik_data": encrypted,
+        "has_mandiri": has_mandiri,
+        "is_ckg_sekolah": True if is_sekolah else None,
+    }
+    stmt = pg_insert(Patient).values(**insert_values)
+    excluded = stmt.excluded
+    set_dict: dict[str, Any] = {
+        "scraped_asik_data": excluded.scraped_asik_data,
+        "nama": case((excluded.nama != "", excluded.nama), else_=Patient.nama),
+        "match_status": case(
+            (
+                Patient.scraped_epus_data.isnot(None),
+                cast(MatchStatus.MATCHED, Patient.match_status.type),
+            ),
+            else_=cast(MatchStatus.ASIK_ONLY, Patient.match_status.type),
+        ),
+        "has_mandiri": case(
+            (Patient.has_mandiri.is_(True), True), else_=has_mandiri
+        ),
+        "is_ckg_sekolah": case(
+            (excluded.is_ckg_sekolah.is_(True), True),
+            else_=Patient.is_ckg_sekolah,
+        ),
+        "deleted_at": None,
+        "updated_at": func.now(),
+    }
+    result = db.execute(
+        stmt.on_conflict_do_update(
+            index_elements=[
+                Patient.puskesmas_id, Patient.nik, Patient.filter_date, Patient.ruangan,
+            ],
+            set_=set_dict,
+        ).returning(literal_column("xmax = 0").label("inserted"))
+    )
+    db.flush()
+    row = result.one()
+    return "inserted" if row.inserted else "updated"
+
+
 def decrypt_field(obj: Patient, kind: ScrapeKind) -> Any | None:
     blob = obj.scraped_asik_data if kind == ScrapeKind.ASIK else obj.scraped_epus_data
     if blob is None:

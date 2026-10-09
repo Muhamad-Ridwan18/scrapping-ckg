@@ -22,6 +22,25 @@ export async function startScrape(
   return ScrapeJobOut.parse(data);
 }
 
+export type SimpusImportInput = {
+  jenis?: "umum" | "sekolah";
+  nik?: string;
+  tanggal?: string;
+  tanggal_dari?: string;
+  tanggal_sampai?: string;
+};
+
+export async function startSimpusImport(
+  puskesmasId: string,
+  input: SimpusImportInput,
+): Promise<ScrapeJob> {
+  const { data } = await http.post(
+    `/puskesmas/${puskesmasId}/simpus-import`,
+    input,
+  );
+  return ScrapeJobOut.parse(data);
+}
+
 export async function startPatientScrape(
   patientId: string,
   kind: ScrapeKind,

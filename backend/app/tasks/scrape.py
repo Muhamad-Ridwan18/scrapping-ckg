@@ -414,6 +414,11 @@ def run_scrape(self, job_id: str, kind_value: str, headless: bool = True) -> Non
         # Cancel may have arrived while job was PENDING and before this worker
         # picked it up. Honor it without touching status (route already wrote
         # CANCELLED + finished_at).
+        if kind == ScrapeKind.SIMPUS:
+            scrape_job_crud.mark_failed(
+                db, job, "SIMPUS import is not a browser scrape", datetime.now(UTC)
+            )
+            return
         if job.status == ScrapeStatus.CANCELLED:
             try:
                 redis_client.publish(chan, "__cancelled__")

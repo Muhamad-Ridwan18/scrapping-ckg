@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session, contains_eager, joinedload, load_only
 
 from app.api.deps import (
     Principal,
+    get_current_admin_id,
     get_db,
     get_principal,
     get_principal_from_query,
@@ -29,6 +30,7 @@ from app.schemas.scrape_job import (
     ScrapeJobLogOut,
     ScrapeJobOut,
     ScrapeStart,
+    SimpusImportStart,
 )
 
 router = APIRouter(tags=["scrape"])
@@ -121,6 +123,11 @@ def start_scrape(
     db: Session = Depends(get_db),
     principal: Principal = Depends(get_principal),
 ) -> ScrapeJobOut:
+    if kind == ScrapeKind.SIMPUS:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "SIMPUS import uses POST /puskesmas/{id}/simpus-import",
+        )
     _authorize(principal, puskesmas_id)
     cred_col = Puskesmas.epus_cred if kind == ScrapeKind.EPUS else Puskesmas.asik_cred
     url_col = Puskesmas.epus_url if kind == ScrapeKind.EPUS else Puskesmas.asik_url
@@ -176,6 +183,73 @@ def start_scrape(
 
 
 @router.post(
+    "/puskesmas/{puskesmas_id}/simpus-import",
+    response_model=ScrapeJobOut,
+    status_code=status.HTTP_201_CREATED,
+)
+def start_simpus_import(
+    puskesmas_id: uuid.UUID,
+    body: SimpusImportStart,
+    db: Session = Depends(get_db),
+    admin_id: uuid.UUID = Depends(get_current_admin_id),
+) -> ScrapeJobOut:
+    row = db.execute(
+        select(
+            Puskesmas.simpus_api_cred.isnot(None),
+            Puskesmas.simpus_api_url,
+            Puskesmas.name,
+        ).where(Puskesmas.id == puskesmas_id)
+    ).one_or_none()
+    if row is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Puskesmas not found")
+    has_token, api_url, puskesmas_name = row
+    if not api_url or not has_token:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "URL dan token SIMPUS belum diisi",
+        )
+    date_filter = None
+    if body.tanggal is not None:
+        date_filter = body.tanggal.isoformat()
+    elif body.tanggal_dari is not None:
+        date_filter = body.tanggal_dari.isoformat()
+    try:
+        job = crud.create(
+            db,
+            puskesmas_id=puskesmas_id,
+            kind=ScrapeKind.SIMPUS,
+            date_filter=date_filter,
+            triggered_by_id=admin_id,
+            triggered_by_type=TriggererType.ADMIN,
+            target_nik=body.nik,
+        )
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "impor SIMPUS masih berjalan untuk puskesmas ini",
+        ) from e
+    try:
+        celery_app.send_task(
+            "simpus.import_jawaban",
+            args=[str(job.id)],
+            kwargs={
+                "jenis": body.jenis,
+                "nik": body.nik,
+                "tanggal": body.tanggal.isoformat() if body.tanggal else None,
+                "tanggal_dari": body.tanggal_dari.isoformat() if body.tanggal_dari else None,
+                "tanggal_sampai": body.tanggal_sampai.isoformat() if body.tanggal_sampai else None,
+            },
+        )
+    except Exception as e:
+        crud.mark_failed(db, job, f"broker unreachable: {e}"[:2000], datetime.now(UTC))
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE, "scrape broker unavailable"
+        ) from e
+    return _to_job_out(job, puskesmas_name)
+
+
+@router.post(
     "/patients/{patient_id}/scrape/{kind}",
     response_model=ScrapeJobOut,
     status_code=status.HTTP_201_CREATED,
@@ -187,6 +261,11 @@ def start_patient_scrape(
     db: Session = Depends(get_db),
     principal: Principal = Depends(get_principal),
 ) -> ScrapeJobOut:
+    if kind == ScrapeKind.SIMPUS:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "SIMPUS import uses POST /puskesmas/{id}/simpus-import",
+        )
     if kind == ScrapeKind.ASIK_SEKOLAH:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,

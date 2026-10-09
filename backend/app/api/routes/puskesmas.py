@@ -14,9 +14,18 @@ from app.api.deps import (
 )
 from app.api.pagination import Page, PageParams, page_params, paginate
 from app.core.rate_limit import enforce_decrypt_rate_limit
+from app.core.security import encrypt_json
 from app.crud import puskesmas as crud
 from app.models.puskesmas import Puskesmas
-from app.schemas.puskesmas import CredIn, CredOut, PuskesmasCreate, PuskesmasDetailOut, PuskesmasOut, PuskesmasUpdate
+from app.schemas.puskesmas import (
+    CredIn,
+    CredOut,
+    PuskesmasCreate,
+    PuskesmasDetailOut,
+    PuskesmasOut,
+    PuskesmasUpdate,
+    SimpusApiIn,
+)
 
 CredKind = Literal["epus", "asik"]
 
@@ -26,6 +35,21 @@ _PUSKESMAS_OUT_COLS = (
     Puskesmas.id, Puskesmas.name, Puskesmas.epus_url, Puskesmas.asik_url,
     Puskesmas.asik_default_alamat, Puskesmas.created_at, Puskesmas.updated_at,
 )
+_PUSKESMAS_DETAIL_COLS = (
+    *_PUSKESMAS_OUT_COLS, Puskesmas.simpus_api_url,
+)
+
+
+def _detail_out(obj: Puskesmas, has_epus: bool, has_asik: bool, has_simpus: bool) -> PuskesmasDetailOut:
+    return PuskesmasDetailOut.model_validate(
+        {
+            **PuskesmasOut.model_validate(obj).model_dump(),
+            "simpus_api_url": obj.simpus_api_url,
+            "is_epus_cred_set": has_epus,
+            "is_asik_cred_set": has_asik,
+            "is_simpus_token_set": has_simpus,
+        }
+    )
 
 
 def _authorize_cred_access(principal: Principal, puskesmas_id: uuid.UUID) -> None:
@@ -73,16 +97,15 @@ def get_puskesmas(
             Puskesmas,
             Puskesmas.epus_cred.isnot(None),
             Puskesmas.asik_cred.isnot(None),
+            Puskesmas.simpus_api_cred.isnot(None),
         )
-        .options(load_only(*_PUSKESMAS_OUT_COLS))
+        .options(load_only(*_PUSKESMAS_DETAIL_COLS))
         .where(Puskesmas.id == id)
     ).one_or_none()
     if row is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Puskesmas not found")
-    obj, has_epus, has_asik = row
-    return PuskesmasDetailOut.model_validate(
-        {**PuskesmasOut.model_validate(obj).model_dump(), "is_epus_cred_set": has_epus, "is_asik_cred_set": has_asik}
-    )
+    obj, has_epus, has_asik, has_simpus = row
+    return _detail_out(obj, has_epus, has_asik, has_simpus)
 
 
 @router.patch("/{id}", response_model=PuskesmasDetailOut)
@@ -93,18 +116,19 @@ def update_puskesmas(
     _: uuid.UUID = Depends(get_current_admin_id),
 ) -> PuskesmasDetailOut:
     obj = db.scalar(
-        select(Puskesmas).options(load_only(*_PUSKESMAS_OUT_COLS)).where(Puskesmas.id == id)
+        select(Puskesmas).options(load_only(*_PUSKESMAS_DETAIL_COLS)).where(Puskesmas.id == id)
     )
     if obj is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Puskesmas not found")
     updated = crud.update(db, obj, data)
-    has_epus, has_asik = db.execute(
-        select(Puskesmas.epus_cred.isnot(None), Puskesmas.asik_cred.isnot(None))
-        .where(Puskesmas.id == id)
+    has_epus, has_asik, has_simpus = db.execute(
+        select(
+            Puskesmas.epus_cred.isnot(None),
+            Puskesmas.asik_cred.isnot(None),
+            Puskesmas.simpus_api_cred.isnot(None),
+        ).where(Puskesmas.id == id)
     ).one()
-    return PuskesmasDetailOut.model_validate(
-        {**PuskesmasOut.model_validate(updated).model_dump(), "is_epus_cred_set": has_epus, "is_asik_cred_set": has_asik}
-    )
+    return _detail_out(updated, has_epus, has_asik, has_simpus)
 
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -119,6 +143,58 @@ def delete_puskesmas(
     if obj is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Puskesmas not found")
     crud.soft_delete(db, obj)
+
+
+@router.put("/{id}/simpus", response_model=PuskesmasDetailOut)
+def set_simpus_api(
+    id: uuid.UUID,
+    data: SimpusApiIn,
+    db: Session = Depends(get_db),
+    _: uuid.UUID = Depends(get_current_admin_id),
+) -> PuskesmasDetailOut:
+    obj = db.scalar(
+        select(Puskesmas)
+        .options(load_only(*_PUSKESMAS_DETAIL_COLS, Puskesmas.simpus_api_cred))
+        .where(Puskesmas.id == id)
+    )
+    if obj is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Puskesmas not found")
+    if not data.token and obj.simpus_api_cred is None:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "token: token is required")
+    obj.simpus_api_url = data.api_url
+    if data.token:
+        obj.simpus_api_cred = encrypt_json({"token": data.token})
+    db.commit()
+    db.refresh(obj)
+    has_epus, has_asik = db.execute(
+        select(Puskesmas.epus_cred.isnot(None), Puskesmas.asik_cred.isnot(None))
+        .where(Puskesmas.id == id)
+    ).one()
+    return _detail_out(obj, has_epus, has_asik, True)
+
+
+@router.delete("/{id}/simpus", response_model=PuskesmasDetailOut)
+def clear_simpus_api(
+    id: uuid.UUID,
+    db: Session = Depends(get_db),
+    _: uuid.UUID = Depends(get_current_admin_id),
+) -> PuskesmasDetailOut:
+    obj = db.scalar(
+        select(Puskesmas)
+        .options(load_only(*_PUSKESMAS_DETAIL_COLS, Puskesmas.simpus_api_cred))
+        .where(Puskesmas.id == id)
+    )
+    if obj is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Puskesmas not found")
+    obj.simpus_api_url = None
+    obj.simpus_api_cred = None
+    db.commit()
+    db.refresh(obj)
+    has_epus, has_asik = db.execute(
+        select(Puskesmas.epus_cred.isnot(None), Puskesmas.asik_cred.isnot(None))
+        .where(Puskesmas.id == id)
+    ).one()
+    return _detail_out(obj, has_epus, has_asik, False)
 
 
 @router.put("/{id}/credentials/{kind}", status_code=status.HTTP_204_NO_CONTENT)

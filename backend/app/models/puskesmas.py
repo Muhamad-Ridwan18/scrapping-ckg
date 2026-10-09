@@ -20,6 +20,10 @@ class Puskesmas(UUIDPKMixin, TimestampMixin, SoftDeleteMixin, Base):
     asik_url: Mapped[str | None] = mapped_column(nullable=True)
     epus_cred: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
     asik_cred: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    # SIMPUS / JAKSIMPUS CKG export. api_url is the site origin (or the full
+    # /api/v1/ckg/jawaban URL). simpus_api_cred is encrypt_json({"token": ...}).
+    simpus_api_url: Mapped[str | None] = mapped_column(nullable=True)
+    simpus_api_cred: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
 
     # Default domicile for the ASIK "create new patient" flow: ePus has only a
     # free-text address and the ASIK registration step-2 "Alamat Domisili" is a
