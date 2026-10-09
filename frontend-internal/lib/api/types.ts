@@ -67,7 +67,8 @@ export type PuskesmasDetail = z.infer<typeof PuskesmasDetailOut>;
 
 export const SimpusConnectIn = z.object({
   api_url: z.string().trim().min(1, "URL wajib diisi"),
-  token: z.string(),
+  email: z.string(),
+  password: z.string(),
   tanggal_dari: z.string(),
   tanggal_sampai: z.string(),
   jenis: z.enum(["", "umum", "sekolah"]),

@@ -6,6 +6,7 @@ from app.schemas.puskesmas import SimpusApiIn, _validate_simpus_api_url
 from app.services.simpus_jawaban import (
     jawaban_endpoint,
     jawaban_to_asik_blob,
+    login_endpoint,
     simpus_blob_to_sync_preview,
 )
 from app.tasks.simpus_import import schedule_window
@@ -42,14 +43,34 @@ def test_simpus_url_rejects_internal(bad):
         _validate_simpus_api_url(bad)
 
 
-def test_simpus_api_in_strips_token():
-    data = SimpusApiIn(api_url="https://ckg.example.com", token="  abc  ")
-    assert data.token == "abc"
+def test_login_endpoint_uses_api_origin():
+    assert login_endpoint("https://ckg.example.com") == (
+        "https://ckg.example.com/api/v1/auth/login"
+    )
+    assert login_endpoint("https://ckg.example.com/api/v1/ckg/jawaban") == (
+        "https://ckg.example.com/api/v1/auth/login"
+    )
 
 
-def test_simpus_api_in_allows_blank_token_for_url_only_update():
-    data = SimpusApiIn(api_url="https://ckg.example.com", token="  ")
-    assert data.token == ""
+def test_simpus_api_in_strips_email():
+    data = SimpusApiIn(
+        api_url="https://ckg.example.com",
+        email="  akun@instansi.id  ",
+        password="secret",
+    )
+    assert data.email == "akun@instansi.id"
+    assert data.password == "secret"
+
+
+def test_simpus_api_in_allows_blank_login_for_url_only_update():
+    data = SimpusApiIn(api_url="https://ckg.example.com", email="  ", password="")
+    assert data.email == ""
+    assert data.password == ""
+
+
+def test_simpus_api_in_rejects_email_without_password():
+    with pytest.raises(ValueError):
+        SimpusApiIn(api_url="https://ckg.example.com", email="akun@instansi.id", password="")
 
 
 def test_schedule_window_is_inclusive_lookback():

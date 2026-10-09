@@ -140,13 +140,22 @@ class CredOut(BaseModel):
 
 
 class SimpusApiIn(BaseModel):
-    api_url: SimpusApiUrl
-    token: str = ""
+    """Instansi login. Blank email and password keep a token already stored."""
 
-    @field_validator("token")
+    api_url: SimpusApiUrl
+    email: str = ""
+    password: str = ""
+
+    @field_validator("email")
     @classmethod
-    def _strip_token(cls, v: str) -> str:
+    def _strip_email(cls, v: str) -> str:
         return v.strip()
+
+    @model_validator(mode="after")
+    def _email_and_password_together(self) -> "SimpusApiIn":
+        if bool(self.email) != bool(self.password):
+            raise ValueError("email dan password akun instansi harus diisi bersamaan")
+        return self
 
 
 class PuskesmasOut(BaseModel):

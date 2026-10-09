@@ -202,7 +202,7 @@ export function useSaveSimpusApi() {
       input,
     }: {
       id: string;
-      input: { api_url: string; token: string };
+      input: { api_url: string; email: string; password: string };
     }) => saveSimpusApi(id, input),
     onSuccess: (updated) => {
       qc.setQueryData(puskesmasKeys.detail(updated.id), updated);

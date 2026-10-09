@@ -52,7 +52,7 @@ export async function deletePuskesmas(id: string): Promise<void> {
 
 export async function saveSimpusApi(
   id: string,
-  input: { api_url: string; token: string },
+  input: { api_url: string; email: string; password: string },
 ): Promise<PuskesmasDetail> {
   const { data } = await http.put(`/puskesmas/${id}/simpus`, input);
   return PuskesmasDetailOut.parse(data);

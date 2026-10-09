@@ -22,7 +22,13 @@ from app.database import SessionLocal
 from app.models.puskesmas import Puskesmas
 from app.models.scrape_job import ScrapeJob, ScrapeKind, ScrapeStatus, TriggererType
 from app.models.simpus_schedule import SimpusSchedule
-from app.services.simpus_jawaban import SimpusApiError, iter_jawaban, jawaban_to_asik_blob
+from app.services.simpus_jawaban import (
+    SimpusApiError,
+    SimpusUnauthorized,
+    iter_jawaban,
+    jawaban_to_asik_blob,
+    login_instansi,
+)
 
 log = logging.getLogger(__name__)
 
@@ -196,14 +202,28 @@ def import_jawaban(
             )
             return
         try:
-            token = decrypt_json(puskesmas.simpus_api_cred)["token"]
+            stored = decrypt_json(puskesmas.simpus_api_cred)
         except Exception:
             scrape_job_crud.mark_failed(
-                db, job, "token SIMPUS tidak bisa dibaca", datetime.now(UTC)
+                db, job, "kredensial SIMPUS tidak bisa dibaca", datetime.now(UTC)
             )
             return
+        token = stored.get("token") or ""
+        email = stored.get("email") or ""
+        password = stored.get("password") or ""
+        if not token and email and password:
+            try:
+                token = login_instansi(puskesmas.simpus_api_url, email, password)
+            except SimpusApiError as exc:
+                scrape_job_crud.mark_failed(db, job, str(exc)[:2000], datetime.now(UTC))
+                return
+            stored = {"email": email, "password": password, "token": token}
+            puskesmas.simpus_api_cred = encrypt_json(stored)
+            db.commit()
         if not token:
-            scrape_job_crud.mark_failed(db, job, "token SIMPUS kosong", datetime.now(UTC))
+            scrape_job_crud.mark_failed(
+                db, job, "token SIMPUS kosong — simpan email dan password instansi", datetime.now(UTC)
+            )
             return
 
         scrape_job_crud.mark_running(db, job, self.request.id or "", started)
@@ -213,60 +233,83 @@ def import_jawaban(
         umum_ids: list[str] = []
         cancel_key = _cancel_key(job_id)
         api_url = puskesmas.simpus_api_url
-        for row in iter_jawaban(
-            api_url,
-            token,
-            jenis=jenis,
-            nik=nik,
-            tanggal=tanggal,
-            tanggal_dari=tanggal_dari,
-            tanggal_sampai=tanggal_sampai,
-        ):
+
+        def consume() -> bool:
+            nonlocal scraped, inserted, updated, skipped, sekolah
+            for row in iter_jawaban(
+                api_url,
+                token,
+                jenis=jenis,
+                nik=nik,
+                tanggal=tanggal,
+                tanggal_dari=tanggal_dari,
+                tanggal_sampai=tanggal_sampai,
+            ):
+                try:
+                    if rc.get(cancel_key) == "1":
+                        db.commit()
+                        scrape_job_crud.mark_cancelled(db, job)
+                        _publish(rc, job_id, "[cancel] dihentikan")
+                        return True
+                except Exception:
+                    pass
+                if not isinstance(row, dict):
+                    skipped += 1
+                    continue
+                row_nik = row.get("nik")
+                parsed = _parse_date(row.get("tanggal"))
+                jawaban = row.get("jawaban")
+                if not isinstance(row_nik, str) or not row_nik.strip() or parsed is None:
+                    skipped += 1
+                    continue
+                if not isinstance(jawaban, dict) or not jawaban:
+                    skipped += 1
+                    continue
+                row_nik = row_nik.strip()
+                is_sekolah = row.get("jenis") == "sekolah"
+                blob = jawaban_to_asik_blob(row_nik, jawaban)
+                has_mandiri = bool(blob.get("pemeriksaan_mandiri"))
+                outcome, patient_id = patient_crud.upsert_simpus_visit(
+                    db,
+                    puskesmas_id=job.puskesmas_id,
+                    nik=row_nik,
+                    nama=row_nik,
+                    encrypted=encrypt_json(blob),
+                    parsed_date=parsed,
+                    ruangan="sekolah" if is_sekolah else "",
+                    is_sekolah=is_sekolah,
+                    has_mandiri=has_mandiri,
+                )
+                db.commit()
+                scraped += 1
+                if outcome == "inserted":
+                    inserted += 1
+                else:
+                    updated += 1
+                if is_sekolah:
+                    sekolah += 1
+                else:
+                    umum_ids.append(str(patient_id))
+            return False
+
+        refreshed = False
+        while True:
             try:
-                if rc.get(cancel_key) == "1":
-                    db.commit()
-                    scrape_job_crud.mark_cancelled(db, job)
-                    _publish(rc, job_id, "[cancel] dihentikan")
+                if consume():
                     return
-            except Exception:
-                pass
-            if not isinstance(row, dict):
-                skipped += 1
-                continue
-            row_nik = row.get("nik")
-            parsed = _parse_date(row.get("tanggal"))
-            jawaban = row.get("jawaban")
-            if not isinstance(row_nik, str) or not row_nik.strip() or parsed is None:
-                skipped += 1
-                continue
-            if not isinstance(jawaban, dict) or not jawaban:
-                skipped += 1
-                continue
-            row_nik = row_nik.strip()
-            is_sekolah = row.get("jenis") == "sekolah"
-            blob = jawaban_to_asik_blob(row_nik, jawaban)
-            has_mandiri = bool(blob.get("pemeriksaan_mandiri"))
-            outcome, patient_id = patient_crud.upsert_simpus_visit(
-                db,
-                puskesmas_id=job.puskesmas_id,
-                nik=row_nik,
-                nama=row_nik,
-                encrypted=encrypt_json(blob),
-                parsed_date=parsed,
-                ruangan="sekolah" if is_sekolah else "",
-                is_sekolah=is_sekolah,
-                has_mandiri=has_mandiri,
-            )
-            db.commit()
-            scraped += 1
-            if outcome == "inserted":
-                inserted += 1
-            else:
-                updated += 1
-            if is_sekolah:
-                sekolah += 1
-            else:
-                umum_ids.append(str(patient_id))
+                break
+            except SimpusUnauthorized:
+                if refreshed or not email or not password:
+                    raise
+                refreshed = True
+                token = login_instansi(api_url, email, password)
+                puskesmas.simpus_api_cred = encrypt_json({
+                    "email": email, "password": password, "token": token,
+                })
+                db.commit()
+                scraped = inserted = updated = skipped = sekolah = 0
+                umum_ids = []
+                _publish(rc, job_id, "[run] token ditolak, login instansi ulang")
 
         finished = datetime.now(UTC)
         note = f"dilewati {skipped}" if skipped else None

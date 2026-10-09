@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const FIELDS = ["api_url", "token"] as const;
+const FIELDS = ["api_url", "email", "password"] as const;
 
 export function SimpusImportCard({
   puskesmasId,
@@ -63,7 +63,8 @@ export function SimpusImportCard({
     resolver: zodResolver(SimpusConnectIn),
     defaultValues: {
       api_url: "",
-      token: "",
+      email: "",
+      password: "",
       tanggal_dari: "",
       tanggal_sampai: "",
       jenis: "",
@@ -75,16 +76,24 @@ export function SimpusImportCard({
   }, [apiUrl, form]);
 
   const onSave = form.handleSubmit(async (values) => {
-    if (!values.token.trim() && !tokenSet) {
-      form.setError("token", { message: "Token wajib diisi" });
+    const email = values.email.trim();
+    const password = values.password;
+    if ((!email || !password) && !tokenSet) {
+      if (!email) form.setError("email", { message: "Email wajib diisi" });
+      if (!password) form.setError("password", { message: "Password wajib diisi" });
+      return;
+    }
+    if (Boolean(email) !== Boolean(password)) {
+      form.setError("password", { message: "Email dan password diisi bersamaan" });
       return;
     }
     try {
       await save.mutateAsync({
         id: puskesmasId,
-        input: { api_url: values.api_url.trim(), token: values.token.trim() },
+        input: { api_url: values.api_url.trim(), email, password },
       });
-      form.setValue("token", "");
+      form.setValue("email", "");
+      form.setValue("password", "");
       toast.success("Koneksi SIMPUS disimpan");
     } catch (err) {
       applyApiErrorToForm(err, form.setError, FIELDS);
@@ -94,14 +103,17 @@ export function SimpusImportCard({
   const onImport = async () => {
     const values = form.getValues();
     try {
-      if (values.api_url.trim() && values.token.trim()) {
+      const email = values.email.trim();
+      const password = values.password;
+      if (values.api_url.trim() && email && password) {
         await save.mutateAsync({
           id: puskesmasId,
-          input: { api_url: values.api_url.trim(), token: values.token.trim() },
+          input: { api_url: values.api_url.trim(), email, password },
         });
-        form.setValue("token", "");
+        form.setValue("email", "");
+        form.setValue("password", "");
       } else if (!tokenSet || !apiUrl) {
-        toast.error("Isi URL dan token SIMPUS dulu");
+        toast.error("Isi URL, email, dan password instansi dulu");
         return;
       }
       const job = await start.mutateAsync({
@@ -127,12 +139,12 @@ export function SimpusImportCard({
                 : "bg-[var(--muted)] text-[var(--muted-foreground)]"
             }`}
           >
-            {tokenSet ? "Token tersimpan" : "Belum diisi"}
+            {tokenSet ? "Akun tersimpan" : "Belum diisi"}
           </span>
         </div>
         <CardDescription>
-          Tarik jawaban CKG dari GET /api/v1/ckg/jawaban. Isi URL publik HTTPS
-          (tunnel boleh). Localhost ditolak.
+          Token diambil dari login instansi POST /api/v1/auth/login, lalu dipakai
+          untuk GET /api/v1/ckg/jawaban. URL harus HTTPS publik.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -147,18 +159,33 @@ export function SimpusImportCard({
             <p className="text-xs text-red-600">{form.formState.errors.api_url.message}</p>
           )}
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="simpus-token">Token</Label>
-          <Input
-            id="simpus-token"
-            type="password"
-            autoComplete="off"
-            placeholder={tokenSet ? "Kosongkan jika tidak diganti" : "Bearer token"}
-            {...form.register("token")}
-          />
-          {form.formState.errors.token && (
-            <p className="text-xs text-red-600">{form.formState.errors.token.message}</p>
-          )}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="simpus-email">Email instansi</Label>
+            <Input
+              id="simpus-email"
+              type="email"
+              autoComplete="off"
+              placeholder={tokenSet ? "Kosongkan jika tidak diganti" : "akun@instansi.id"}
+              {...form.register("email")}
+            />
+            {form.formState.errors.email && (
+              <p className="text-xs text-red-600">{form.formState.errors.email.message}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="simpus-password">Password</Label>
+            <Input
+              id="simpus-password"
+              type="password"
+              autoComplete="off"
+              placeholder={tokenSet ? "Kosongkan jika tidak diganti" : "Password akun"}
+              {...form.register("password")}
+            />
+            {form.formState.errors.password && (
+              <p className="text-xs text-red-600">{form.formState.errors.password.message}</p>
+            )}
+          </div>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className="space-y-2">
@@ -204,7 +231,8 @@ export function SimpusImportCard({
                   await clear.mutateAsync(puskesmasId);
                   form.reset({
                     api_url: "",
-                    token: "",
+                    email: "",
+                    password: "",
                     tanggal_dari: form.getValues("tanggal_dari"),
                     tanggal_sampai: form.getValues("tanggal_sampai"),
                     jenis: form.getValues("jenis"),

@@ -20,6 +20,7 @@ from urllib.request import Request, urlopen
 
 _DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 _JAWABAN_SUFFIX = "/api/v1/ckg/jawaban"
+_LOGIN_SUFFIX = "/api/v1/auth/login"
 _MAX_PAGES = 500
 _PAGE_SIZE = 200
 _TIMEOUT_SECONDS = 60
@@ -27,6 +28,10 @@ _TIMEOUT_SECONDS = 60
 
 class SimpusApiError(RuntimeError):
     pass
+
+
+class SimpusUnauthorized(SimpusApiError):
+    """Jawaban API rejected the bearer token."""
 
 
 @dataclass(frozen=True)
@@ -43,11 +48,63 @@ class _Form:
     questions: dict[str, _Question]
 
 
-def jawaban_endpoint(api_url: str) -> str:
+def _api_origin(api_url: str) -> str:
     base = api_url.rstrip("/")
     if base.endswith(_JAWABAN_SUFFIX):
-        return base
-    return base + _JAWABAN_SUFFIX
+        base = base[: -len(_JAWABAN_SUFFIX)]
+    if base.endswith(_LOGIN_SUFFIX):
+        base = base[: -len(_LOGIN_SUFFIX)]
+    return base.rstrip("/")
+
+
+def login_endpoint(api_url: str) -> str:
+    return _api_origin(api_url) + _LOGIN_SUFFIX
+
+
+def login_instansi(api_url: str, email: str, password: str) -> str:
+    """POST /api/v1/auth/login and return the instansi bearer token."""
+    body = json.dumps({"email": email, "password": password}).encode("utf-8")
+    request = Request(
+        login_endpoint(api_url),
+        data=body,
+        headers={"Content-Type": "application/json", "Accept": "application/json"},
+        method="POST",
+    )
+    try:
+        with urlopen(request, timeout=_TIMEOUT_SECONDS) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="replace")[:300]
+        message = _api_message(detail) or f"SIMPUS HTTP {exc.code}"
+        raise SimpusApiError(message) from exc
+    except URLError as exc:
+        raise SimpusApiError(f"SIMPUS tidak terjangkau: {exc.reason}") from exc
+    except json.JSONDecodeError as exc:
+        raise SimpusApiError("SIMPUS mengembalikan JSON yang tidak valid") from exc
+    if not isinstance(payload, dict) or payload.get("success") is not True:
+        raise SimpusApiError(str(_payload_message(payload) or "Login SIMPUS ditolak"))
+    data = payload.get("data")
+    token = data.get("token") if isinstance(data, dict) else None
+    if not isinstance(token, str) or not token.strip():
+        raise SimpusApiError("Login SIMPUS tidak mengembalikan token")
+    return token.strip()
+
+
+def _payload_message(payload: Any) -> str | None:
+    if isinstance(payload, dict) and isinstance(payload.get("message"), str):
+        return payload["message"]
+    return None
+
+
+def _api_message(raw: str) -> str | None:
+    try:
+        return _payload_message(json.loads(raw))
+    except json.JSONDecodeError:
+        return raw.strip() or None
+
+
+def jawaban_endpoint(api_url: str) -> str:
+    return _api_origin(api_url) + _JAWABAN_SUFFIX
 
 
 def _qid(raw: str) -> str:
@@ -256,7 +313,10 @@ def fetch_jawaban_page(
             payload = json.loads(response.read().decode("utf-8"))
     except HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")[:300]
-        raise SimpusApiError(f"SIMPUS HTTP {exc.code}: {detail}") from exc
+        message = _api_message(detail) or f"SIMPUS HTTP {exc.code}"
+        if exc.code == 401:
+            raise SimpusUnauthorized(message) from exc
+        raise SimpusApiError(message) from exc
     except URLError as exc:
         raise SimpusApiError(f"SIMPUS tidak terjangkau: {exc.reason}") from exc
     except json.JSONDecodeError as exc:

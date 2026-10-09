@@ -17,6 +17,7 @@ from app.core.rate_limit import enforce_decrypt_rate_limit
 from app.core.security import encrypt_json
 from app.crud import puskesmas as crud
 from app.models.puskesmas import Puskesmas
+from app.services.simpus_jawaban import SimpusApiError, login_instansi
 from app.schemas.puskesmas import (
     CredIn,
     CredOut,
@@ -159,11 +160,22 @@ def set_simpus_api(
     )
     if obj is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Puskesmas not found")
-    if not data.token and obj.simpus_api_cred is None:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "token: token is required")
+    if not data.email and obj.simpus_api_cred is None:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "email: email akun instansi wajib diisi",
+        )
+    if data.email:
+        try:
+            token = login_instansi(data.api_url, data.email, data.password)
+        except SimpusApiError as exc:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+        obj.simpus_api_cred = encrypt_json({
+            "email": data.email,
+            "password": data.password,
+            "token": token,
+        })
     obj.simpus_api_url = data.api_url
-    if data.token:
-        obj.simpus_api_cred = encrypt_json({"token": data.token})
     db.commit()
     db.refresh(obj)
     has_epus, has_asik = db.execute(
