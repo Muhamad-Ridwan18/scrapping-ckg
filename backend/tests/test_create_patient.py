@@ -87,6 +87,12 @@ def test_build_step2_uses_cfg_names_and_epus_detail():
     assert s["detail_alamat"] == "JL. KEMANDORAN RT 008 RW 022"
 
 
+def test_build_step2_detail_falls_back_to_kelurahan():
+    pk = SimpleNamespace(asik_default_alamat=_ALAMAT_CFG)
+    s = _build_step2(None, {}, pk)
+    assert s["detail_alamat"] == "Pekayonjaya"
+
+
 # --- _whatsapp_from_epus: a fabricated number must be flagged, real ones normalized ---
 def test_whatsapp_normalizes_leading_zero():
     wa, used_default = _whatsapp_from_epus(

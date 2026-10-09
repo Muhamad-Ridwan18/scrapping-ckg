@@ -977,8 +977,11 @@ def _fill_alamat_cascade(page: Page, provinsi: str, kota: str, kecamatan: str, k
 
 def _fill_detail_alamat(page: Page, text: str) -> None:
     ta = page.locator("textarea")
-    if ta.count() and text:
-        _fill_field(page, ta, text)
+    if not ta.count():
+        return
+    if not text:
+        raise RuntimeError("Detail Alamat Domisili kosong — Selanjutnya tetap nonaktif")
+    _fill_field(page, ta, text)
 
 
 def _fill_step2(page: Page, step2: dict) -> None:
@@ -1032,7 +1035,13 @@ def _step3_select_and_commit(page: Page, nik: str) -> str | None:
     Daftarkan click if any stage is missing, so a failure never half-commits."""
     console.print("[bold cyan]Step 10: Selanjutnya → List Data Individu[/bold cyan]")
     if not _click_selanjutnya(page):
-        raise RuntimeError("step-2 'Selanjutnya' (to step 3) not clickable")
+        errs = page.evaluate(
+            """() => [...new Set(Array.from(document.querySelectorAll('*'))
+                .filter(e => e.children.length===0 && /wajib diisi|tidak valid/i.test(e.textContent||''))
+                .map(e => e.textContent.trim().slice(0, 60)))]"""
+        )
+        detail = f" ({errs})" if errs else ""
+        raise RuntimeError(f"step-2 'Selanjutnya' (to step 3) not clickable{detail}")
     if not _wait_for_text(page, ["List Data Individu"], timeout_ms=15000):
         raise RuntimeError("step-3 'List Data Individu' not shown after Selanjutnya")
     page.wait_for_timeout(800)

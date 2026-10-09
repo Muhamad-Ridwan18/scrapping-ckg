@@ -188,7 +188,8 @@ def _build_step2(patient: Patient, epus: dict, puskesmas: Puskesmas) -> dict[str
     Sourcing (FINDINGS.md §Step2): Status Pernikahan + disabilitas reuse the
     `epus_to_asik` converter (default when ePus lacks them); Pekerjaan has no
     ePus source → always "Lainnya"; the Alamat cascade uses the puskesmas'
-    configured Prov/Kota/Kec/Kel names; Detail Alamat = ePus free-text `Alamat`.
+    configured Prov/Kota/Kec/Kel names; Detail Alamat = ePus free-text `Alamat`,
+    or the kelurahan name when that street line is absent.
     Defaulted fields should be logged to `patient.asik_default_fills` by the live
     create task that commits the registration.
     """
@@ -204,6 +205,10 @@ def _build_step2(patient: Patient, epus: dict, puskesmas: Puskesmas) -> dict[str
     )
     raw_alamat = pasien.get("Alamat")
     detail_alamat = re.sub(r"\s+", " ", str(raw_alamat)).strip() if raw_alamat else ""
+    # SIMPUS has no street line. ASIK still requires Detail Alamat, and an empty
+    # textarea leaves "Selanjutnya" disabled. Use the configured kelurahan.
+    if not detail_alamat:
+        detail_alamat = ((alamat_cfg.get("kelurahan") or {}).get("name") or "").strip()
     return {
         "status_pernikahan": status,
         "disabilitas": disabilitas,
