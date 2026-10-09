@@ -266,14 +266,16 @@ def import_jawaban(
                     skipped += 1
                     continue
                 row_nik = row_nik.strip()
+                raw_nama = row.get("nama")
+                nama = raw_nama.strip() if isinstance(raw_nama, str) else ""
                 is_sekolah = row.get("jenis") == "sekolah"
-                blob = jawaban_to_asik_blob(row_nik, jawaban)
+                blob = jawaban_to_asik_blob(row_nik, jawaban, nama or None)
                 has_mandiri = bool(blob.get("pemeriksaan_mandiri"))
                 outcome, patient_id = patient_crud.upsert_simpus_visit(
                     db,
                     puskesmas_id=job.puskesmas_id,
                     nik=row_nik,
-                    nama=row_nik,
+                    nama=nama or row_nik,
                     encrypted=encrypt_json(blob),
                     parsed_date=parsed,
                     ruangan="sekolah" if is_sekolah else "",

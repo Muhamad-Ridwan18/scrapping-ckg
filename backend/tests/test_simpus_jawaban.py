@@ -83,8 +83,10 @@ def test_jawaban_maps_ppm_to_label():
     blob = jawaban_to_asik_blob(
         "3201000000000001",
         {"FRM000078": {"PPM00000208": "Ya"}},
+        nama="  Siti Aminah  ",
     )
     assert blob["detail_data"]["data_individu"]["NIK"] == "3201000000000001"
+    assert blob["detail_data"]["data_individu"]["Nama"] == "Siti Aminah"
     assert blob["pelayanan_nakes"] == []
     blocks = blob["pemeriksaan_mandiri"]
     assert len(blocks) == 1

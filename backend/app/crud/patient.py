@@ -618,7 +618,10 @@ def upsert_simpus_visit(
         "scraped_asik_data": excluded.scraped_asik_data,
         "from_simpus": True,
         "asik_synced_at": None,
-        "nama": case((excluded.nama != "", excluded.nama), else_=Patient.nama),
+        "nama": case(
+            (excluded.nama != excluded.nik, excluded.nama),
+            else_=Patient.nama,
+        ),
         "match_status": case(
             (
                 Patient.scraped_epus_data.isnot(None),

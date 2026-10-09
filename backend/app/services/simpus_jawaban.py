@@ -206,7 +206,7 @@ def _display(value: Any, question: _Question | None) -> Any:
     return str(value)
 
 
-def jawaban_to_asik_blob(nik: str, jawaban: dict) -> dict:
+def jawaban_to_asik_blob(nik: str, jawaban: dict, nama: str | None = None) -> dict:
     """Map one API `jawaban` object into the ASIK patient blob."""
     catalog = _catalog()
     nakes: dict[str, dict[str, Any]] = {}
@@ -241,8 +241,11 @@ def jawaban_to_asik_blob(nik: str, jawaban: dict) -> dict:
             if fields
         ]
 
+    individu: dict[str, str] = {"NIK": nik}
+    if isinstance(nama, str) and nama.strip():
+        individu["Nama"] = nama.strip()
     return {
-        "detail_data": {"data_individu": {"NIK": nik}},
+        "detail_data": {"data_individu": individu},
         "pelayanan_nakes": _blocks(nakes),
         "pemeriksaan_mandiri": _blocks(mandiri),
         "source": "simpus",
