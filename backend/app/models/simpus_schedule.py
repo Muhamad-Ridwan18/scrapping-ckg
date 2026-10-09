@@ -31,6 +31,10 @@ class SimpusSchedule(UUIDPKMixin, TimestampMixin, SoftDeleteMixin, Base):
     minute: Mapped[int] = mapped_column(Integer, nullable=False)
     lookback_days: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    # When true, the daily pull also registers CKG umum visits that are not yet
+    # in ASIK (name from SIMPUS, domicile from the puskesmas default address),
+    # then fills the exam. Off until an admin opts in.
+    create_new: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     next_run_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     last_fired_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True

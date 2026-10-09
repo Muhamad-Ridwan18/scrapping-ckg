@@ -21,6 +21,7 @@ def upsert(
     minute: int,
     lookback_days: int,
     enabled: bool,
+    create_new: bool,
 ) -> SimpusSchedule:
     obj = get_by_puskesmas(db, puskesmas_id)
     if obj is None:
@@ -30,6 +31,7 @@ def upsert(
             minute=minute,
             lookback_days=lookback_days,
             enabled=enabled,
+            create_new=create_new,
             next_run_at=compute_next_run_at(hour, minute),
         )
         db.add(obj)
@@ -38,6 +40,7 @@ def upsert(
         obj.minute = minute
         obj.lookback_days = lookback_days
         obj.enabled = enabled
+        obj.create_new = create_new
         obj.next_run_at = compute_next_run_at(hour, minute)
     db.commit()
     db.refresh(obj)

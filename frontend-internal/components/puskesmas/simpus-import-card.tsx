@@ -46,7 +46,7 @@ export function SimpusImportCard({
   const saveSchedule = useSaveSimpusSchedule(puskesmasId);
   const scheduleForm = useForm<SimpusScheduleInput>({
     resolver: zodResolver(SimpusScheduleIn),
-    defaultValues: { hour: 1, minute: 0, lookback_days: 1, enabled: false },
+    defaultValues: { hour: 1, minute: 0, lookback_days: 1, enabled: false, create_new: false },
   });
 
   useEffect(() => {
@@ -57,6 +57,7 @@ export function SimpusImportCard({
       minute: saved.minute,
       lookback_days: saved.lookback_days,
       enabled: saved.enabled,
+      create_new: saved.create_new,
     });
   }, [scheduleQuery.data, scheduleForm]);
   const form = useForm<SimpusConnectInput>({
@@ -262,6 +263,24 @@ export function SimpusImportCard({
               Tarik otomatis setiap hari
             </Label>
           </div>
+          <div className="flex items-center gap-2">
+            <input
+              id="simpus-create-new"
+              type="checkbox"
+              checked={scheduleForm.watch("create_new")}
+              onChange={(e) =>
+                scheduleForm.setValue("create_new", e.target.checked, { shouldDirty: true })
+              }
+            />
+            <Label htmlFor="simpus-create-new" className="cursor-pointer">
+              Sekaligus buat pasien baru di ASIK
+            </Label>
+          </div>
+          <p className="text-xs text-[var(--muted-foreground)]">
+            Daftarkan kunjungan CKG umum yang belum ada di ASIK, memakai nama
+            dari SIMPUS, lalu isi pemeriksaannya. Butuh akun ASIK dan alamat
+            default pada puskesmas ini. Hanya jalan saat tarik otomatis.
+          </p>
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-2">
               <Label htmlFor="simpus-hour">Jam</Label>

@@ -80,6 +80,7 @@ export const SimpusScheduleIn = z.object({
   minute: z.number().int().min(0).max(59),
   lookback_days: z.number().int().min(1).max(14),
   enabled: z.boolean(),
+  create_new: z.boolean(),
 });
 export type SimpusScheduleInput = z.infer<typeof SimpusScheduleIn>;
 

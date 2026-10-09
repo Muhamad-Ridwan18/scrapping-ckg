@@ -22,6 +22,7 @@ from app.database import SessionLocal
 from app.models.puskesmas import Puskesmas
 from app.models.scrape_job import ScrapeJob, ScrapeKind, ScrapeStatus, TriggererType
 from app.models.simpus_schedule import SimpusSchedule
+from app.tasks.create_patient import _derive_from_nik
 from app.services.simpus_jawaban import (
     SimpusApiError,
     SimpusUnauthorized,
@@ -133,9 +134,10 @@ def dispatch_due() -> int:
                     "simpus.import_jawaban",
                     args=[str(job.id)],
                     kwargs={
-                        "tanggal_dari": date_from.isoformat(),
-                        "tanggal_sampai": date_to.isoformat(),
-                    },
+                    "tanggal_dari": date_from.isoformat(),
+                    "tanggal_sampai": date_to.isoformat(),
+                    "create_new": cfg.create_new,
+                },
                 )
             except Exception as exc:
                 scrape_job_crud.mark_failed(
@@ -169,6 +171,7 @@ def import_jawaban(
     tanggal: str | None = None,
     tanggal_dari: str | None = None,
     tanggal_sampai: str | None = None,
+    create_new: bool = False,
 ) -> None:
     db: Session = SessionLocal()
     rc = redis.from_url(settings.REDIS_URL, decode_responses=True)
@@ -268,6 +271,10 @@ def import_jawaban(
                 row_nik = row_nik.strip()
                 raw_nama = row.get("nama")
                 nama = raw_nama.strip() if isinstance(raw_nama, str) else ""
+                try:
+                    birth_date, _gender = _derive_from_nik(row_nik)
+                except ValueError:
+                    birth_date = None
                 is_sekolah = row.get("jenis") == "sekolah"
                 blob = jawaban_to_asik_blob(row_nik, jawaban, nama or None)
                 has_mandiri = bool(blob.get("pemeriksaan_mandiri"))
@@ -281,6 +288,7 @@ def import_jawaban(
                     ruangan="sekolah" if is_sekolah else "",
                     is_sekolah=is_sekolah,
                     has_mandiri=has_mandiri,
+                    birth_date=birth_date,
                 )
                 db.commit()
                 scraped += 1
@@ -348,12 +356,32 @@ def import_jawaban(
                     "[skip] URL atau akun ASIK belum diisi, jawaban umum tidak dikirim ke ASIK",
                 )
             else:
+                task_name = "simpus.sync_asik"
+                if create_new:
+                    has_alamat = db.scalar(
+                        select(Puskesmas.asik_default_alamat).where(
+                            Puskesmas.id == job.puskesmas_id,
+                            Puskesmas.asik_default_alamat.isnot(None),
+                        )
+                    )
+                    if has_alamat is None:
+                        _publish(
+                            rc, job_id,
+                            "[skip] alamat default ASIK kosong, pasien baru tidak didaftarkan",
+                        )
+                    else:
+                        task_name = "simpus.create_asik"
+                verb = (
+                    "mendaftarkan dan mengisi"
+                    if task_name == "simpus.create_asik"
+                    else "mengirim"
+                )
                 _publish(
                     rc, job_id,
-                    f"[run] mengirim {len(umum_ids)} kunjungan umum ke ASIK",
+                    f"[run] {verb} {len(umum_ids)} kunjungan umum ke ASIK",
                 )
                 celery_app.send_task(
-                    "simpus.sync_asik",
+                    task_name,
                     kwargs={
                         "puskesmas_id": str(job.puskesmas_id),
                         "patient_ids": umum_ids,

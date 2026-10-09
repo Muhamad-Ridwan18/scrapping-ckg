@@ -9,6 +9,7 @@ class SimpusScheduleIn(BaseModel):
     minute: int = Field(ge=0, le=59)
     lookback_days: int = Field(default=1, ge=1, le=14)
     enabled: bool = False
+    create_new: bool = False
 
 
 class SimpusScheduleOut(BaseModel):
@@ -20,5 +21,6 @@ class SimpusScheduleOut(BaseModel):
     minute: int
     lookback_days: int
     enabled: bool
+    create_new: bool
     next_run_at: datetime
     last_fired_at: datetime | None

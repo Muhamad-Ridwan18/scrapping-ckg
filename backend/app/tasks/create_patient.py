@@ -1115,6 +1115,177 @@ def run_create_one(self, job_id: str, headless: bool = True) -> None:
         db.close()
 
 
+@celery_app.task(name="simpus.create_asik")
+def create_simpus_patients(
+    puskesmas_id: str,
+    patient_ids: list[str],
+    triggered_by_id: str,
+    triggered_by_type: str = "cron",
+) -> None:
+    """Register SIMPUS CKG umum visits that ASIK does not have yet, then fill.
+
+    Identity uses the SIMPUS name. DOB and gender come from the NIK. Domicile
+    uses the puskesmas default address. A visit ASIK already has is not
+    registered again; its exam is still filled from the SIMPUS answers.
+    """
+    from app.services.simpus_jawaban import simpus_blob_to_sync_preview
+    from app.tasks.sync import _cancel_key, _count_preview_forms, _execute_sync
+
+    if not patient_ids:
+        return
+    db = SessionLocal()
+    redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
+    try:
+        pk_uuid = uuid.UUID(puskesmas_id)
+        puskesmas = db.scalar(
+            select(Puskesmas)
+            .options(load_only(
+                Puskesmas.id, Puskesmas.asik_url, Puskesmas.asik_cred,
+                Puskesmas.asik_default_alamat,
+            ))
+            .where(Puskesmas.id == pk_uuid)
+        )
+        if puskesmas is None or not puskesmas.asik_url or not puskesmas.asik_default_alamat:
+            log.info("simpus create skipped pk=%s — asik url or default alamat missing", puskesmas_id)
+            return
+        creds = puskesmas_crud.get_cred_decrypted(puskesmas, "asik")
+        if creds is None:
+            log.info("simpus create skipped pk=%s — asik credentials missing", puskesmas_id)
+            return
+        try:
+            trigger = TriggererType(triggered_by_type)
+        except ValueError:
+            trigger = TriggererType.CRON
+        try:
+            actor = uuid.UUID(triggered_by_id)
+        except ValueError:
+            actor = pk_uuid
+        captcha_solver = _build_captcha_solver(db)
+        base_url = f"https://{puskesmas.asik_url}"
+        session_dir = _asik_session_dir(pk_uuid)
+        timeout = max(1, int(settings.SYNC_SUBPROCESS_TIMEOUT_SECONDS))
+        for raw_id in patient_ids:
+            pid = uuid.UUID(raw_id)
+            patient = db.scalar(
+                select(Patient)
+                .options(load_only(
+                    Patient.id, Patient.puskesmas_id, Patient.nik, Patient.nama,
+                    Patient.filter_date, Patient.birth_date, Patient.scraped_asik_data,
+                ))
+                .where(Patient.id == pid, Patient.from_simpus.is_(True))
+            )
+            if patient is None or patient.scraped_asik_data is None:
+                continue
+            try:
+                blob = patient_crud.decrypt_field(patient, ScrapeKind.ASIK)
+            except Exception:
+                log.warning("simpus create decrypt failed patient=%s", pid)
+                continue
+            preview = simpus_blob_to_sync_preview(blob if isinstance(blob, dict) else None)
+            forms_total = _count_preview_forms(preview)
+            if forms_total == 0:
+                continue
+            try:
+                job = sync_job_crud.create(
+                    db,
+                    puskesmas_id=pk_uuid,
+                    patient_id=pid,
+                    triggered_by_id=actor,
+                    triggered_by_type=trigger,
+                )
+            except IntegrityError:
+                db.rollback()
+                continue
+            cancel_key_str = _cancel_key(str(job.id))
+            log_key = _log_key(str(job.id))
+            chan = _stream_chan(str(job.id))
+            real_name = bool(
+                patient.nama and patient.nama.strip() and patient.nama.strip() != patient.nik
+            )
+            birth = patient.birth_date
+            if birth is None:
+                try:
+                    birth, _gender = _derive_from_nik(patient.nik)
+                except ValueError:
+                    birth = None
+            can_register = (
+                real_name
+                and birth is not None
+                and patient.filter_date.year >= date.today().year
+            )
+            if can_register:
+                held = patient.birth_date
+                if held is None:
+                    patient.birth_date = birth
+                block = _wali_block_reason(patient.nik, patient.birth_date, patient.filter_date)
+                step2 = None if block else _build_step2(patient, {}, puskesmas)
+                if held is None:
+                    patient.birth_date = held
+                if block or step2 is None:
+                    reason = block or "alamat default ASIK kosong"
+                    sync_job_crud.mark_failed(db, job, reason[:2000], datetime.now(UTC))
+                    continue
+                try:
+                    cfg = _build_register_config(
+                        asik_creds=creds,
+                        base_url=base_url,
+                        patient=patient,
+                        epus={},
+                        exam_date=patient.filter_date,
+                        dry_run_probe=False,
+                        captcha_solver=captcha_solver,
+                        headless=True,
+                        step2=step2,
+                        commit=True,
+                    )
+                except ValueError as exc:
+                    sync_job_crud.mark_failed(db, job, str(exc)[:2000], datetime.now(UTC))
+                    continue
+                sync_job_crud.mark_running(db, job, raw_id, datetime.now(UTC), forms_total)
+                _log_line(
+                    redis_client, log_key, chan,
+                    f"[create] mendaftarkan {patient.nama} ({patient.nik}) ke ASIK",
+                )
+                out = _run_register(
+                    cfg=cfg,
+                    session_dir=session_dir,
+                    timeout=timeout,
+                    redis_client=redis_client,
+                    log_key=log_key,
+                    stream_chan=chan,
+                    cancel_key_str=cancel_key_str,
+                )
+                outcome = out.get("outcome") or "error"
+                if outcome == "cancelled":
+                    sync_job_crud.mark_cancelled(db, job)
+                    continue
+                if outcome not in ("created", "already_served"):
+                    reason = _REGISTER_FAIL_REASON.get(outcome) or out.get("error") or outcome
+                    sync_job_crud.mark_failed(db, job, f"{outcome}: {reason}"[:2000], datetime.now(UTC))
+                    continue
+                if outcome == "already_served":
+                    _log_line(
+                        redis_client, log_key, chan,
+                        "[create] sudah ada di ASIK, mengisi pemeriksaan dari SIMPUS",
+                    )
+            _execute_sync(
+                db=db,
+                redis_client=redis_client,
+                job=job,
+                patient=patient,
+                base_url_full=base_url,
+                creds=creds,
+                captcha_solver=captcha_solver,
+                merged=preview,
+                forms_total=forms_total,
+                headless=True,
+                celery_task_id=raw_id,
+                cancel_key_str=cancel_key_str,
+            )
+    finally:
+        db.close()
+
+
 def _publish_terminal(redis_client: "redis.Redis", chan: str, sentinel: str) -> None:
     try:
         redis_client.publish(chan, sentinel)

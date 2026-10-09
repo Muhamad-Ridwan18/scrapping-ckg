@@ -593,6 +593,7 @@ def upsert_simpus_visit(
     ruangan: str,
     is_sekolah: bool,
     has_mandiri: bool,
+    birth_date: date | None = None,
 ) -> tuple[str, uuid.UUID]:
     """Insert or replace the ASIK-shaped blob for one SIMPUS visit.
 
@@ -611,6 +612,7 @@ def upsert_simpus_visit(
         "is_ckg_sekolah": True if is_sekolah else None,
         "from_simpus": True,
         "asik_synced_at": None,
+        "birth_date": birth_date,
     }
     stmt = pg_insert(Patient).values(**insert_values)
     excluded = stmt.excluded
@@ -621,6 +623,10 @@ def upsert_simpus_visit(
         "nama": case(
             (excluded.nama != excluded.nik, excluded.nama),
             else_=Patient.nama,
+        ),
+        "birth_date": case(
+            (Patient.birth_date.is_(None), excluded.birth_date),
+            else_=Patient.birth_date,
         ),
         "match_status": case(
             (

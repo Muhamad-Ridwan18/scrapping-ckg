@@ -41,15 +41,23 @@ def put_simpus_schedule(
         select(
             Puskesmas.simpus_api_url,
             Puskesmas.simpus_api_cred.isnot(None),
+            Puskesmas.asik_url,
+            Puskesmas.asik_cred.isnot(None),
+            Puskesmas.asik_default_alamat,
         ).where(Puskesmas.id == puskesmas_id)
     ).one_or_none()
     if row is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Puskesmas not found")
-    api_url, has_token = row
+    api_url, has_token, asik_url, has_asik, asik_alamat = row
     if body.enabled and (not api_url or not has_token):
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
             "URL dan token SIMPUS harus diisi sebelum jadwal diaktifkan",
+        )
+    if body.create_new and (not asik_url or not has_asik or not asik_alamat):
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "URL ASIK, akun ASIK, dan alamat default harus diisi sebelum mendaftarkan pasien baru",
         )
     obj = crud.upsert(
         db,
@@ -58,5 +66,6 @@ def put_simpus_schedule(
         minute=body.minute,
         lookback_days=body.lookback_days,
         enabled=body.enabled,
+        create_new=body.create_new,
     )
     return SimpusScheduleOut.model_validate(obj)
