@@ -23,6 +23,7 @@ class SimpusImportStart(BaseModel):
     tanggal: _dt.date | None = None
     tanggal_dari: _dt.date | None = None
     tanggal_sampai: _dt.date | None = None
+    create_new: bool = False
 
     @model_validator(mode="after")
     def _range_order(self) -> "SimpusImportStart":

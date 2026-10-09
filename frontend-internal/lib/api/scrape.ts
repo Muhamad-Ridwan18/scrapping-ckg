@@ -28,6 +28,7 @@ export type SimpusImportInput = {
   tanggal?: string;
   tanggal_dari?: string;
   tanggal_sampai?: string;
+  create_new?: boolean;
 };
 
 export async function startSimpusImport(

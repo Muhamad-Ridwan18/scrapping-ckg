@@ -121,6 +121,7 @@ export function SimpusImportCard({
         jenis: values.jenis || undefined,
         tanggal_dari: values.tanggal_dari || undefined,
         tanggal_sampai: values.tanggal_sampai || undefined,
+        create_new: scheduleForm.getValues("create_new"),
       });
       toast.success(`Impor dimulai (${job.id.slice(0, 8)})`);
     } catch (err) {
@@ -279,7 +280,8 @@ export function SimpusImportCard({
           <p className="text-xs text-[var(--muted-foreground)]">
             Daftarkan kunjungan CKG umum yang belum ada di ASIK, memakai nama
             dari SIMPUS, lalu isi pemeriksaannya. Butuh akun ASIK dan alamat
-            default pada puskesmas ini. Hanya jalan saat tarik otomatis.
+            default pada puskesmas ini. Berlaku untuk tarik manual dan tarik
+            otomatis.
           </p>
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-2">

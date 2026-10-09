@@ -198,16 +198,34 @@ def start_simpus_import(
             Puskesmas.simpus_api_cred.isnot(None),
             Puskesmas.simpus_api_url,
             Puskesmas.name,
+            Puskesmas.asik_url,
+            Puskesmas.asik_cred.isnot(None),
+            Puskesmas.asik_default_alamat,
         ).where(Puskesmas.id == puskesmas_id)
     ).one_or_none()
     if row is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Puskesmas not found")
-    has_token, api_url, puskesmas_name = row
+    has_token, api_url, puskesmas_name, asik_url, has_asik, asik_alamat = row
     if not api_url or not has_token:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
             "URL dan token SIMPUS belum diisi",
         )
+    if body.create_new:
+        missing = [
+            label
+            for label, ok in (
+                ("URL ASIK", asik_url),
+                ("akun ASIK", has_asik),
+                ("alamat default", asik_alamat),
+            )
+            if not ok
+        ]
+        if missing:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                f"{', '.join(missing)} harus diisi sebelum mendaftarkan pasien baru",
+            )
     date_filter = None
     if body.tanggal is not None:
         date_filter = body.tanggal.isoformat()
@@ -239,6 +257,7 @@ def start_simpus_import(
                 "tanggal": body.tanggal.isoformat() if body.tanggal else None,
                 "tanggal_dari": body.tanggal_dari.isoformat() if body.tanggal_dari else None,
                 "tanggal_sampai": body.tanggal_sampai.isoformat() if body.tanggal_sampai else None,
+                "create_new": body.create_new,
             },
         )
     except Exception as e:
