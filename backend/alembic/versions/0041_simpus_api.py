@@ -17,9 +17,11 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    # PG 12+ allows ADD VALUE in the migration transaction when the new label
-    # is not used by later statements in this file.
-    op.execute("ALTER TYPE scrape_kind ADD VALUE IF NOT EXISTS 'simpus'")
+    # The partial index below compares kind = 'simpus', so the new enum label
+    # must be committed before that statement. ADD VALUE cannot run in the
+    # same transaction that uses the value.
+    with op.get_context().autocommit_block():
+        op.execute("ALTER TYPE scrape_kind ADD VALUE IF NOT EXISTS 'simpus'")
     op.add_column("puskesmas", sa.Column("simpus_api_url", sa.String(length=512), nullable=True))
     op.add_column("puskesmas", sa.Column("simpus_api_cred", sa.LargeBinary(), nullable=True))
     op.execute(
