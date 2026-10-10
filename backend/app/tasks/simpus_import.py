@@ -28,6 +28,7 @@ from app.services.simpus_jawaban import (
     SimpusUnauthorized,
     iter_jawaban,
     jawaban_to_asik_blob,
+    pendaftaran_from_row,
     login_instansi,
 )
 
@@ -276,7 +277,12 @@ def import_jawaban(
                 except ValueError:
                     birth_date = None
                 is_sekolah = row.get("jenis") == "sekolah"
-                blob = jawaban_to_asik_blob(row_nik, jawaban, nama or None)
+                blob = jawaban_to_asik_blob(
+                    row_nik,
+                    jawaban,
+                    nama or None,
+                    pendaftaran_from_row(row),
+                )
                 has_mandiri = bool(blob.get("pemeriksaan_mandiri"))
                 outcome, patient_id = patient_crud.upsert_simpus_visit(
                     db,

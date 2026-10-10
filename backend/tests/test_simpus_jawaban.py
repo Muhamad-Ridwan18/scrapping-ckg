@@ -6,6 +6,7 @@ from app.schemas.puskesmas import SimpusApiIn, _validate_simpus_api_url
 from app.services.simpus_jawaban import (
     jawaban_endpoint,
     jawaban_to_asik_blob,
+    pendaftaran_from_row,
     login_endpoint,
     simpus_blob_to_sync_preview,
 )
@@ -98,3 +99,18 @@ def test_jawaban_maps_ppm_to_label():
     preview = simpus_blob_to_sync_preview(blob)
     assert list(preview) == [blocks[0]["layanan"]]
     assert preview[blocks[0]["layanan"]][label] == "Ya"
+
+
+def test_pendaftaran_is_stored_beside_answers():
+    pend = pendaftaran_from_row({
+        "status_pernikahan": "Menikah",
+        "pekerjaan": "Ibu Rumah Tangga",
+        "nomor_hp": "081234567890",
+        "alamat": "Jl. Melati No. 12",
+        "alamat_domisili": {"province_name": "DKI JAKARTA", "village_name": "GROGOL UTARA"},
+        "jawaban": {"FRM001": {"Q1": "Ya"}},
+    })
+    blob = jawaban_to_asik_blob("3174012345678901", {"FRM001": {"Q1": "Ya"}}, pendaftaran=pend)
+    assert blob["pendaftaran"]["status_pernikahan"] == "Menikah"
+    assert blob["pendaftaran"]["alamat_domisili"]["provinsi"] == "DKI JAKARTA"
+    assert "pendaftaran" not in simpus_blob_to_sync_preview(blob)

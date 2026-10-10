@@ -205,6 +205,25 @@ def _wait_for_text(page: Page, needles, timeout_ms: int = 15000) -> bool:
     return False
 
 
+def _click_text_ci(page: Page, text: str) -> bool:
+    """Click the last visible leaf whose text equals `text`, ignoring case."""
+    return bool(page.evaluate(
+        """(want) => {
+            const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim().toLowerCase();
+            const target = norm(want);
+            const els = Array.from(document.querySelectorAll('*')).filter((e) =>
+                e.offsetParent && e.childElementCount === 0 && norm(e.innerText) === target
+            );
+            const el = els[els.length - 1];
+            if (!el) return false;
+            el.scrollIntoView({block: 'center'});
+            el.click();
+            return true;
+        }""",
+        text,
+    ))
+
+
 def _click_text(page: Page, text: str, *, exact: bool = True, prefer_last: bool = False, timeout: int = 5000) -> bool:
     """Genuine-click the first (or last) VISIBLE element whose text matches."""
     loc = page.get_by_text(text, exact=exact)
@@ -637,12 +656,10 @@ def _maybe_skip_wali(page: Page) -> bool:
     return ok
 
 
-def _click_selanjutnya(page: Page) -> bool:
-    """Genuine-click the styled DIV whose exact text is 'Selanjutnya' and that
-    is enabled (computed cursor != 'not-allowed'). `get_by_text(exact)` already
-    resolves to the leaf, so there is no need to reject parents with a same-text
-    child."""
-    loc = page.get_by_text("Selanjutnya", exact=True)
+def _click_enabled_exact(page: Page, text: str) -> bool:
+    """Genuine-click a visible leaf whose exact text is `text` and whose cursor
+    is not `not-allowed` (ASIK disables the step button that way)."""
+    loc = page.get_by_text(text, exact=True)
     n = loc.count()
     for i in range(n):
         el = loc.nth(i)
@@ -658,6 +675,10 @@ def _click_selanjutnya(page: Page) -> bool:
         except Exception:
             continue
     return False
+
+
+def _click_selanjutnya(page: Page) -> bool:
+    return _click_enabled_exact(page, "Selanjutnya")
 
 
 # ---------------------------------------------------------------------------
@@ -935,19 +956,40 @@ def _select_step2_dropdown(page: Page, trigger_text: str, value: str) -> None:
     page.wait_for_timeout(250)
 
 
+def _pekerjaan_candidates(value: str) -> list[str]:
+    text = value.strip()
+    folded = text.lower().replace("-", " ")
+    if folded in ("lainnya", "lain lain"):
+        return ["Lain-lain", "Lainnya"]
+    return [text]
+
+
 def _select_pekerjaan(page: Page, value: str) -> None:
-    """Pekerjaan is a modal picker with a search box; search then click."""
-    if not (_click_text(page, "Pilih pekerjaan", exact=True)
-            or _click_text(page, "Pilih pekerjaan", exact=False)):
+    """Pekerjaan is a modal picker with a search box; search then click.
+
+    The closed field may already show Lain-lain (the live default) instead of
+    the placeholder 'Pilih pekerjaan'.
+    """
+    opened = False
+    for trigger in ("Pilih pekerjaan", "Lain-lain", "Lainnya"):
+        if _click_text(page, trigger, exact=True) or _click_text(page, trigger, exact=False):
+            opened = True
+            break
+    if not opened:
         raise RuntimeError("Pekerjaan trigger ('Pilih pekerjaan') not found")
     page.wait_for_timeout(500)
     search = page.get_by_placeholder("Cari pekerjaan")
     if search.count():
         _fill_field(page, search, value)
         page.wait_for_timeout(500)
-    if not _click_text(page, value, exact=True, prefer_last=True):
-        raise RuntimeError(f"Pekerjaan option '{value}' not found")
-    page.wait_for_timeout(300)
+    for candidate in _pekerjaan_candidates(value):
+        if _click_text(page, candidate, exact=True, prefer_last=True):
+            page.wait_for_timeout(300)
+            return
+        if _click_text_ci(page, candidate):
+            page.wait_for_timeout(300)
+            return
+    raise RuntimeError(f"Pekerjaan option '{value}' not found")
 
 
 def _pick_location_level(page: Page, search_placeholder: str, name: str) -> None:
@@ -959,7 +1001,10 @@ def _pick_location_level(page: Page, search_placeholder: str, name: str) -> None
         raise RuntimeError(f"location search box '{search_placeholder}' not found")
     _fill_field(page, search, name)
     page.wait_for_timeout(1200)  # per-level list is fetched async ("Memuat data..")
-    if not _click_text(page, name, exact=True, prefer_last=True):
+    if not (
+        _click_text(page, name, exact=True, prefer_last=True)
+        or _click_text_ci(page, name)
+    ):
         raise RuntimeError(f"location '{name}' not found under '{search_placeholder}'")
     page.wait_for_timeout(1000)
 
@@ -1029,23 +1074,17 @@ def _read_ticket(page: Page) -> str | None:
     return m.group(1) if m else None
 
 
-def _step3_select_and_commit(page: Page, nik: str) -> str | None:
-    """From step 2, advance to step 3, select our NIK's row, and click 'Daftarkan
-    dengan NIK' (THE commit). Returns the success ticket. Raises before the final
-    Daftarkan click if any stage is missing, so a failure never half-commits."""
-    console.print("[bold cyan]Step 10: Selanjutnya → List Data Individu[/bold cyan]")
-    if not _click_selanjutnya(page):
-        errs = page.evaluate(
-            """() => [...new Set(Array.from(document.querySelectorAll('*'))
-                .filter(e => e.children.length===0 && /wajib diisi|tidak valid/i.test(e.textContent||''))
-                .map(e => e.textContent.trim().slice(0, 60)))]"""
-        )
-        detail = f" ({errs})" if errs else ""
-        raise RuntimeError(f"step-2 'Selanjutnya' (to step 3) not clickable{detail}")
-    if not _wait_for_text(page, ["List Data Individu"], timeout_ms=15000):
-        raise RuntimeError("step-3 'List Data Individu' not shown after Selanjutnya")
-    page.wait_for_timeout(800)
+def _step2_block_reason(page: Page) -> str:
+    errs = page.evaluate(
+        """() => [...new Set(Array.from(document.querySelectorAll('*'))
+            .filter(e => e.children.length===0 && /wajib diisi|tidak valid/i.test(e.textContent||''))
+            .map(e => e.textContent.trim().slice(0, 60)))]"""
+    )
+    return f" ({errs})" if errs else ""
 
+
+def _commit_listed_individu(page: Page, nik: str) -> str | None:
+    """Step 3: pick this NIK and click 'Daftarkan dengan NIK'."""
     console.print("[bold cyan]Step 11: Pilih matching individu[/bold cyan]")
     picked = False
     try:
@@ -1073,6 +1112,36 @@ def _step3_select_and_commit(page: Page, nik: str) -> str | None:
     _click_button_by_text(page, "Tutup", timeout=5000)
     page.wait_for_timeout(1200)
     return ticket
+
+
+def _step3_select_and_commit(page: Page, nik: str) -> str | None:
+    """Leave step 2 and commit.
+
+    Older ASIK builds use Selanjutnya → List Data Individu → Daftarkan dengan NIK.
+    The current form puts an enabled 'Daftarkan' on step 2 itself once the
+    domicile and detail address validate.
+    """
+    console.print("[bold cyan]Step 10: Selanjutnya → List Data Individu[/bold cyan]")
+    if _click_selanjutnya(page):
+        if not _wait_for_text(page, ["List Data Individu"], timeout_ms=15000):
+            raise RuntimeError("step-3 'List Data Individu' not shown after Selanjutnya")
+        page.wait_for_timeout(800)
+        return _commit_listed_individu(page, nik)
+    if _click_enabled_exact(page, "Daftarkan"):
+        console.print("    step-2 Daftarkan clicked")
+        if _wait_for_text(page, ["List Data Individu", "Berhasil Daftar", "No. Tiket"], timeout_ms=15000):
+            if "list data individu" in _page_text(page).lower():
+                page.wait_for_timeout(800)
+                return _commit_listed_individu(page, nik)
+            ticket = _read_ticket(page)
+            console.print(f"    committed — ticket = [bold]{ticket}[/bold]")
+            _click_button_by_text(page, "Tutup", timeout=5000)
+            page.wait_for_timeout(1200)
+            return ticket
+        raise RuntimeError("no confirmation after step-2 Daftarkan" + _step2_block_reason(page))
+    raise RuntimeError(
+        "step-2 'Selanjutnya'/'Daftarkan' not clickable" + _step2_block_reason(page)
+    )
 
 
 def _set_terdaftar_date_filter(page: Page, exam_date: str) -> bool:

@@ -15,12 +15,14 @@ from types import SimpleNamespace
 
 import pytest
 
+from app.services.simpus_jawaban import pendaftaran_from_row
 from app.tasks.create_patient import (
     _build_step2,
     _derive_from_nik,
     _title_case_name,
     _wali_block_reason,
     _whatsapp_from_epus,
+    step2_from_simpus,
 )
 
 
@@ -85,6 +87,40 @@ def test_build_step2_uses_cfg_names_and_epus_detail():
     }
     # ePus free-text address → Detail Alamat, whitespace-collapsed.
     assert s["detail_alamat"] == "JL. KEMANDORAN RT 008 RW 022"
+
+
+def test_step2_from_simpus_uses_jawaban_row():
+    pk = SimpleNamespace(asik_default_alamat=_ALAMAT_CFG)
+    pend = pendaftaran_from_row({
+        "status_pernikahan": "Menikah",
+        "pekerjaan": "Ibu Rumah Tangga",
+        "nomor_hp": "081234567890",
+        "alamat": "Jl. Melati No. 12 RT 003 RW 005",
+        "alamat_domisili": {
+            "province_name": "DKI JAKARTA",
+            "regency_name": "KOTA JAKARTA SELATAN",
+            "district_name": "KEBAYORAN LAMA",
+            "village_name": "GROGOL UTARA",
+        },
+    })
+    s = step2_from_simpus(pend, pk)
+    assert s["status_pernikahan"] == "Menikah"
+    assert s["pekerjaan"] == "Ibu Rumah Tangga"
+    assert s["detail_alamat"] == "Jl. Melati No. 12 RT 003 RW 005"
+    assert s["alamat"] == {
+        "provinsi": "DKI JAKARTA",
+        "kota": "KOTA JAKARTA SELATAN",
+        "kecamatan": "KEBAYORAN LAMA",
+        "kelurahan": "GROGOL UTARA",
+    }
+
+
+def test_step2_from_simpus_falls_back_when_domicile_missing():
+    pk = SimpleNamespace(asik_default_alamat=_ALAMAT_CFG)
+    s = step2_from_simpus({"pekerjaan": "Ibu Rumah Tangga"}, pk)
+    assert s["alamat"]["kelurahan"] == "Pekayonjaya"
+    assert s["pekerjaan"] == "Ibu Rumah Tangga"
+    assert s["detail_alamat"] == "Pekayonjaya"
 
 
 def test_build_step2_detail_falls_back_to_kelurahan():

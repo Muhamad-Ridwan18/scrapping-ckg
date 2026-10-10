@@ -206,7 +206,44 @@ def _display(value: Any, question: _Question | None) -> Any:
     return str(value)
 
 
-def jawaban_to_asik_blob(nik: str, jawaban: dict, nama: str | None = None) -> dict:
+def _clean_text(value: object) -> str:
+    if not isinstance(value, str):
+        return ""
+    return re.sub(r"\s+", " ", value).strip()
+
+
+def pendaftaran_from_row(row: dict) -> dict:
+    """Identity fields the jawaban API now sends for ASIK registration step 2.
+
+    These are not CKG answers. They fill Status Pernikahan, Pekerjaan, WhatsApp,
+    Detail Alamat, and the four-level Alamat Domisili cascade.
+    """
+    dom = row.get("alamat_domisili")
+    levels = {}
+    if isinstance(dom, dict):
+        levels = {
+            "provinsi": _clean_text(dom.get("province_name")),
+            "kota": _clean_text(dom.get("regency_name")),
+            "kecamatan": _clean_text(dom.get("district_name")),
+            "kelurahan": _clean_text(dom.get("village_name")),
+        }
+        levels = {key: value for key, value in levels.items() if value}
+    out = {
+        "status_pernikahan": _clean_text(row.get("status_pernikahan")),
+        "pekerjaan": _clean_text(row.get("pekerjaan")),
+        "nomor_hp": _clean_text(row.get("nomor_hp")),
+        "alamat": _clean_text(row.get("alamat")),
+        "alamat_domisili": levels,
+    }
+    return {key: value for key, value in out.items() if value}
+
+
+def jawaban_to_asik_blob(
+    nik: str,
+    jawaban: dict,
+    nama: str | None = None,
+    pendaftaran: dict | None = None,
+) -> dict:
     """Map one API `jawaban` object into the ASIK patient blob."""
     catalog = _catalog()
     nakes: dict[str, dict[str, Any]] = {}
@@ -244,12 +281,15 @@ def jawaban_to_asik_blob(nik: str, jawaban: dict, nama: str | None = None) -> di
     individu: dict[str, str] = {"NIK": nik}
     if isinstance(nama, str) and nama.strip():
         individu["Nama"] = nama.strip()
-    return {
+    blob: dict[str, Any] = {
         "detail_data": {"data_individu": individu},
         "pelayanan_nakes": _blocks(nakes),
         "pemeriksaan_mandiri": _blocks(mandiri),
         "source": "simpus",
     }
+    if pendaftaran:
+        blob["pendaftaran"] = pendaftaran
+    return blob
 
 
 def simpus_blob_to_sync_preview(blob: dict | None) -> dict[str, dict]:

@@ -70,6 +70,8 @@ _DEFAULT_WHATSAPP = "800000000"
 _DEFAULT_STATUS_PERNIKAHAN = "Belum Menikah"
 _DEFAULT_DISABILITAS = "Tidak memiliki disabilitas"  # else "Memiliki disablilitas" (ASIK's typo)
 _DEFAULT_PEKERJAAN = "Lainnya"
+# Live ASIK registration (2026-10-10) shows this label, not "Lainnya".
+_SIMPUS_DEFAULT_PEKERJAAN = "Lain-lain"
 
 
 def _derive_from_nik(nik: str) -> tuple[date, str]:
@@ -223,6 +225,50 @@ def _build_step2(patient: Patient, epus: dict, puskesmas: Puskesmas) -> dict[str
     }
 
 
+def _alamat_levels(raw: object) -> dict[str, str] | None:
+    if not isinstance(raw, dict):
+        return None
+    levels = {
+        key: str(raw.get(key) or "").strip()
+        for key in ("provinsi", "kota", "kecamatan", "kelurahan")
+    }
+    if any(not levels[key] for key in levels):
+        return None
+    return levels
+
+
+def step2_from_simpus(pendaftaran: object, puskesmas: Puskesmas) -> dict[str, Any] | None:
+    """ASIK step 2 from the jawaban row, with the puskesmas address as fallback.
+
+    The row's alamat_domisili wins when all four levels are present. A partial
+    domicile is not mixed with the puskesmas default.
+    """
+    pend = pendaftaran if isinstance(pendaftaran, dict) else {}
+    alamat = _alamat_levels(pend.get("alamat_domisili"))
+    if alamat is None:
+        cfg = puskesmas.asik_default_alamat or {}
+        alamat = _alamat_levels({
+            "provinsi": (cfg.get("provinsi") or {}).get("name"),
+            "kota": (cfg.get("kota") or {}).get("name"),
+            "kecamatan": (cfg.get("kecamatan") or {}).get("name"),
+            "kelurahan": (cfg.get("kelurahan") or {}).get("name"),
+        })
+    if alamat is None:
+        return None
+    status = _status_perkawinan(pend.get("status_pernikahan")) or _DEFAULT_STATUS_PERNIKAHAN
+    pekerjaan = str(pend.get("pekerjaan") or "").strip() or _SIMPUS_DEFAULT_PEKERJAAN
+    detail = re.sub(r"\s+", " ", str(pend.get("alamat") or "")).strip()
+    if not detail:
+        detail = alamat["kelurahan"]
+    return {
+        "status_pernikahan": status,
+        "disabilitas": _DEFAULT_DISABILITAS,
+        "pekerjaan": pekerjaan,
+        "alamat": alamat,
+        "detail_alamat": detail,
+    }
+
+
 def _build_register_config(
     *,
     asik_creds: dict,
@@ -235,6 +281,7 @@ def _build_register_config(
     headless: bool,
     step2: dict[str, Any] | None = None,
     commit: bool = False,
+    whatsapp: str | None = None,
 ) -> dict[str, Any]:
     """Build the config.json the `register.py` scraper reads.
 
@@ -247,7 +294,12 @@ def _build_register_config(
     """
     birth_date, gender = _derive_from_nik(patient.nik)
     nama_raw = ((epus or {}).get("data_pasien") or {}).get("Nama Pasien") or patient.nama
-    whatsapp, _used_default = _whatsapp_from_epus(epus)
+    phone_source = (
+        {"data_pasien": {"No Telp / HP": whatsapp}}
+        if whatsapp
+        else epus
+    )
+    whatsapp, _used_default = _whatsapp_from_epus(phone_source)
     register: dict[str, Any] = {
         "nik": patient.nik,
         "nama": _title_case_name(nama_raw),
@@ -1223,7 +1275,9 @@ def create_simpus_patients(
                 if held is None:
                     patient.birth_date = birth
                 block = _wali_block_reason(patient.nik, patient.birth_date, patient.filter_date)
-                step2 = None if block else _build_step2(patient, {}, puskesmas)
+                pend = blob.get("pendaftaran") if isinstance(blob, dict) else None
+                step2 = None if block else step2_from_simpus(pend, puskesmas)
+                phone = pend.get("nomor_hp") if isinstance(pend, dict) else None
                 if held is None:
                     patient.birth_date = held
                 if block or step2 is None:
@@ -1242,6 +1296,7 @@ def create_simpus_patients(
                         headless=True,
                         step2=step2,
                         commit=True,
+                        whatsapp=phone if isinstance(phone, str) and phone.strip() else None,
                     )
                 except ValueError as exc:
                     sync_job_crud.mark_failed(db, job, str(exc)[:2000], datetime.now(UTC))
