@@ -876,6 +876,36 @@ class _AnswerGate:
             pass
 
 
+def _blank_visit_may_fill(observed: int, form_has_answer: bool) -> bool:
+    """A new visit often never requests get/skrining-layanan.
+
+    Filling is safe only when that request was never sent and the rendered
+    form has no answer yet. A request that failed, or a form that already
+    shows answers without the XHR, must still be refused.
+    """
+    return observed == 0 and not form_has_answer
+
+
+def _form_has_any_answer(page: Page) -> bool:
+    """True when any visible SurveyJS question already holds a value."""
+    return bool(page.evaluate(
+        """() => {
+            const qs = Array.from(document.querySelectorAll('.sd-question'))
+                .filter(q => q.offsetParent);
+            for (const q of qs) {
+                if (q.querySelector('input:checked')) return true;
+                const fields = q.querySelectorAll('input[type="number"], input[type="text"], textarea');
+                for (const field of fields) {
+                    if ((field.value || '').trim()) return true;
+                }
+                const sel = q.querySelector('select');
+                if (sel && (sel.value || '').trim()) return true;
+            }
+            return false;
+        }"""
+    ))
+
+
 def _read_form_questions(page: Page) -> list[dict]:
     """Return [{label, dataName, hasRadios, hasNumber, hasDropdown, choices}]."""
     return page.evaluate(
@@ -1794,25 +1824,30 @@ def _process_form_inner(
     # defaults (see `_AnswerGate`). This replaces a blind 800 ms sleep that
     # merely made the race usually-win.
     if not gate.wait():
-        record["status"] = "answers_unconfirmed"
-        record["answers_xhr_observed"] = gate.observed
-        record["answers_xhr_status"] = gate.last_status
-        detail = (
-            f"{gate.observed} response(s), last status {gate.last_status}"
-            if gate.observed
-            else "never requested"
-        )
-        record["error"] = (
-            "existing answers never arrived (get/skrining-layanan not seen in "
-            f"{_ANSWER_XHR_TIMEOUT_MS} ms; {detail}) — refusing to fill or submit"
-        )
-        console.print(f"          [red]{record['error']}[/red]")
-        try:
-            page.go_back()
-            page.wait_for_url(lambda u: DETAIL_PATH_PREFIX in u, timeout=10000)
-        except Exception:
-            page.goto(detail_url, wait_until="domcontentloaded")
-        return record
+        if _blank_visit_may_fill(gate.observed, _form_has_any_answer(page)):
+            console.print(
+                "          [yellow]no stored answers on this blank form — filling the new visit[/yellow]"
+            )
+        else:
+            record["status"] = "answers_unconfirmed"
+            record["answers_xhr_observed"] = gate.observed
+            record["answers_xhr_status"] = gate.last_status
+            detail = (
+                f"{gate.observed} response(s), last status {gate.last_status}"
+                if gate.observed
+                else "never requested"
+            )
+            record["error"] = (
+                "existing answers never arrived (get/skrining-layanan not seen in "
+                f"{_ANSWER_XHR_TIMEOUT_MS} ms; {detail}) — refusing to fill or submit"
+            )
+            console.print(f"          [red]{record['error']}[/red]")
+            try:
+                page.go_back()
+                page.wait_for_url(lambda u: DETAIL_PATH_PREFIX in u, timeout=10000)
+            except Exception:
+                page.goto(detail_url, wait_until="domcontentloaded")
+            return record
     record["answers_xhr"] = gate.url
 
     filled, skipped = _fill_form_iteratively(page, items)

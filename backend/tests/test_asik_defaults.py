@@ -148,3 +148,24 @@ def test_scraper_pick_safe_option_never_selects_abnormal():
     assert s._pick_safe_option(["Ya", "Tidak"]) == "Tidak"
     # A disease-only option list must not be fabricated → None (form fails safe).
     assert s._pick_safe_option(["Abnormal Gambaran Abnormal Lainnya"]) is None
+
+
+def test_blank_new_visit_may_fill_when_answer_xhr_never_starts():
+    s = _load_scraper_sync()
+    assert s._blank_visit_may_fill(0, False) is True
+    assert s._blank_visit_may_fill(0, True) is False
+    assert s._blank_visit_may_fill(1, False) is False
+
+
+def test_live_asik_titles_alias_to_catalog_slugs():
+    s = _load_scraper_sync()
+    sections = {
+        "perilaku_merokok_dewasa_lansia": [{"merged_key": "rokok", "merged_value": "Tidak"}],
+        "hati": [{"merged_key": "hepatitis", "merged_value": "Tidak"}],
+        "skrining_laboratorium_fungsi_ginjal_hati_profil_lipid": [
+            {"merged_key": "lab", "merged_value": "1"},
+        ],
+    }
+    assert s._match_section_items(sections, "hasil_perilaku_merokok")[0]["merged_key"] == "rokok"
+    assert s._match_section_items(sections, "faktor_risiko_hati")[0]["merged_key"] == "hepatitis"
+    assert s._match_section_items(sections, "hati")[0]["merged_key"] == "hepatitis"
