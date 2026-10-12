@@ -272,7 +272,7 @@ def _read_active_tab_count(page: Page) -> int | None:
 # every tab. `specific-search` is also tab-scoped (0 rows on the wrong tab, 1 on
 # the right one), which is exactly the per-tab signal this loop needs.
 # ---------------------------------------------------------------------------
-_SEARCH_ENDPOINT_NEEDLE = "specific-search"
+_SEARCH_ENDPOINT_NEEDLES = ("specific-search", "list-kunjungan")
 
 
 def _extract_search_rows(body) -> list[dict] | None:
@@ -298,19 +298,62 @@ def _extract_search_rows(body) -> list[dict] | None:
                 rows = data[key]
                 break
     if rows is None:
+        rows = _first_record_list(body)
+    if rows is None:
         return None
     out: list[dict] = []
     for row in rows:
         if not isinstance(row, dict):
             continue
-        nik = row.get("patient_nik") or row.get("nik")
-        sdate = row.get("screening_date")
+        nik = _nik_from_record(row)
+        sdate = (
+            row.get("screening_date")
+            or row.get("tanggal_pemeriksaan")
+            or row.get("tanggal")
+        )
+        name = (
+            row.get("patient_full_name")
+            or row.get("nama_peserta")
+            or row.get("nama")
+            or ""
+        )
         out.append({
-            "nik": str(nik).strip() if nik is not None else "",
+            "nik": nik,
             "screening_date": str(sdate).strip() if sdate is not None else None,
-            "name": str(row.get("patient_full_name") or "").strip(),
+            "name": str(name).strip(),
         })
     return out
+
+
+def _nik_from_record(row: dict) -> str:
+    for key in ("patient_nik", "nik", "nik_peserta", "no_nik", "nomor_nik"):
+        value = row.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    for value in row.values():
+        if isinstance(value, str) and re.fullmatch(r"\d{16}", value.strip()):
+            return value.strip()
+    return ""
+
+
+def _first_record_list(node, depth: int = 0):
+    """First nested list of records that carries a NIK."""
+    if depth > 5:
+        return None
+    if isinstance(node, list) and node and isinstance(node[0], dict):
+        if any(_nik_from_record(item) for item in node if isinstance(item, dict)):
+            return node
+    if isinstance(node, dict):
+        for value in node.values():
+            found = _first_record_list(value, depth + 1)
+            if found is not None:
+                return found
+    elif isinstance(node, list):
+        for value in node[:8]:
+            found = _first_record_list(value, depth + 1)
+            if found is not None:
+                return found
+    return None
 
 
 def _asik_year_skip(matched_rows: list[dict], filter_date: str | None) -> tuple[bool, list[str]]:
@@ -345,7 +388,8 @@ def _wait_search_rows(
     while True:
         found: list[dict] | None = None
         for entry in interceptor.all_responses[since:]:
-            if _SEARCH_ENDPOINT_NEEDLE not in (entry.get("url") or ""):
+            url = entry.get("url") or ""
+            if not any(needle in url for needle in _SEARCH_ENDPOINT_NEEDLES):
                 continue
             rows = _extract_search_rows(entry.get("body"))
             if rows is not None:
@@ -379,7 +423,12 @@ def _rows_showing_nik(page: Page, nik: str) -> list[str]:
     """Visible pelayanan table rows whose text contains this NIK."""
     return page.evaluate(
         """(nik) => Array.from(document.querySelectorAll('tr'))
-            .filter(r => r.offsetParent !== null && (r.innerText || '').includes(nik))
+            .filter(r => {
+                if (r.offsetParent === null || !(r.innerText || '').includes(nik)) return false;
+                return Array.from(r.querySelectorAll('button')).some(b =>
+                    /^(Mulai|Lanjutkan)$/.test((b.innerText || '').trim()) && b.offsetParent
+                );
+            })
             .map(r => (r.innerText || '').replace(/\\s+/g, ' ').trim())
             .slice(0, 5)""",
         nik,
@@ -405,7 +454,7 @@ def _click_mulai_for_nik(page: Page, nik: str) -> bool:
             );
             if (rows.length !== 1) return false;
             const btn = Array.from(rows[0].querySelectorAll('button')).find(
-                b => b.innerText.trim() === 'Mulai' && b.offsetParent
+                b => /^(Mulai|Lanjutkan)$/.test(b.innerText.trim()) && b.offsetParent
             );
             if (!btn) return false;
             btn.scrollIntoView({block: 'center'});
@@ -2036,10 +2085,10 @@ def run(args) -> dict:
                         for it in sub.get("items") or []:
                             if isinstance(it, dict):
                                 ident.append(it)
-            expected_name = ""
+            expected_name = str(cfg.get("patient_name") or "").strip()
             for it in ident:
                 if (it.get("merged_key") or "").lower().strip() == "nama":
-                    expected_name = str(it.get("merged_value") or "").strip()
+                    expected_name = str(it.get("merged_value") or "").strip() or expected_name
                     break
             console.print(f"\n[bold cyan]Searching NIK={nik} (expected name='{expected_name}')[/bold cyan]")
 
@@ -2127,6 +2176,27 @@ def run(args) -> dict:
                     f"    filter={cur_filter} badge={badge} mulai_buttons={mulai_count} "
                     f"search_rows={'?' if search_niks is None else len(search_niks)}"
                 )
+                if search_niks is None and expected_name and badge == 1 and mulai_count == 1:
+                    row_text = page.evaluate(
+                        """() => {
+                            const rows = Array.from(document.querySelectorAll('tr')).filter(r =>
+                                r.offsetParent && Array.from(r.querySelectorAll('button')).some(
+                                    b => b.innerText.trim() === 'Mulai' && b.offsetParent
+                                )
+                            );
+                            return rows.length === 1 ? (rows[0].innerText || '').replace(/\\s+/g, ' ') : '';
+                        }"""
+                    ) or ""
+                    if expected_name.lower() in row_text.lower():
+                        console.print("    [green]single Mulai row matches the patient name[/green]")
+                        patient_tab = tab
+                        matched_rows = [{
+                            "nik": nik,
+                            "screening_date": _date_from_row_text(row_text) or filter_date,
+                            "name": expected_name,
+                        }]
+                        saw_any_search = True
+                        break
                 if search_niks is None:
                     # No parseable specific-search for THIS search. We cannot prove the
                     # filter applied, so we must not accept the tab on the DOM

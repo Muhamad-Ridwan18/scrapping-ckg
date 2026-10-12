@@ -1204,7 +1204,34 @@ def _dump_terdaftar(page: Page) -> None:
         pass
 
 
-def _search_terdaftar_by_nik(page: Page, nik: str) -> None:
+def _find_terdaftar_row(page: Page, nama: str):
+    """The Terdaftar table pages past the first screen. Return the row locator."""
+    target = (nama or "").strip().lower()
+    if not target:
+        return None
+    for _ in range(8):
+        rows = page.locator("tr")
+        for i in range(rows.count()):
+            try:
+                text = (rows.nth(i).inner_text(timeout=1000) or "").lower()
+            except Exception:
+                continue
+            if target in text:
+                return rows.nth(i)
+        nxt = page.get_by_role("button", name=re.compile(r"berikutnya|next", re.I))
+        if not nxt.count():
+            break
+        try:
+            if not nxt.first.is_enabled():
+                break
+            nxt.first.click(timeout=2000)
+            page.wait_for_timeout(1200)
+        except Exception:
+            break
+    return None
+
+
+def _search_terdaftar_by_nik(page: Page, nik: str, nama: str = "") -> None:
     """Narrow the (already date-scoped) 'Data Individu Terdaftar' list to one NIK —
     needed only when a day's registrations paginate past the first view. The
     search-type control is a CUSTOM Vue dropdown (not a <select>): its trigger shows
@@ -1229,10 +1256,24 @@ def _search_terdaftar_by_nik(page: Page, nik: str) -> None:
                         continue
                 break
         page.wait_for_timeout(400)
-        box = page.locator("#searchNik")
-        box.fill(nik, timeout=5000)
-        page.keyboard.press("Enter")
-        page.wait_for_timeout(1600)
+        typed = False
+        for sel in ("#searchNik", 'input[placeholder*="NIK" i]', 'input[placeholder*="Nama" i]', 'input[placeholder*="Cari" i]'):
+            box = page.locator(sel)
+            if not box.count():
+                continue
+            try:
+                box.first.click(timeout=2000)
+                page.keyboard.press("Control+A")
+                page.keyboard.press("Delete")
+                page.keyboard.type(nik if "NIK" in sel or sel == "#searchNik" else (nama or nik), delay=15)
+                page.keyboard.press("Enter")
+                page.wait_for_timeout(1600)
+                typed = True
+                break
+            except Exception:
+                continue
+        if not typed:
+            raise RuntimeError("no terdaftar search box")
     except Exception as exc:
         console.print(f"    [yellow]Terdaftar NIK-search (fallback) failed: {exc}[/yellow]")
 
@@ -1267,12 +1308,11 @@ def _konfirmasi_hadir(
 
         if exam_date:
             _set_terdaftar_date_filter(page, exam_date)
-        # Date-scoped list now shows the day's registrations directly — locate our row.
-        row = page.locator("tr").filter(has_text=nama)
-        if not row.count():
-            _search_terdaftar_by_nik(page, nik)  # paginated day → narrow to one NIK
-            row = page.locator("tr").filter(has_text=nama)
-        if not row.count():
+        row = _find_terdaftar_row(page, nama)
+        if row is None:
+            _search_terdaftar_by_nik(page, nik, nama)
+            row = _find_terdaftar_row(page, nama)
+        if row is None:
             console.print(
                 f"    [yellow]Konfirmasi Hadir: no row for '{nama}' "
                 f"(date filter={exam_date}, nik={nik})[/yellow]"

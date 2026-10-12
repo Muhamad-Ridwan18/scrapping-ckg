@@ -144,6 +144,7 @@ def _build_config(
     base_url: str,
     nik: str,
     merged_data: Any,
+    patient_name: str | None = None,
     captcha_solver: dict[str, Any],
     headless: bool = True,
     filter_date: str | None = None,
@@ -167,6 +168,7 @@ def _build_config(
             "password": asik_creds.get("password", ""),
         },
         "nik": nik,
+        "patient_name": patient_name or "",
         # ASIK's patient list is date-range-scoped (default = current week). Without
         # this the sync searches the wrong week and never finds a past-date patient.
         "filter_date": filter_date,
@@ -250,6 +252,11 @@ def _execute_sync(
                 asik_creds=creds,
                 base_url=base_url_full,
                 nik=patient.nik,
+                patient_name=(
+                    patient.nama
+                    if patient.nama and patient.nama.strip() != patient.nik
+                    else None
+                ),
                 merged_data=merged,
                 captcha_solver=captcha_solver,
                 headless=headless,
