@@ -325,14 +325,23 @@ def _extract_search_rows(body) -> list[dict] | None:
     return out
 
 
+def _text_nik(value) -> str:
+    if isinstance(value, str) and re.fullmatch(r"\d{16}", value.strip()):
+        return value.strip()
+    if isinstance(value, int) and len(str(value)) == 16:
+        return str(value)
+    return ""
+
+
 def _nik_from_record(row: dict) -> str:
     for key in ("patient_nik", "nik", "nik_peserta", "no_nik", "nomor_nik"):
-        value = row.get(key)
-        if isinstance(value, str) and value.strip():
-            return value.strip()
+        found = _text_nik(row.get(key))
+        if found:
+            return found
     for value in row.values():
-        if isinstance(value, str) and re.fullmatch(r"\d{16}", value.strip()):
-            return value.strip()
+        found = _text_nik(value)
+        if found:
+            return found
     return ""
 
 
@@ -931,6 +940,52 @@ def _nakes_targets_from_responses(responses: list[dict]) -> list[dict] | None:
                 "link": link if isinstance(link, str) and link.strip() else None,
             })
     return out
+
+
+def _find_visit_for_nik(responses: list[dict], nik: str) -> dict | None:
+    """reg_id and faskes_code from any captured list row for this NIK."""
+    found: dict | None = None
+
+    def walk(node, depth: int = 0) -> None:
+        nonlocal found
+        if found is not None or depth > 7:
+            return
+        if isinstance(node, dict):
+            row_nik = ""
+            for key in ("patient_nik", "nik", "nik_peserta", "no_nik", "nomor_nik"):
+                row_nik = _text_nik(node.get(key))
+                if row_nik:
+                    break
+            if row_nik == nik:
+                reg = node.get("reg_id") or node.get("registration_id")
+                faskes = node.get("faskes_code")
+                sdate = (
+                    node.get("screening_date")
+                    or node.get("tanggal_pemeriksaan")
+                    or node.get("tanggal")
+                )
+                if reg and faskes:
+                    found = {
+                        "reg_id": str(reg),
+                        "faskes_code": str(faskes),
+                        "screening_date": str(sdate).strip() if sdate else None,
+                    }
+                    return
+            for value in node.values():
+                walk(value, depth + 1)
+                if found is not None:
+                    return
+        elif isinstance(node, list):
+            for value in node[:40]:
+                walk(value, depth + 1)
+                if found is not None:
+                    return
+
+    for entry in responses:
+        walk(entry.get("body"))
+        if found is not None:
+            return found
+    return None
 
 
 def _blank_visit_may_fill(observed: int) -> bool:
@@ -2408,7 +2463,6 @@ def run(args) -> dict:
                 f"(ASIK {row_years or ['?']} / ePus {epus_year})[/green]"
             )
 
-            detail_mark = len(interceptor.all_responses)
             if not (_click_mulai_for_nik(page, nik) or _click_mulai_by_name(page, expected_name)):
                 raise RuntimeError(
                     "Mulai click failed — could not match row by name "
@@ -2509,18 +2563,43 @@ def run(args) -> dict:
                     page.wait_for_timeout(800)
                     close_popups(page, silent=True)
 
-            nakes_targets = _nakes_targets_from_responses(interceptor.all_responses[detail_mark:])
+            nakes_targets = _nakes_targets_from_responses(interceptor.all_responses)
             if nakes_targets is None:
-                paths = []
-                for entry in interceptor.all_responses[detail_mark:]:
+                visit = _find_visit_for_nik(interceptor.all_responses, nik)
+                screening_date = (visit or {}).get("screening_date") or filter_date
+                if visit and visit.get("reg_id") and visit.get("faskes_code") and screening_date:
+                    try:
+                        from patient_scraper import fetch_detail_screening, get_mitra_token
+                        mitra = get_mitra_token(page.context, base_url)
+                        data = fetch_detail_screening(
+                            page.context,
+                            base_url,
+                            faskes_code=visit["faskes_code"],
+                            screening_date=str(screening_date)[:10],
+                            reg_id=visit["reg_id"],
+                            mitra=mitra,
+                        )
+                        nakes_targets = _nakes_targets_from_responses(
+                            [{"url": "detail-screening", "body": data}]
+                        )
+                        console.print(
+                            f"  requested detail-screening for reg_id={visit['reg_id']}"
+                        )
+                    except Exception as exc:
+                        console.print(
+                            f"  [yellow]detail-screening request failed: {exc}[/yellow]"
+                        )
+            if nakes_targets is None:
+                pkg_urls = []
+                for entry in interceptor.all_responses:
                     url = (entry.get("url") or "").split("?")[0]
-                    if url and url not in paths:
-                        paths.append(url)
+                    if "/api/pkg/" in url and url not in pkg_urls:
+                        pkg_urls.append(url)
                 console.print(
                     "  [yellow]Pelayanan oleh Nakes: no screening_layanan response was captured[/yellow]"
                 )
-                if paths:
-                    console.print(f"    [dim]responses: {paths[-8:]}[/dim]")
+                if pkg_urls:
+                    console.print(f"    [dim]pkg: {pkg_urls[-12:]}[/dim]")
             else:
                 console.print(
                     f"  Pelayanan oleh Nakes: {len(nakes_targets)} forms from detail-screening"

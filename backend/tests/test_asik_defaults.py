@@ -179,6 +179,27 @@ def test_nakes_targets_come_from_detail_screening():
     assert s._nakes_targets_from_responses([]) is None
 
 
+def test_visit_ids_are_taken_from_the_list_row():
+    s = _load_scraper_sync()
+    visit = s._find_visit_for_nik(
+        [{
+            "url": "https://sehatindonesiaku.kemkes.go.id/api/pkg/ssi/list-kunjungan-umum",
+            "body": {"data": [{
+                "nik": "1116096702060002",
+                "reg_id": "reg-1",
+                "faskes_code": "P0001",
+                "screening_date": "2026-10-13",
+            }]},
+        }],
+        "1116096702060002",
+    )
+    assert visit == {
+        "reg_id": "reg-1",
+        "faskes_code": "P0001",
+        "screening_date": "2026-10-13",
+    }
+
+
 def test_blank_new_visit_may_fill_when_answer_xhr_never_starts():
     s = _load_scraper_sync()
     assert s._blank_visit_may_fill(0) is True
