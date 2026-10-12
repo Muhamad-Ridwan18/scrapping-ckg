@@ -358,6 +358,64 @@ def _wait_search_rows(
         elapsed += 100
 
 
+def _json_rows_for_nik(interceptor, since: int, nik: str) -> list[dict] | None:
+    """Newest captured JSON list that contains only this NIK.
+
+    The pelayanan search used to be `specific-search`. When that URL is absent,
+    any later response whose rows are exactly this NIK is the same proof.
+    """
+    found: list[dict] | None = None
+    for entry in interceptor.all_responses[since:]:
+        rows = _extract_search_rows(entry.get("body"))
+        if not rows:
+            continue
+        niks = {r["nik"] for r in rows if r.get("nik")}
+        if niks == {nik}:
+            found = [r for r in rows if r["nik"] == nik]
+    return found
+
+
+def _rows_showing_nik(page: Page, nik: str) -> list[str]:
+    """Visible pelayanan table rows whose text contains this NIK."""
+    return page.evaluate(
+        """(nik) => Array.from(document.querySelectorAll('tr'))
+            .filter(r => r.offsetParent !== null && (r.innerText || '').includes(nik))
+            .map(r => (r.innerText || '').replace(/\\s+/g, ' ').trim())
+            .slice(0, 5)""",
+        nik,
+    ) or []
+
+
+def _date_from_row_text(text: str) -> str | None:
+    iso = re.search(r"(\d{4}-\d{2}-\d{2})", text or "")
+    if iso:
+        return iso.group(1)
+    local = re.search(r"(\d{2})[/-](\d{2})[/-](\d{4})", text or "")
+    if local:
+        return f"{local.group(3)}-{local.group(2)}-{local.group(1)}"
+    return None
+
+
+def _click_mulai_for_nik(page: Page, nik: str) -> bool:
+    """Click Mulai on the single visible row that shows this NIK."""
+    return bool(page.evaluate(
+        """(nik) => {
+            const rows = Array.from(document.querySelectorAll('tr')).filter(
+                r => r.offsetParent !== null && (r.innerText || '').includes(nik)
+            );
+            if (rows.length !== 1) return false;
+            const btn = Array.from(rows[0].querySelectorAll('button')).find(
+                b => b.innerText.trim() === 'Mulai' && b.offsetParent
+            );
+            if (!btn) return false;
+            btn.scrollIntoView({block: 'center'});
+            btn.click();
+            return true;
+        }""",
+        nik,
+    ))
+
+
 def _click_mulai_by_name(page: Page, expected_name: str) -> bool:
     """Click Mulai for the row whose first cell text matches expected_name.
 
@@ -2025,6 +2083,21 @@ def run(args) -> dict:
                 console.print(f"  Trying tab: {tab}")
                 _click_tab(page, tab)
                 page.wait_for_timeout(1500)
+                # The pelayanan list the user sees (Belum Pemeriksaan) already
+                # shows the NIK. Accept that row before the search box, which
+                # can clear the table when its JSON response is not the old
+                # specific-search URL.
+                visible = _rows_showing_nik(page, nik)
+                if len(visible) == 1:
+                    console.print("    [green]NIK is on this pelayanan tab[/green]")
+                    patient_tab = tab
+                    matched_rows = [{
+                        "nik": nik,
+                        "screening_date": _date_from_row_text(visible[0]) or filter_date,
+                        "name": "",
+                    }]
+                    saw_any_search = True
+                    break
                 # Tab switch can reset the dropdown back to Nama; re-select NIK
                 # and re-fire the search.
                 _select_nik_filter(page)
@@ -2032,6 +2105,20 @@ def run(args) -> dict:
                 _fill_search_input(page, nik)
                 page.wait_for_timeout(2500)
                 search_rows = _wait_search_rows(page, interceptor, mark)
+                if search_rows is None:
+                    search_rows = _json_rows_for_nik(interceptor, mark, nik)
+                if search_rows is None:
+                    visible = _rows_showing_nik(page, nik)
+                    if len(visible) == 1:
+                        console.print("    [green]NIK is on this pelayanan tab after search[/green]")
+                        patient_tab = tab
+                        matched_rows = [{
+                            "nik": nik,
+                            "screening_date": _date_from_row_text(visible[0]) or filter_date,
+                            "name": "",
+                        }]
+                        saw_any_search = True
+                        break
                 search_niks = None if search_rows is None else [r["nik"] for r in search_rows]
                 badge = _read_active_tab_count(page)
                 mulai_count = _find_mulai_button_count(page)
@@ -2044,10 +2131,17 @@ def run(args) -> dict:
                     # No parseable specific-search for THIS search. We cannot prove the
                     # filter applied, so we must not accept the tab on the DOM
                     # heuristic alone — that is the wrong-patient path.
+                    paths = []
+                    for entry in interceptor.all_responses[mark:]:
+                        url = (entry.get("url") or "").split("?")[0]
+                        if url and url not in paths:
+                            paths.append(url)
                     console.print(
                         "    [yellow]no parseable specific-search response — cannot verify "
                         "the NIK filter applied; skipping this tab[/yellow]"
                     )
+                    if paths:
+                        console.print(f"    [dim]responses: {paths[-8:]}[/dim]")
                     continue
                 saw_any_search = True
                 if not search_niks:
@@ -2144,7 +2238,7 @@ def run(args) -> dict:
                 f"(ASIK {row_years or ['?']} / ePus {epus_year})[/green]"
             )
 
-            if not _click_mulai_by_name(page, expected_name):
+            if not (_click_mulai_for_nik(page, nik) or _click_mulai_by_name(page, expected_name)):
                 raise RuntimeError(
                     "Mulai click failed — could not match row by name "
                     f"'{expected_name}' and fallback (single Mulai) did not apply"
