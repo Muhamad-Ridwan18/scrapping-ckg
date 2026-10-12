@@ -876,28 +876,34 @@ class _AnswerGate:
             pass
 
 
-def _screening_payload(body) -> dict | None:
-    if not isinstance(body, dict):
+def _screening_payload(body, depth: int = 0) -> dict | None:
+    """The object that owns `screening_layanan`, wherever it sits in the JSON."""
+    if depth > 6:
         return None
-    if isinstance(body.get("screening_layanan"), list):
-        return body
-    data = body.get("data")
-    if isinstance(data, dict) and isinstance(data.get("screening_layanan"), list):
-        return data
+    if isinstance(body, dict):
+        if isinstance(body.get("screening_layanan"), list):
+            return body
+        for value in body.values():
+            found = _screening_payload(value, depth + 1)
+            if found is not None:
+                return found
+    elif isinstance(body, list):
+        for value in body[:8]:
+            found = _screening_payload(value, depth + 1)
+            if found is not None:
+                return found
     return None
 
 
 def _nakes_targets_from_responses(responses: list[dict]) -> list[dict] | None:
-    """Pelayanan oleh Nakes rows from a captured detail-screening body.
+    """Pelayanan oleh Nakes rows from a captured screening response.
 
-    Returns None when that response was never seen, so the caller can tell
-    "the page did not load the list" apart from "the list was empty".
+    The live detail page no longer posts to `/api/pkg/detail-screening`. Any
+    JSON body that carries `screening_layanan` is accepted. Returns None when
+    that list was never seen.
     """
     payload = None
     for entry in responses:
-        url = entry.get("url") or ""
-        if "detail-screening" not in url:
-            continue
         found = _screening_payload(entry.get("body"))
         if found is not None:
             payload = found
@@ -2505,9 +2511,16 @@ def run(args) -> dict:
 
             nakes_targets = _nakes_targets_from_responses(interceptor.all_responses[detail_mark:])
             if nakes_targets is None:
+                paths = []
+                for entry in interceptor.all_responses[detail_mark:]:
+                    url = (entry.get("url") or "").split("?")[0]
+                    if url and url not in paths:
+                        paths.append(url)
                 console.print(
-                    "  [yellow]Pelayanan oleh Nakes: detail-screening was not captured[/yellow]"
+                    "  [yellow]Pelayanan oleh Nakes: no screening_layanan response was captured[/yellow]"
                 )
+                if paths:
+                    console.print(f"    [dim]responses: {paths[-8:]}[/dim]")
             else:
                 console.print(
                     f"  Pelayanan oleh Nakes: {len(nakes_targets)} forms from detail-screening"

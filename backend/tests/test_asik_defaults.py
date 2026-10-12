@@ -169,7 +169,7 @@ def test_nakes_targets_come_from_detail_screening():
         }
     }
     targets = s._nakes_targets_from_responses([
-        {"url": "https://sehatindonesiaku.kemkes.go.id/api/pkg/detail-screening", "body": body},
+        {"url": "https://sehatindonesiaku.kemkes.go.id/api/pkg/ssi/detail-kunjungan-umum", "body": body},
     ])
     assert targets is not None
     assert targets[0]["layanan"] == "Skrining Gigi - Dewasa >=25 tahun"
