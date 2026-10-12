@@ -876,34 +876,15 @@ class _AnswerGate:
             pass
 
 
-def _blank_visit_may_fill(observed: int, form_has_answer: bool) -> bool:
-    """A new visit often never requests get/skrining-layanan.
+def _blank_visit_may_fill(observed: int) -> bool:
+    """Fill when get/skrining-layanan was never sent.
 
-    Filling is safe only when that request was never sent and the rendered
-    form has no answer yet. A request that failed, or a form that already
-    shows answers without the XHR, must still be refused.
+    A new visit does not make that request. An existing visit sometimes
+    inlines its answers in the page instead. After the wait, source values
+    can be written either way. A request that was sent but did not return
+    200 is still refused.
     """
-    return observed == 0 and not form_has_answer
-
-
-def _form_has_any_answer(page: Page) -> bool:
-    """True when any visible SurveyJS question already holds a value."""
-    return bool(page.evaluate(
-        """() => {
-            const qs = Array.from(document.querySelectorAll('.sd-question'))
-                .filter(q => q.offsetParent);
-            for (const q of qs) {
-                if (q.querySelector('input:checked')) return true;
-                const fields = q.querySelectorAll('input[type="number"], input[type="text"], textarea');
-                for (const field of fields) {
-                    if ((field.value || '').trim()) return true;
-                }
-                const sel = q.querySelector('select');
-                if (sel && (sel.value || '').trim()) return true;
-            }
-            return false;
-        }"""
-    ))
+    return observed == 0
 
 
 def _read_form_questions(page: Page) -> list[dict]:
@@ -1824,9 +1805,9 @@ def _process_form_inner(
     # defaults (see `_AnswerGate`). This replaces a blind 800 ms sleep that
     # merely made the race usually-win.
     if not gate.wait():
-        if _blank_visit_may_fill(gate.observed, _form_has_any_answer(page)):
+        if _blank_visit_may_fill(gate.observed):
             console.print(
-                "          [yellow]no stored answers on this blank form — filling the new visit[/yellow]"
+                "          [yellow]answer request was never sent — filling from the source[/yellow]"
             )
         else:
             record["status"] = "answers_unconfirmed"

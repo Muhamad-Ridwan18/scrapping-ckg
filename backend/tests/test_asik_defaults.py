@@ -152,9 +152,8 @@ def test_scraper_pick_safe_option_never_selects_abnormal():
 
 def test_blank_new_visit_may_fill_when_answer_xhr_never_starts():
     s = _load_scraper_sync()
-    assert s._blank_visit_may_fill(0, False) is True
-    assert s._blank_visit_may_fill(0, True) is False
-    assert s._blank_visit_may_fill(1, False) is False
+    assert s._blank_visit_may_fill(0) is True
+    assert s._blank_visit_may_fill(1) is False
 
 
 def test_live_asik_titles_alias_to_catalog_slugs():
