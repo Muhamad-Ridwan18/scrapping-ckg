@@ -1536,6 +1536,17 @@ def _normalize_slug(slug: str) -> str:
     return s
 
 
+# Live Pelayanan row title → catalog `layanan_name` slug. The JSON catalog
+# (asik_form_mapping.json, shared with SIMPUS) still says the old name, while
+# the ASIK page the filler clicks shows a different title. Exact, prefix, and
+# substring matching all miss these two. Keep this explicit: a short slug like
+# `hati` must not attach to every form that merely contains that word.
+_FORM_SLUG_ALIASES = {
+    "hasil_perilaku_merokok": "perilaku_merokok_dewasa_lansia",
+    "faktor_risiko_hati": "hati",
+}
+
+
 def _match_section_items(merged_sections: dict, form_slug: str) -> list[dict]:
     """Find items by slug, falling back to prefix + normalized + substring matches.
 
@@ -1553,6 +1564,9 @@ def _match_section_items(merged_sections: dict, form_slug: str) -> list[dict]:
     """
     if form_slug in merged_sections:
         return merged_sections[form_slug]
+    alias = _FORM_SLUG_ALIASES.get(form_slug)
+    if alias and alias in merged_sections:
+        return merged_sections[alias]
     # Prefix-match either direction
     for key, items in merged_sections.items():
         if form_slug.startswith(key) or key.startswith(form_slug):
