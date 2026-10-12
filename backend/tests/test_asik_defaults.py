@@ -150,6 +150,35 @@ def test_scraper_pick_safe_option_never_selects_abnormal():
     assert s._pick_safe_option(["Abnormal Gambaran Abnormal Lainnya"]) is None
 
 
+def test_nakes_targets_come_from_detail_screening():
+    s = _load_scraper_sync()
+    body = {
+        "data": {
+            "screening_layanan": [
+                {
+                    "layanan": "Skrining Gigi",
+                    "list_pemeriksaan": [
+                        {
+                            "pemeriksaan": "Skrining Gigi - Dewasa >=25 tahun",
+                            "pemeriksaan_link": "https://form.kemkes.go.id/v2/skrining-form?x=1",
+                        },
+                        {"pemeriksaan": "Tanpa link"},
+                    ],
+                }
+            ]
+        }
+    }
+    targets = s._nakes_targets_from_responses([
+        {"url": "https://sehatindonesiaku.kemkes.go.id/api/pkg/detail-screening", "body": body},
+    ])
+    assert targets is not None
+    assert targets[0]["layanan"] == "Skrining Gigi - Dewasa >=25 tahun"
+    assert targets[0]["parent_layanan"] == "Skrining Gigi"
+    assert targets[0]["link"].startswith("https://form.kemkes.go.id/")
+    assert targets[1]["link"] is None
+    assert s._nakes_targets_from_responses([]) is None
+
+
 def test_blank_new_visit_may_fill_when_answer_xhr_never_starts():
     s = _load_scraper_sync()
     assert s._blank_visit_may_fill(0) is True

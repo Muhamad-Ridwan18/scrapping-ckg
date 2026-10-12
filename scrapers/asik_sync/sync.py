@@ -876,6 +876,57 @@ class _AnswerGate:
             pass
 
 
+def _screening_payload(body) -> dict | None:
+    if not isinstance(body, dict):
+        return None
+    if isinstance(body.get("screening_layanan"), list):
+        return body
+    data = body.get("data")
+    if isinstance(data, dict) and isinstance(data.get("screening_layanan"), list):
+        return data
+    return None
+
+
+def _nakes_targets_from_responses(responses: list[dict]) -> list[dict] | None:
+    """Pelayanan oleh Nakes rows from a captured detail-screening body.
+
+    Returns None when that response was never seen, so the caller can tell
+    "the page did not load the list" apart from "the list was empty".
+    """
+    payload = None
+    for entry in responses:
+        url = entry.get("url") or ""
+        if "detail-screening" not in url:
+            continue
+        found = _screening_payload(entry.get("body"))
+        if found is not None:
+            payload = found
+    if payload is None:
+        return None
+    out: list[dict] = []
+    for layanan in payload.get("screening_layanan") or []:
+        if not isinstance(layanan, dict):
+            continue
+        parent = (
+            layanan.get("layanan")
+            or layanan.get("nama_layanan")
+            or layanan.get("layanan_name")
+        )
+        for pem in layanan.get("list_pemeriksaan") or []:
+            if not isinstance(pem, dict):
+                continue
+            name = pem.get("pemeriksaan") or pem.get("pemeriksaan_code") or ""
+            if not isinstance(name, str) or not name.strip():
+                continue
+            link = pem.get("pemeriksaan_link")
+            out.append({
+                "layanan": name.strip(),
+                "parent_layanan": str(parent).strip() if isinstance(parent, str) and parent.strip() else None,
+                "link": link if isinstance(link, str) and link.strip() else None,
+            })
+    return out
+
+
 def _blank_visit_may_fill(observed: int) -> bool:
     """Fill when get/skrining-layanan was never sent.
 
@@ -1699,6 +1750,7 @@ def _process_form_inner(
     parent_layanan: str | None = None,
     dry_run: bool = False,
     prune_unchanged: bool = False,
+    form_url: str | None = None,
 ) -> dict:
     # `layanan` is the PAKET label (sub-section in ASIK's Pelayanan oleh
     # Nakes list). `parent_layanan` is the accordion-header label above it
@@ -1759,26 +1811,38 @@ def _process_form_inner(
         f"{', would_prune' if record['would_prune'] else ''})[/cyan]"
     )
 
-    # Flip Diperiksa toggle to "Ya" if the row started as "Tidak". Vue swaps
-    # the disabled <div> for a real <button> after the click.
-    if needs_toggle:
-        flipped = _flip_diperiksa_toggle(page, kind, idx)
-        if not flipped:
-            record["status"] = "toggle_failed"
-            record["error"] = "could not flip Diperiksa toggle to Ya"
+    if form_url:
+        try:
+            page.goto(form_url, wait_until="domcontentloaded", timeout=_NAV_TIMEOUT_MS)
+        except Exception as exc:
+            record["status"] = "form_load_timeout"
+            record["error"] = f"nakes form did not open: {exc}"
+            try:
+                page.goto(detail_url, wait_until="domcontentloaded", timeout=_NAV_TIMEOUT_MS)
+            except Exception:
+                pass
             return record
-        if not _wait_input_data_button(page, kind, idx):
-            record["status"] = "toggle_no_button"
-            record["error"] = "Diperiksa flipped but Input Data button never appeared"
-            return record
-        console.print(f"          [dim]flipped Diperiksa → Ya[/dim]")
+    else:
+        # Flip Diperiksa toggle to "Ya" if the row started as "Tidak". Vue swaps
+        # the disabled <div> for a real <button> after the click.
+        if needs_toggle:
+            flipped = _flip_diperiksa_toggle(page, kind, idx)
+            if not flipped:
+                record["status"] = "toggle_failed"
+                record["error"] = "could not flip Diperiksa toggle to Ya"
+                return record
+            if not _wait_input_data_button(page, kind, idx):
+                record["status"] = "toggle_no_button"
+                record["error"] = "Diperiksa flipped but Input Data button never appeared"
+                return record
+            console.print(f"          [dim]flipped Diperiksa → Ya[/dim]")
 
-    # Click Input Data → form.kemkes.go.id
-    clicked = _click_input_data(page, kind, idx)
-    if not clicked:
-        record["status"] = "no_button"
-        record["error"] = "Input Data button not found"
-        return record
+        # Click Input Data → form.kemkes.go.id
+        clicked = _click_input_data(page, kind, idx)
+        if not clicked:
+            record["status"] = "no_button"
+            record["error"] = "Input Data button not found"
+            return record
 
     # Wait for form host
     try:
@@ -2338,6 +2402,7 @@ def run(args) -> dict:
                 f"(ASIK {row_years or ['?']} / ePus {epus_year})[/green]"
             )
 
+            detail_mark = len(interceptor.all_responses)
             if not (_click_mulai_for_nik(page, nik) or _click_mulai_by_name(page, expected_name)):
                 raise RuntimeError(
                     "Mulai click failed — could not match row by name "
@@ -2437,6 +2502,60 @@ def run(args) -> dict:
                     dom_dirty = True
                     page.wait_for_timeout(800)
                     close_popups(page, silent=True)
+
+            nakes_targets = _nakes_targets_from_responses(interceptor.all_responses[detail_mark:])
+            if nakes_targets is None:
+                console.print(
+                    "  [yellow]Pelayanan oleh Nakes: detail-screening was not captured[/yellow]"
+                )
+            else:
+                console.print(
+                    f"  Pelayanan oleh Nakes: {len(nakes_targets)} forms from detail-screening"
+                )
+                for target in nakes_targets:
+                    if not target.get("link"):
+                        console.print(
+                            f"      [yellow]nakes: {target['layanan']} has no pemeriksaan_link[/yellow]"
+                        )
+                        result["forms"].append({
+                            "layanan": target["layanan"],
+                            "slug": _slugify_form(target["layanan"]),
+                            "parent_layanan": target.get("parent_layanan"),
+                            "kind": "nakes",
+                            "status": "no_button",
+                            "filled": 0,
+                            "skipped": 0,
+                            "submitted": False,
+                            "defaults": [],
+                            "error": "pemeriksaan_link missing",
+                        })
+                        continue
+                    rec = _process_form(
+                        page,
+                        base_url=base_url,
+                        kind="nakes",
+                        layanan=target["layanan"],
+                        idx=0,
+                        needs_toggle=False,
+                        merged_sections=merged_sections,
+                        detail_url=detail_url,
+                        default_values=default_values,
+                        parent_layanan=target.get("parent_layanan"),
+                        dry_run=dry_run,
+                        prune_unchanged=prune_unchanged,
+                        form_url=target["link"],
+                    )
+                    result["forms"].append(rec)
+                    if DETAIL_PATH_PREFIX not in page.url:
+                        try:
+                            page.goto(detail_url, wait_until="domcontentloaded", timeout=_NAV_TIMEOUT_MS)
+                        except Exception:
+                            pass
+                    if rec.get("status") not in (
+                        "skipped_no_section", "no_button", "skipped_unchanged"
+                    ):
+                        page.wait_for_timeout(800)
+                        close_popups(page, silent=True)
 
             elapsed = round(time.monotonic() - t0, 2)
             result["metadata"]["elapsed_seconds"] = elapsed
