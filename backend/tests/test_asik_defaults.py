@@ -224,6 +224,36 @@ def test_visit_ids_come_from_the_mandiri_form_submit():
     assert visit["faskes_code"] == "P3173"
 
 
+def test_sibling_paket_is_not_used_as_parent():
+    s = _load_scraper_sync()
+    forms = s._reject_sibling_parents([
+        {
+            "kind": "nakes",
+            "layanan": "Tekanan Darah Dewasa Lansia",
+            "parent_layanan": "Skrining Gizi, Tekanan Darah, dan Gula Darah",
+        },
+        {
+            "kind": "nakes",
+            "layanan": "Pemeriksaan Gula Darah Dewasa Lansia",
+            "parent_layanan": "Tekanan Darah Dewasa Lansia",
+        },
+        {
+            "kind": "nakes",
+            "layanan": "Skrining Karies dan Gigi Hilang",
+            "parent_layanan": "Skrining Telinga dan Mata (18-39 tahun)",
+        },
+        {
+            "kind": "nakes",
+            "layanan": "Skrining Telinga dan Mata (18-39 tahun)",
+            "parent_layanan": None,
+        },
+    ])
+    assert forms[0]["parent_layanan"] == "Skrining Gizi, Tekanan Darah, dan Gula Darah"
+    assert forms[1]["parent_layanan"] is None
+    assert forms[2]["parent_layanan"] is None
+    assert forms[3]["parent_layanan"] is None
+
+
 def test_list_request_without_nik_is_not_a_visit():
     s = _load_scraper_sync()
     assert s._visit_from_detail_requests([{

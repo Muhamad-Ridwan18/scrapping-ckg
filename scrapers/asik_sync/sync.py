@@ -680,7 +680,7 @@ def _enumerate_forms(page: Page) -> list[dict]:
     (button OR div), so `_click_input_data` can locate the same row after
     re-snapshotting.
     """
-    return page.evaluate(
+    rows = page.evaluate(
         _JS_NAKES_ROWS + """() => {
             const results = [];
             let mandiriIdx = 0, nakesIdx = 0;
@@ -697,23 +697,24 @@ def _enumerate_forms(page: Page) -> list[dict]:
             }
             const nakesRows = __nakesRows();
             // For each nakes row the visible label is the PAKET (sub-section)
-            // name. ASIK groups pakets under a parent <button> accordion header
-            // (the layanan name e.g. "Skrining Gizi, Tekanan Darah, …"). The
-            // paket rows live inside a sibling `<div class="space-y-*">`; the
-            // parent label is its previousElementSibling's textContent. Capture
-            // both so the section-index lookup can disambiguate paket slugs
-            // that collide across multiple parent layanans.
+            // name. ASIK groups pakets under an accordion header. The header
+            // is the previous sibling that is NOT itself a paket row.
             const parentLabelOf = (row) => {
+                const own = __norm(__nakesLabel(row) || '');
+                const headerLine = (el) => {
+                    if (!el) return null;
+                    const raw = el.innerText || el.textContent || '';
+                    if (/input\\s*data/i.test(raw)) return null;
+                    if (Array.from(el.querySelectorAll('button, a, div, span')).some(__isInputData)) return null;
+                    const line = raw.split(/\\r?\\n/).map(s => __norm(s)).find(Boolean) || '';
+                    if (!line || line.length < 5 || line.length > 180 || line === own) return null;
+                    if (/^(ya|tidak|diperiksa|aksi|selesai(?: diperiksa)?|belum(?: diperiksa)?)$/i.test(line)) return null;
+                    return line;
+                };
                 let p = row;
-                for (let i = 0; i < 8 && p; i++) {
-                    const prev = p.previousElementSibling;
-                    if (prev && (prev.tagName === 'BUTTON' || prev.tagName === 'DIV')) {
-                        const t = (prev.innerText || prev.textContent || '').trim();
-                        if (t && t.length > 4 && t.length < 200) {
-                            // first non-empty line — strips count badges
-                            return t.split(/\\r?\\n/).map(s => s.trim()).find(s => s) || null;
-                        }
-                    }
+                for (let i = 0; i < 10 && p; i++) {
+                    const line = headerLine(p.previousElementSibling);
+                    if (line) return line;
                     p = p.parentElement;
                 }
                 return null;
@@ -734,6 +735,28 @@ def _enumerate_forms(page: Page) -> list[dict]:
             return results;
         }"""
     )
+    return _reject_sibling_parents(rows)
+
+
+def _reject_sibling_parents(forms: list[dict]) -> list[dict]:
+    """A parent is the accordion above a paket, never another paket's title.
+
+    The detail page's previous sibling of "Pemeriksaan Gula Darah" is
+    "Tekanan Darah". Treating that as the parent made the filler submit
+    Tekanan Darah's answers into the Gula Darah form (same for Karies ←
+    Telinga, Sifilis ← HIV).
+    """
+    titles = {
+        _slugify_form(form.get("layanan") or "")
+        for form in forms
+        if form.get("layanan")
+    }
+    titles.discard("")
+    for form in forms:
+        parent = form.get("parent_layanan")
+        if parent and _slugify_form(parent) in titles:
+            form["parent_layanan"] = None
+    return forms
 
 
 # ---------------------------------------------------------------------------
