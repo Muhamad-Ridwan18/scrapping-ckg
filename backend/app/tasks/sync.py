@@ -525,6 +525,10 @@ def _execute_sync(
                 # and processing, so its data was never pushed.
                 "row_vanished",
                 "toggle_failed", "toggle_no_button",
+                # The Nakes form list was never read, so those forms were not
+                # opened. Counting this as skipped stamped asik_synced_at while
+                # Pelayanan oleh Nakes stayed empty.
+                "nakes_not_loaded",
             ))
             skipped = sum(1 for f in forms if f.get("status") in (
                 "skipped_no_section", "skipped_no_real_data", "no_match",

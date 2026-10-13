@@ -35,7 +35,8 @@ def test_extract_reads_nik_and_screening_date():
     ]}
     rows = _extract_search_rows(body)
     assert rows == [{"nik": "3208312508650001",
-                     "screening_date": "2026-04-21", "name": "MARGODIYONO"}]
+                     "screening_date": "2026-04-21", "name": "MARGODIYONO",
+                     "reg_id": "R1"}]
 
 
 def test_extract_handles_nested_data_and_missing_screening_date():

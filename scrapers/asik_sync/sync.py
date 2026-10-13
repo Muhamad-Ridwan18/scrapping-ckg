@@ -317,11 +317,20 @@ def _extract_search_rows(body) -> list[dict] | None:
             or row.get("nama")
             or ""
         )
-        out.append({
+        item = {
             "nik": nik,
             "screening_date": str(sdate).strip() if sdate is not None else None,
             "name": str(name).strip(),
-        })
+        }
+        # Kept so the Nakes pass can call detail-screening even when the detail
+        # page never posts that response itself.
+        reg = row.get("reg_id") or row.get("registration_id")
+        faskes = row.get("faskes_code") or row.get("kode_faskes") or row.get("code_faskes")
+        if reg:
+            item["reg_id"] = str(reg)
+        if faskes:
+            item["faskes_code"] = str(faskes)
+        out.append(item)
     return out
 
 
@@ -562,6 +571,100 @@ def _start_pemeriksaan(page: Page) -> bool:
     return False
 
 
+# Nakes rows used to be `div.grid-cols-5` with the name in `.col-span-2`.
+# The live page no longer uses that class (a run that submitted every Mandiri
+# form captured no `screening_layanan` response and zero Nakes rows). Mandiri
+# is still a `<tr>`. Any other visible "Input Data" control is a Nakes row.
+_JS_NAKES_ROWS = r"""
+const __norm = (s) => (s || '').replace(/\s+/g, ' ').trim();
+const __isInputData = (el) => {
+    if (!el || el.offsetParent === null || el.closest('tr')) return false;
+    const t = __norm(el.innerText);
+    if (!t || t.length > 40 || !/input\s*data/i.test(t)) return false;
+    return !Array.from(el.children).some(c => {
+        const ct = __norm(c.innerText);
+        return c.offsetParent && ct && ct.length <= 40 && /input\s*data/i.test(ct);
+    });
+};
+const __nakesRows = () => {
+    const anchors = Array.from(document.querySelectorAll('button, a, div, span'))
+        .filter(__isInputData);
+    const seen = new Set();
+    const rows = [];
+    for (const anchor of anchors) {
+        let row = anchor;
+        for (let i = 0; i < 8 && row.parentElement; i++) {
+            const parent = row.parentElement;
+            if (__norm(parent.innerText).length > 800) break;
+            const inParent = Array.from(parent.querySelectorAll('button, a, div, span'))
+                .filter(__isInputData);
+            if (inParent.length > 1) break;
+            row = parent;
+        }
+        if (!row || seen.has(row)) continue;
+        seen.add(row);
+        rows.push(row);
+    }
+    return rows;
+};
+const __nakesLabel = (row) => {
+    const cell = row.querySelector('.col-span-2');
+    if (cell) {
+        const line = (cell.innerText || '').split(/\n/).map(s => __norm(s)).find(Boolean) || '';
+        if (line && !/^input\s*data$/i.test(line)) return line;
+    }
+    const lines = (row.innerText || '').split(/\n/).map(s => __norm(s)).filter(Boolean);
+    const skip = /^(input\s*data|ya|tidak|diperiksa|aksi|selesai(?: diperiksa)?|belum(?: diperiksa)?)$/i;
+    return lines.find(l => l.length > 3 && l.length < 180 && !skip.test(l)) || null;
+};
+"""
+
+
+def _expand_nakes_section(page: Page) -> None:
+    """Open collapsed Pelayanan oleh Nakes groups so their rows are in the DOM."""
+    try:
+        page.get_by_text(re.compile(r"pelayanan\s+(oleh\s+)?nakes", re.I)).first.scroll_into_view_if_needed(timeout=2000)
+    except Exception:
+        pass
+    try:
+        labels = page.evaluate(
+            """() => {
+                const norm = (s) => (s || '').replace(/\\s+/g, ' ').trim();
+                const heads = Array.from(document.querySelectorAll('h1,h2,h3,h4,button,div,span,p'))
+                    .filter(el => {
+                        const t = norm(el.innerText);
+                        return t.length > 0 && t.length < 80 && /pelayanan\\s+(oleh\\s+)?nakes/i.test(t);
+                    })
+                    .sort((a, b) => norm(a.innerText).length - norm(b.innerText).length);
+                const head = heads[0];
+                if (!head) return [];
+                let section = head;
+                for (let i = 0; i < 8 && section.parentElement; i++) {
+                    section = section.parentElement;
+                    if (section.querySelector('[aria-expanded="false"]')) break;
+                }
+                return Array.from(section.querySelectorAll('[aria-expanded="false"]'))
+                    .filter(el => el.offsetParent)
+                    .map(el => norm(el.innerText))
+                    .filter(t => t && t.length < 160 && !/input\\s*data|kirim|simpan|hapus/i.test(t))
+                    .slice(0, 40);
+            }"""
+        ) or []
+    except Exception:
+        return
+    for label in labels:
+        try:
+            loc = page.get_by_role("button", name=re.compile(rf"^\s*{re.escape(label)}\s*$"))
+            if loc.count() == 0:
+                loc = page.get_by_text(label, exact=True)
+            if loc.count() == 0:
+                continue
+            loc.first.click(timeout=2000)
+            page.wait_for_timeout(250)
+        except Exception:
+            continue
+
+
 # ---------------------------------------------------------------------------
 # Patient detail page — enumerate forms
 # ---------------------------------------------------------------------------
@@ -578,7 +681,7 @@ def _enumerate_forms(page: Page) -> list[dict]:
     re-snapshotting.
     """
     return page.evaluate(
-        """() => {
+        _JS_NAKES_ROWS + """() => {
             const results = [];
             let mandiriIdx = 0, nakesIdx = 0;
             // Mandiri: TR rows containing an enabled Input Data <button>.
@@ -592,19 +695,7 @@ def _enumerate_forms(page: Page) -> list[dict]:
                 if (!layanan) continue;
                 results.push({ kind: 'mandiri', layanan, idx: mandiriIdx++, needs_toggle: false });
             }
-            // Nakes: div.grid.grid-cols-5 rows whose anchor cell shows "Input Data"
-            // (either as a real <button> or a <div class="cursor-not-allowed">).
-            // Nakes rows have exactly 4 children — col-span-2 layanan, Diperiksa,
-            // Status, Aksi. Match the Aksi cell (children[3]) text rather than
-            // any text in the row, so the header row ("Aksi") and stray
-            // grid-cols-5 elsewhere on the page are excluded.
-            const nakesRows = Array.from(document.querySelectorAll('div.grid.grid-cols-5'))
-                .filter(r => {
-                    if (r.offsetParent === null) return false;
-                    const aksi = r.children[3];
-                    if (!aksi) return false;
-                    return /input\\s*data/i.test((aksi.innerText || '').trim());
-                });
+            const nakesRows = __nakesRows();
             // For each nakes row the visible label is the PAKET (sub-section)
             // name. ASIK groups pakets under a parent <button> accordion header
             // (the layanan name e.g. "Skrining Gizi, Tekanan Darah, …"). The
@@ -628,8 +719,7 @@ def _enumerate_forms(page: Page) -> list[dict]:
                 return null;
             };
             for (const r of nakesRows) {
-                const cell = r.querySelector('.col-span-2');
-                const layanan = cell?.innerText?.trim();
+                const layanan = __nakesLabel(r);
                 if (!layanan) continue;
                 const cb = r.querySelector('input[type="checkbox"]');
                 const needsToggle = !!(cb && !cb.checked && !cb.disabled);
@@ -689,13 +779,8 @@ def _flip_diperiksa_toggle(page: Page, kind: str, idx: int) -> bool:
     if kind != "nakes":
         return False
     return page.evaluate(
-        """({idx}) => {
-            const rows = Array.from(document.querySelectorAll('div.grid.grid-cols-5'))
-                .filter(r => {
-                    if (r.offsetParent === null) return false;
-                    const aksi = r.children[3];
-                    return aksi && /input\\s*data/i.test((aksi.innerText || '').trim());
-                });
+        _JS_NAKES_ROWS + """({idx}) => {
+            const rows = __nakesRows();
             const row = rows[idx];
             if (!row) return false;
             const cb = row.querySelector('input[type="checkbox"]');
@@ -719,17 +804,14 @@ def _wait_input_data_button(page: Page, kind: str, idx: int, timeout_ms: int = 1
     deadline = time.monotonic() + (timeout_ms / 1000)
     while time.monotonic() < deadline:
         ok = page.evaluate(
-            """({idx}) => {
-                const rows = Array.from(document.querySelectorAll('div.grid.grid-cols-5'))
-                    .filter(r => {
-                        if (r.offsetParent === null) return false;
-                        const aksi = r.children[3];
-                        return aksi && /input\\s*data/i.test((aksi.innerText || '').trim());
-                    });
-                const row = rows[idx];
+            _JS_NAKES_ROWS + """({idx}) => {
+                const row = __nakesRows()[idx];
                 if (!row) return false;
-                const btn = Array.from(row.querySelectorAll('button')).find(b => b.innerText.trim() === 'Input Data' && b.offsetParent);
-                return !!btn;
+                const btn = Array.from(row.querySelectorAll('button, a, div, span')).find(b => {
+                    const t = (b.innerText || '').replace(/\\s+/g, ' ').trim();
+                    return /^input\\s*data$/i.test(t) && b.offsetParent && t.length < 40;
+                });
+                return !!(btn && (btn.tagName === 'BUTTON' || btn.tagName === 'A'));
             }""",
             {"idx": idx},
         )
@@ -747,7 +829,7 @@ def _click_input_data(page: Page, kind: str, idx: int) -> bool:
     the Diperiksa toggle first if `needs_toggle` was True for this row.
     """
     return page.evaluate(
-        """({kind, idx}) => {
+        _JS_NAKES_ROWS + """({kind, idx}) => {
             if (kind === 'mandiri') {
                 const trs = Array.from(document.querySelectorAll('tr')).filter(tr => {
                     const b = Array.from(tr.querySelectorAll('button')).find(x => x.innerText.trim() === 'Input Data');
@@ -761,15 +843,12 @@ def _click_input_data(page: Page, kind: str, idx: int) -> bool:
                 btn.click();
                 return true;
             }
-            const rows = Array.from(document.querySelectorAll('div.grid.grid-cols-5'))
-                .filter(r => {
-                    if (r.offsetParent === null) return false;
-                    const aksi = r.children[3];
-                    return aksi && /input\\s*data/i.test((aksi.innerText || '').trim());
-                });
-            const row = rows[idx];
+            const row = __nakesRows()[idx];
             if (!row) return false;
-            const btn = Array.from(row.querySelectorAll('button')).find(b => b.innerText.trim() === 'Input Data' && b.offsetParent);
+            const btn = Array.from(row.querySelectorAll('button, a, div, span')).find(b => {
+                const t = (b.innerText || '').replace(/\\s+/g, ' ').trim();
+                return /^input\\s*data$/i.test(t) && b.offsetParent && t.length < 40;
+            });
             if (!btn) return false;
             btn.scrollIntoView({block:'center'});
             btn.click();
@@ -942,49 +1021,184 @@ def _nakes_targets_from_responses(responses: list[dict]) -> list[dict] | None:
     return out
 
 
+def _json_obj(value):
+    if isinstance(value, (dict, list)):
+        return value
+    if isinstance(value, str) and value[:1] in "{[":
+        try:
+            return json.loads(value)
+        except Exception:
+            return None
+    return None
+
+
+def _faskes_of(node: dict, inherited: str | None) -> str | None:
+    for key in ("faskes_code", "kode_faskes", "code_faskes"):
+        value = node.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return inherited
+
+
+def _reg_of(node: dict) -> str | None:
+    reg = node.get("reg_id") or node.get("registration_id")
+    if reg is None or reg == "":
+        return None
+    return str(reg)
+
+
+def _date_of(node: dict, inherited: str | None) -> str | None:
+    for key in ("screening_date", "tanggal_pemeriksaan", "tanggal"):
+        value = node.get(key)
+        if value is not None and str(value).strip():
+            return str(value).strip()
+    return inherited
+
+
+def _nik_of(node: dict) -> str:
+    for key in ("patient_nik", "nik", "nik_peserta", "no_nik", "nomor_nik"):
+        found = _text_nik(node.get(key))
+        if found:
+            return found
+    return ""
+
+
+def _walk_visit(node, nik: str | None, *, require_nik: bool, depth: int = 0,
+                faskes: str | None = None, screening_date: str | None = None) -> dict | None:
+    """First `{reg_id, faskes_code}` in `node`.
+
+    `faskes` and the screening date are inherited from a parent wrapper, because
+    the list response often puts `faskes_code` beside `data: [rows]` rather than
+    on the row. When `require_nik` is set, the same object must carry `nik`.
+    """
+    if depth > 7:
+        return None
+    if isinstance(node, dict):
+        faskes = _faskes_of(node, faskes)
+        screening_date = _date_of(node, screening_date)
+        reg = _reg_of(node)
+        row_nik = _nik_of(node)
+        if reg and faskes and (not require_nik or row_nik == nik):
+            return {
+                "reg_id": reg,
+                "faskes_code": faskes,
+                "screening_date": screening_date,
+            }
+        for value in node.values():
+            found = _walk_visit(
+                value, nik, require_nik=require_nik, depth=depth + 1,
+                faskes=faskes, screening_date=screening_date,
+            )
+            if found is not None:
+                return found
+    elif isinstance(node, list):
+        for value in node[:40]:
+            found = _walk_visit(
+                value, nik, require_nik=require_nik, depth=depth + 1,
+                faskes=faskes, screening_date=screening_date,
+            )
+            if found is not None:
+                return found
+    return None
+
+
 def _find_visit_for_nik(responses: list[dict], nik: str) -> dict | None:
-    """reg_id and faskes_code from any captured list row for this NIK."""
-    found: dict | None = None
-
-    def walk(node, depth: int = 0) -> None:
-        nonlocal found
-        if found is not None or depth > 7:
-            return
-        if isinstance(node, dict):
-            row_nik = ""
-            for key in ("patient_nik", "nik", "nik_peserta", "no_nik", "nomor_nik"):
-                row_nik = _text_nik(node.get(key))
-                if row_nik:
-                    break
-            if row_nik == nik:
-                reg = node.get("reg_id") or node.get("registration_id")
-                faskes = node.get("faskes_code")
-                sdate = (
-                    node.get("screening_date")
-                    or node.get("tanggal_pemeriksaan")
-                    or node.get("tanggal")
-                )
-                if reg and faskes:
-                    found = {
-                        "reg_id": str(reg),
-                        "faskes_code": str(faskes),
-                        "screening_date": str(sdate).strip() if sdate else None,
-                    }
-                    return
-            for value in node.values():
-                walk(value, depth + 1)
-                if found is not None:
-                    return
-        elif isinstance(node, list):
-            for value in node[:40]:
-                walk(value, depth + 1)
-                if found is not None:
-                    return
-
+    """reg_id and faskes_code for this NIK, from a response or its request body."""
     for entry in responses:
-        walk(entry.get("body"))
+        for raw in (entry.get("body"), _json_obj(entry.get("request_post_data"))):
+            found = _walk_visit(raw, nik, require_nik=True)
+            if found is not None:
+                return found
+    return None
+
+
+_DETAIL_URL_HINTS = ("detail-screening", "detail-kunjungan", "get-screening")
+
+
+def _visit_from_detail_requests(responses: list[dict]) -> dict | None:
+    """reg_id + faskes from a detail-page request that does not repeat the NIK.
+
+    Only detail endpoints count. A list response holds every patient on the
+    page, so a NIK-less walk of that body would open the wrong visit.
+    """
+    found: dict | None = None
+    for entry in responses:
+        url = entry.get("url") or ""
+        if "list-" in url or not any(hint in url for hint in _DETAIL_URL_HINTS):
+            continue
+        for raw in (entry.get("body"), _json_obj(entry.get("request_post_data"))):
+            hit = _walk_visit(raw, None, require_nik=False)
+            if hit is not None:
+                found = hit
+    return found
+
+
+def _visit_from_form_host(responses: list[dict]) -> dict | None:
+    """reg_id + faskes from a Mandiri form request, when the list JSON had neither.
+
+    Opening Pemeriksaan Mandiri already talks to form.kemkes.go.id. That
+    request belongs to this patient, so a NIK on the same object is not required.
+    """
+    from urllib.parse import parse_qs, urlparse
+
+    found: dict | None = None
+    for entry in responses:
+        url = entry.get("url") or ""
+        if "form.kemkes.go.id" not in url:
+            continue
+        query = {k: v[0] for k, v in parse_qs(urlparse(url).query).items() if v}
+        for raw in (entry.get("body"), _json_obj(entry.get("request_post_data")), query or None):
+            hit = _walk_visit(raw, None, require_nik=False)
+            if hit is not None:
+                found = hit
+    return found
+
+
+def _visit_from_blobs(blobs: list[str], nik: str) -> dict | None:
+    """reg_id + faskes parsed out of JSON strings the detail page already holds."""
+    for raw in blobs:
+        found = _walk_visit(_json_obj(raw), nik, require_nik=True)
         if found is not None:
             return found
+    return None
+
+
+def _visit_from_page(page: Page, nik: str) -> dict | None:
+    """The open detail page's stored patient, when the list JSON never had it."""
+    try:
+        blobs = page.evaluate(
+            """() => {
+                const blobs = [];
+                const push = (v) => {
+                    if (typeof v === 'string' && v) blobs.push(v.slice(0, 20000));
+                };
+                try { push(localStorage.getItem('dataDetail')); } catch (e) {}
+                try { push(sessionStorage.getItem('dataDetail')); } catch (e) {}
+                try { push(JSON.stringify(history.state)); } catch (e) {}
+                try {
+                    push(JSON.stringify(Object.fromEntries(new URLSearchParams(location.search))));
+                } catch (e) {}
+                try {
+                    const app = document.querySelector('#__nuxt')?.__vue_app__;
+                    const state = app?.config?.globalProperties?.$pinia?.state?.value;
+                    if (state) push(JSON.stringify(state));
+                } catch (e) {}
+                return blobs;
+            }"""
+        ) or []
+    except Exception:
+        return None
+    return _visit_from_blobs(blobs, nik)
+
+
+def _visit_from_matched(rows: list[dict]) -> dict | None:
+    for row in rows:
+        if row.get("reg_id") and row.get("faskes_code"):
+            return {
+                "reg_id": str(row["reg_id"]),
+                "faskes_code": str(row["faskes_code"]),
+                "screening_date": row.get("screening_date"),
+            }
     return None
 
 
@@ -2463,6 +2677,7 @@ def run(args) -> dict:
                 f"(ASIK {row_years or ['?']} / ePus {epus_year})[/green]"
             )
 
+            detail_mark = len(interceptor.all_responses)
             if not (_click_mulai_for_nik(page, nik) or _click_mulai_by_name(page, expected_name)):
                 raise RuntimeError(
                     "Mulai click failed — could not match row by name "
@@ -2484,8 +2699,14 @@ def run(args) -> dict:
                     close_popups(page, silent=True)
                     page.wait_for_timeout(1500)
 
+            _expand_nakes_section(page)
             forms = _stamp_occurrences(_enumerate_forms(page))
-            console.print(f"  Detected {len(forms)} forms on detail page")
+            n_mandiri = sum(1 for f in forms if f.get("kind") == "mandiri")
+            n_nakes = sum(1 for f in forms if f.get("kind") == "nakes")
+            console.print(
+                f"  Detected {len(forms)} forms on detail page "
+                f"(mandiri={n_mandiri}, nakes={n_nakes})"
+            )
 
             # `forms` is the work list; `current_rows` is where those rows live
             # RIGHT NOW. They diverge as soon as a submit re-renders the page,
@@ -2497,6 +2718,7 @@ def run(args) -> dict:
 
             for f in forms:
                 if dom_dirty:
+                    _expand_nakes_section(page)
                     current_rows = _stamp_occurrences(_enumerate_forms(page))
                     dom_dirty = False
                 row = _resolve_current_row(current_rows, f)
@@ -2565,8 +2787,23 @@ def run(args) -> dict:
 
             nakes_targets = _nakes_targets_from_responses(interceptor.all_responses)
             if nakes_targets is None:
-                visit = _find_visit_for_nik(interceptor.all_responses, nik)
-                screening_date = (visit or {}).get("screening_date") or filter_date
+                visit = (
+                    _visit_from_matched(matched_rows)
+                    or _find_visit_for_nik(interceptor.all_responses, nik)
+                    or _visit_from_detail_requests(interceptor.all_responses[detail_mark:])
+                    or _visit_from_form_host(interceptor.all_responses[detail_mark:])
+                    or _visit_from_page(page, nik)
+                )
+                if visit is None:
+                    console.print(
+                        "  [yellow]detail-screening tidak diminta: "
+                        "reg_id dan faskes tidak ketemu di daftar maupun form Mandiri[/yellow]"
+                    )
+                row_date = next(
+                    (r.get("screening_date") for r in matched_rows if r.get("screening_date")),
+                    None,
+                )
+                screening_date = (visit or {}).get("screening_date") or row_date or filter_date
                 if visit and visit.get("reg_id") and visit.get("faskes_code") and screening_date:
                     try:
                         from patient_scraper import fetch_detail_screening, get_mitra_token
@@ -2600,11 +2837,38 @@ def run(args) -> dict:
                 )
                 if pkg_urls:
                     console.print(f"    [dim]pkg: {pkg_urls[-12:]}[/dim]")
+                # The DOM pass only sees Mandiri when the Nakes grid is not in
+                # the snapshot. Leaving here used to mark the job synced with
+                # that half unfilled. A missing list is a failure, so the
+                # patient is retried instead of stamped done.
+                if not any(f.get("kind") == "nakes" for f in result["forms"]):
+                    result["forms"].append({
+                        "layanan": "Pelayanan oleh Nakes",
+                        "slug": None,
+                        "kind": "nakes",
+                        "status": "nakes_not_loaded",
+                        "filled": 0,
+                        "skipped": 0,
+                        "submitted": False,
+                        "defaults": [],
+                        "error": (
+                            "daftar form Pelayanan oleh Nakes tidak terbaca, "
+                            "jadi bagian itu tidak diisi"
+                        ),
+                    })
             else:
                 console.print(
                     f"  Pelayanan oleh Nakes: {len(nakes_targets)} forms from detail-screening"
                 )
+                already_sent = {
+                    f.get("layanan")
+                    for f in result["forms"]
+                    if f.get("kind") == "nakes"
+                    and f.get("status") in ("submitted", "would_submit")
+                }
                 for target in nakes_targets:
+                    if target["layanan"] in already_sent:
+                        continue
                     if not target.get("link"):
                         console.print(
                             f"      [yellow]nakes: {target['layanan']} has no pemeriksaan_link[/yellow]"

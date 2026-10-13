@@ -179,6 +179,59 @@ def test_nakes_targets_come_from_detail_screening():
     assert s._nakes_targets_from_responses([]) is None
 
 
+def test_visit_ids_come_from_the_parent_when_the_row_omits_faskes():
+    s = _load_scraper_sync()
+    visit = s._find_visit_for_nik(
+        [{
+            "url": "https://sehatindonesiaku.kemkes.go.id/api/pkg/ssi/list-kunjungan-umum",
+            "body": {"faskes_code": "P0001", "data": [{
+                "nik": "1116096702060002",
+                "reg_id": "reg-1",
+                "screening_date": "2026-10-13",
+            }]},
+        }],
+        "1116096702060002",
+    )
+    assert visit["faskes_code"] == "P0001"
+    assert visit["reg_id"] == "reg-1"
+
+
+def test_visit_ids_come_from_the_detail_request_body():
+    s = _load_scraper_sync()
+    visit = s._visit_from_detail_requests([{
+        "url": "https://sehatindonesiaku.kemkes.go.id/api/pkg/ssi/detail-kunjungan-umum",
+        "body": {"screening_status": "sedang"},
+        "request_post_data": (
+            '{"reg_id":"reg-9","kode_faskes":"P0009","screening_date":"2026-10-01"}'
+        ),
+    }])
+    assert visit == {
+        "reg_id": "reg-9",
+        "faskes_code": "P0009",
+        "screening_date": "2026-10-01",
+    }
+
+
+def test_visit_ids_come_from_the_mandiri_form_submit():
+    s = _load_scraper_sync()
+    visit = s._visit_from_form_host([{
+        "url": "https://form.kemkes.go.id/api/proxy/kes-screening/asik/screening/asik/form-submit",
+        "request_post_data": (
+            '{"reg_id":"reg-3","faskes_code":"P3173","screening_date":"2026-10-13"}'
+        ),
+    }])
+    assert visit["reg_id"] == "reg-3"
+    assert visit["faskes_code"] == "P3173"
+
+
+def test_list_request_without_nik_is_not_a_visit():
+    s = _load_scraper_sync()
+    assert s._visit_from_detail_requests([{
+        "url": "https://sehatindonesiaku.kemkes.go.id/api/pkg/ssi/list-kunjungan-umum",
+        "request_post_data": '{"reg_id":"reg-9","faskes_code":"P0009"}',
+    }]) is None
+
+
 def test_visit_ids_are_taken_from_the_list_row():
     s = _load_scraper_sync()
     visit = s._find_visit_for_nik(

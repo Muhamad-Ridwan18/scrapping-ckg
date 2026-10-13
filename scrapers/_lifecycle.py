@@ -43,7 +43,9 @@ def install(poll_seconds: float = _DEFAULT_POLL_SECONDS) -> None:
     # Reset terminal-close signals to default-terminate behavior.
     # Skip SIGINT — Python's default of raising KeyboardInterrupt is what
     # callers expect for Ctrl-C cleanup paths.
-    for sig in (signal.SIGHUP, signal.SIGTERM):
+    for sig in (getattr(signal, "SIGHUP", None), signal.SIGTERM):
+        if sig is None:
+            continue
         try:
             signal.signal(sig, signal.SIG_DFL)
         except (ValueError, OSError):
