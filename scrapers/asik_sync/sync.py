@@ -1917,6 +1917,39 @@ _FORM_SLUG_ALIASES = {
 }
 
 
+def _pick_items_for_labels(
+    merged_sections: dict, preferred: list[dict], labels: list[str]
+) -> tuple[list[dict], bool]:
+    """Items whose question text is actually on the form that is open.
+
+    SIMPUS groups several ASIK pakets under one name ("Skrining Gizi, Tekanan
+    Darah, dan Gula Darah …"). A title match can land on the other group, whose
+    questions are not on this form, so nothing gets filled. When the preferred
+    bag shares no label with the open form, use the section that shares the most.
+    """
+    wanted = {
+        _clean_question_label(label).strip().lower()
+        for label in labels
+        if _clean_question_label(label).strip()
+    }
+
+    def hits(bag: list[dict]) -> list[dict]:
+        return [
+            item for item in bag
+            if _clean_question_label(item.get("merged_key") or "").strip().lower() in wanted
+        ]
+
+    preferred_hits = hits(preferred or [])
+    if preferred_hits:
+        return preferred_hits, False
+    best: list[dict] = []
+    for bag in merged_sections.values():
+        got = hits(bag)
+        if len(got) > len(best):
+            best = got
+    return best, bool(best)
+
+
 def _match_section_items(merged_sections: dict, form_slug: str) -> list[dict]:
     """Find items by slug, falling back to prefix + normalized + substring matches.
 
@@ -2089,7 +2122,7 @@ def _process_form_inner(
         "answers_xhr": None,
         "error": None,
     }
-    if not items:
+    if not items and kind != "nakes":
         parent_disp = f" parent={parent_layanan!r}" if parent_layanan else ""
         console.print(
             f"      [dim]skip ({kind}): {layanan} (no slug match; tried paket={paket_slug}, parent={parent_slug}){parent_disp}[/dim]"
@@ -2103,10 +2136,11 @@ def _process_form_inner(
     # `asik_value` is null — so "ASIK has nothing here" can never look prunable.
     # `identitas_pasien` is never pruned: it is the patient-identity anchor and
     # cheap to re-affirm.
-    record["would_prune"] = (
-        matched_slug != "identitas_pasien"
-        and all(bool(it.get("same_as_asik")) for it in items)
-    )
+    if items:
+        record["would_prune"] = (
+            matched_slug != "identitas_pasien"
+            and all(bool(it.get("same_as_asik")) for it in items)
+        )
     if record["would_prune"] and prune_unchanged:
         record["status"] = "skipped_unchanged"
         console.print(
@@ -2115,7 +2149,8 @@ def _process_form_inner(
         return record
 
     console.print(
-        f"      [cyan]→ {kind}: {layanan} (matched={matched_slug}, {len(items)} fields"
+        f"      [cyan]→ {kind}: {layanan} "
+        f"({f'matched={matched_slug}, {len(items)} fields' if items else 'no title match'}"
         f"{', would_prune' if record['would_prune'] else ''})[/cyan]"
     )
 
@@ -2212,6 +2247,28 @@ def _process_form_inner(
                 page.goto(detail_url, wait_until="domcontentloaded")
             return record
     record["answers_xhr"] = gate.url
+
+    questions = _read_form_questions(page)
+    picked, from_other = _pick_items_for_labels(
+        merged_sections,
+        items,
+        [q.get("rawLabel") or "" for q in questions],
+    )
+    if from_other:
+        console.print(
+            f"          [dim]{len(picked)} question(s) taken from the section that shares these labels[/dim]"
+        )
+    items = picked
+    if not items:
+        record["status"] = "skipped_no_section"
+        record["error"] = "no stored question matches this form"
+        console.print(f"          [dim]{record['error']}[/dim]")
+        try:
+            page.go_back()
+            page.wait_for_url(lambda u: DETAIL_PATH_PREFIX in u, timeout=10000)
+        except Exception:
+            page.goto(detail_url, wait_until="domcontentloaded")
+        return record
 
     filled, skipped = _fill_form_iteratively(page, items)
     record["filled"] = filled

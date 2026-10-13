@@ -254,6 +254,46 @@ def test_sibling_paket_is_not_used_as_parent():
     assert forms[3]["parent_layanan"] is None
 
 
+def test_blood_pressure_uses_the_section_that_shares_its_questions():
+    s = _load_scraper_sync()
+    female = [
+        {"merged_key": "Berat Badan (Kg)", "merged_value": 55},
+        {"merged_key": "Pengukuran Tinggi Badan (cm)", "merged_value": 160},
+        {"merged_key": "Pengukuran Lingkar Perut", "merged_value": 80},
+        {"merged_key": "Index Massa Tubuh", "merged_value": 21},
+    ]
+    adult = [
+        {"merged_key": "Tekanan Darah Sistolik", "merged_value": 120},
+        {"merged_key": "Tekanan darah diastolik", "merged_value": 80},
+        {"merged_key": "Apakah Anda pernah dinyatakan tekanan darah tinggi?", "merged_value": "Tidak"},
+        {"merged_key": "Gula Darah Puasa (GDP) (mg/dl)", "merged_value": 90},
+    ]
+    gigi = [
+        {"merged_key": "Gigi karies", "merged_value": "Ya"},
+        {"merged_key": "Gigi hilang/dicabut", "merged_value": "Tidak"},
+    ]
+    sections = {
+        "skrining_gizi_tekanan_darah_dan_gula_darah_perempuan": female,
+        "skrining_gizi_tekanan_darah_dan_gula_darah_laki_laki_di_atas_40_tahun": adult,
+        "skrining_gigi_dewasa_25_tahun": gigi,
+    }
+    picked, from_other = s._pick_items_for_labels(
+        sections,
+        female,
+        ["Tekanan Darah Sistolik", "Tekanan darah diastolik"],
+    )
+    assert from_other
+    assert [it["merged_key"] for it in picked] == [
+        "Tekanan Darah Sistolik",
+        "Tekanan darah diastolik",
+    ]
+    karies, karies_other = s._pick_items_for_labels(
+        sections, [], ["Gigi karies", "Gigi hilang/dicabut"]
+    )
+    assert karies_other
+    assert len(karies) == 2
+
+
 def test_list_request_without_nik_is_not_a_visit():
     s = _load_scraper_sync()
     assert s._visit_from_detail_requests([{
