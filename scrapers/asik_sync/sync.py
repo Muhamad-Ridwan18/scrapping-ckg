@@ -830,10 +830,7 @@ def _wait_input_data_button(page: Page, kind: str, idx: int, timeout_ms: int = 1
             _JS_NAKES_ROWS + """({idx}) => {
                 const row = __nakesRows()[idx];
                 if (!row) return false;
-                const btn = Array.from(row.querySelectorAll('button, a, div, span')).find(b => {
-                    const t = (b.innerText || '').replace(/\\s+/g, ' ').trim();
-                    return /^input\\s*data$/i.test(t) && b.offsetParent && t.length < 40;
-                });
+                const btn = Array.from(row.querySelectorAll('button, a, div, span')).find(__isInputData);
                 return !!(btn && (btn.tagName === 'BUTTON' || btn.tagName === 'A'));
             }""",
             {"idx": idx},
@@ -851,27 +848,40 @@ def _click_input_data(page: Page, kind: str, idx: int) -> bool:
     has an Input Data anchor (button OR div), in DOM-order. Caller MUST flip
     the Diperiksa toggle first if `needs_toggle` was True for this row.
     """
+    if kind == "nakes":
+        # element.click() inside the page hits the outer wrapper whose text is
+        # "Input Data" and never fires the control that opens form.kemkes.go.id.
+        # Mark the innermost control and let Playwright send a real click.
+        marked = page.evaluate(
+            _JS_NAKES_ROWS + """({idx}) => {
+                document.querySelectorAll('[data-ckg-nakes-click]').forEach(el => el.removeAttribute('data-ckg-nakes-click'));
+                const row = __nakesRows()[idx];
+                if (!row) return false;
+                const btn = Array.from(row.querySelectorAll('button, a, div, span')).find(__isInputData);
+                if (!btn) return false;
+                btn.setAttribute('data-ckg-nakes-click', '1');
+                btn.scrollIntoView({block: 'center'});
+                return true;
+            }""",
+            {"idx": idx},
+        )
+        if not marked:
+            return False
+        try:
+            page.locator("[data-ckg-nakes-click='1']").click(timeout=5000)
+        except Exception as exc:
+            console.print(f"          [yellow]nakes Input Data click did not land: {exc}[/yellow]")
+            return False
+        return True
     return page.evaluate(
         _JS_NAKES_ROWS + """({kind, idx}) => {
-            if (kind === 'mandiri') {
-                const trs = Array.from(document.querySelectorAll('tr')).filter(tr => {
-                    const b = Array.from(tr.querySelectorAll('button')).find(x => x.innerText.trim() === 'Input Data');
-                    return b && b.offsetParent !== null;
-                });
-                const tr = trs[idx];
-                if (!tr) return false;
-                const btn = Array.from(tr.querySelectorAll('button')).find(b => b.innerText.trim() === 'Input Data');
-                if (!btn) return false;
-                btn.scrollIntoView({block:'center'});
-                btn.click();
-                return true;
-            }
-            const row = __nakesRows()[idx];
-            if (!row) return false;
-            const btn = Array.from(row.querySelectorAll('button, a, div, span')).find(b => {
-                const t = (b.innerText || '').replace(/\\s+/g, ' ').trim();
-                return /^input\\s*data$/i.test(t) && b.offsetParent && t.length < 40;
+            const trs = Array.from(document.querySelectorAll('tr')).filter(tr => {
+                const b = Array.from(tr.querySelectorAll('button')).find(x => x.innerText.trim() === 'Input Data');
+                return b && b.offsetParent !== null;
             });
+            const tr = trs[idx];
+            if (!tr) return false;
+            const btn = Array.from(tr.querySelectorAll('button')).find(b => b.innerText.trim() === 'Input Data');
             if (!btn) return false;
             btn.scrollIntoView({block:'center'});
             btn.click();
@@ -2138,8 +2148,17 @@ def _process_form_inner(
         # Click Input Data → form.kemkes.go.id
         clicked = _click_input_data(page, kind, idx)
         if not clicked:
-            record["status"] = "no_button"
-            record["error"] = "Input Data button not found"
+            # A Nakes row was on the page (we enumerated it) but the click never
+            # opened the form. `no_button` is a skip and would stamp the patient
+            # synced; this is a failed open, same as the URL never changing.
+            record["status"] = "form_load_timeout" if kind == "nakes" else "no_button"
+            record["error"] = (
+                "Input Data click did not open the form"
+                if kind == "nakes"
+                else "Input Data button not found"
+            )
+            if kind == "nakes":
+                console.print(f"          [yellow]{record['error']}[/yellow]")
             return record
 
     # Wait for form host
@@ -2148,6 +2167,7 @@ def _process_form_inner(
     except PWTimeout:
         record["status"] = "form_load_timeout"
         record["error"] = "form page did not load"
+        console.print(f"          [yellow]form page did not load (still on {page.url})[/yellow]")
         return record
 
     if not _wait_for_form_loaded(page):
