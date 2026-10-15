@@ -67,6 +67,8 @@ def set_step(
             obj.asik_scrape_job_id = job_id
         elif step == CronStep.EPUS:
             obj.epus_scrape_job_id = job_id
+        elif step == CronStep.SIMPUS:
+            obj.simpus_scrape_job_id = job_id
         else:
             obj.merge_job_id = job_id
     db.commit()
@@ -167,3 +169,8 @@ def cancel_cron_run_and_children(
         _cancel_scrape(run.epus_scrape_job_id)
     if run.merge_job_id is not None and run.merge_job_id != exclude_job_id:
         _cancel_merge(run.merge_job_id)
+    if (
+        run.simpus_scrape_job_id is not None
+        and run.simpus_scrape_job_id != exclude_job_id
+    ):
+        _cancel_scrape(run.simpus_scrape_job_id)

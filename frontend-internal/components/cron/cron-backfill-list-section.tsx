@@ -42,6 +42,7 @@ const SOURCE_SCOPE_LABEL: Record<CronSourceScopeT, string> = {
   epus_only: "EPUS only",
   asik_only: "ASIK only",
   none: "Sync only (no rescrape)",
+  simpus: "SIMPUS",
 };
 
 type Tab = "active" | "all";

@@ -10,10 +10,14 @@ from app.api.deps import get_current_admin_id, get_db
 from app.api.pagination import Page, PageParams, page_params, paginate
 from app.celery_app import celery_app
 from app.crud import cron_run as crud
+from app.models.cron_config import CronSourceScope
 from app.models.cron_run import CronRun, CronRunStatus, CronStep
 from app.models.puskesmas import Puskesmas
+from app.models.scrape_job import TriggererType
+from app.models.simpus_schedule import SimpusSchedule
 from app.models.sync_job import SyncJob, SyncStatus
 from app.schemas.cron_run import CronRunOut, CronRunSyncSummary, cron_run_to_out
+from app.tasks.simpus_import import open_simpus_run
 
 router = APIRouter(tags=["cron"])
 
@@ -23,6 +27,7 @@ _RUN_OUT_COLS = (
     CronRun.target_date, CronRun.source_scope, CronRun.status, CronRun.current_step,
     CronRun.current_step_attempt, CronRun.failed_step,
     CronRun.asik_scrape_job_id, CronRun.epus_scrape_job_id, CronRun.merge_job_id,
+    CronRun.simpus_scrape_job_id,
     CronRun.triggered_by_id, CronRun.error_message,
     CronRun.started_at, CronRun.finished_at,
     CronRun.created_at, CronRun.updated_at,
@@ -171,16 +176,17 @@ def retry_run(
         )
     pk_name = obj.puskesmas.name
 
-    # Pre-check is advisory (nice 409 message); the lane partial UNIQUE indexes
-    # (uq_cron_runs_active_epus / _asik) are the actual race-safe guard. Retry is
-    # restricted to non-backfill runs (always source_scope=BOTH), and BOTH
-    # occupies both lanes — so any active run conflicts. EPUS-first dispatch is
-    # therefore always correct here.
+    active_scope = (
+        CronRun.source_scope == CronSourceScope.SIMPUS
+        if obj.source_scope is CronSourceScope.SIMPUS
+        else CronRun.source_scope != CronSourceScope.SIMPUS
+    )
     active = db.scalar(
         select(CronRun.id)
         .where(
             CronRun.puskesmas_id == obj.puskesmas_id,
             CronRun.status.in_((CronRunStatus.PENDING, CronRunStatus.RUNNING)),
+            active_scope,
         )
         .limit(1)
     )
@@ -189,6 +195,36 @@ def retry_run(
             status.HTTP_409_CONFLICT,
             "a cron run is already in progress for this puskesmas",
         )
+
+    if obj.source_scope is CronSourceScope.SIMPUS:
+        create_new = bool(
+            db.scalar(
+                select(SimpusSchedule.create_new).where(
+                    SimpusSchedule.puskesmas_id == obj.puskesmas_id
+                )
+            )
+        )
+        try:
+            new_run = open_simpus_run(
+                db,
+                puskesmas_id=obj.puskesmas_id,
+                date_from=obj.target_date,
+                date_to=obj.target_date,
+                create_new=create_new,
+                triggered_by_id=admin_id,
+                triggered_by_type=TriggererType.ADMIN,
+            )
+        except IntegrityError as e:
+            db.rollback()
+            raise HTTPException(
+                status.HTTP_409_CONFLICT,
+                "impor SIMPUS masih berjalan untuk puskesmas ini",
+            ) from e
+        except Exception as e:
+            raise HTTPException(
+                status.HTTP_503_SERVICE_UNAVAILABLE, "scrape broker unavailable"
+            ) from e
+        return _to_out(new_run, pk_name)
 
     try:
         new_run = crud.create(

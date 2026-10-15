@@ -57,9 +57,9 @@ class CronSourceScope(str, enum.Enum):
     - NONE: scrape NOTHING (no rescrape). Start straight at MERGE (merge any
       matched-but-unmerged patients from data already on disk), then the ASIK
       sync step. A sync-only backfill — requires sync on and merge != no_merge
-      (both enforced at create time). Occupies BOTH lanes → mutually exclusive
-      with every other active run for the puskesmas (it writes merged_data and
-      pushes to the one-account ASIK session, so nothing else may run alongside).
+      (both enforced at create time). Occupies both EPUS and ASIK lanes.
+    - SIMPUS: the jawaban import. Not a backfill. Own lane, so it does not take
+      the EPUS or ASIK slot.
 
     Independent of merge_mode: scope picks the scraper(s); merge_mode still
     governs the merge. A run "occupies a lane" per source it touches (BOTH →
@@ -73,6 +73,7 @@ class CronSourceScope(str, enum.Enum):
     EPUS_ONLY = "epus_only"
     ASIK_ONLY = "asik_only"
     NONE = "none"
+    SIMPUS = "simpus"
 
 
 # Lane occupancy per scope: a run "touches" a source lane when its scope includes
@@ -84,8 +85,11 @@ _SCOPE_LANES: dict[CronSourceScope, frozenset[str]] = {
     CronSourceScope.EPUS_ONLY: frozenset({"epus"}),
     CronSourceScope.ASIK_ONLY: frozenset({"asik"}),
     # NONE doesn't scrape, but it merges + pushes to the one-account ASIK
-    # session — occupy both lanes so it is mutually exclusive with every scope.
+    # session — occupy both EPUS/ASIK lanes.
     CronSourceScope.NONE: frozenset({"epus", "asik"}),
+    # Jawaban pull. Separate from the scrape lanes so it does not drop the
+    # daily EPUS/ASIK fire. Serialized by uq_cron_runs_active_simpus.
+    CronSourceScope.SIMPUS: frozenset({"simpus"}),
 }
 
 

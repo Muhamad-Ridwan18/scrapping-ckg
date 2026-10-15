@@ -67,6 +67,13 @@ export default function CronRunDetailPage({
         }),
       );
     }
+    if (r?.simpus_scrape_job_id) {
+      tasks.push(
+        qc.invalidateQueries({
+          queryKey: scrapeKeys.detail(r.simpus_scrape_job_id),
+        }),
+      );
+    }
     if (r?.merge_job_id) {
       tasks.push(
         qc.invalidateQueries({ queryKey: mergeKeys.detail(r.merge_job_id) }),
@@ -195,10 +202,16 @@ export default function CronRunDetailPage({
       <div className="space-y-3">
         <h2 className="text-lg font-semibold">Child jobs</h2>
         <div className="space-y-2">
-          <ChildScrapeJobRow label="EPUS Scrape" jobId={r.epus_scrape_job_id} />
-          <ChildScrapeJobRow label="ASIK Scrape" jobId={r.asik_scrape_job_id} />
-          <ChildMergeJobRow label="Merge" jobId={r.merge_job_id} />
-          <SyncStepRow runId={r.id} />
+          {r.source_scope === "simpus" ? (
+            <ChildScrapeJobRow label="Tarik SIMPUS" jobId={r.simpus_scrape_job_id} />
+          ) : (
+            <>
+              <ChildScrapeJobRow label="EPUS Scrape" jobId={r.epus_scrape_job_id} />
+              <ChildScrapeJobRow label="ASIK Scrape" jobId={r.asik_scrape_job_id} />
+              <ChildMergeJobRow label="Merge" jobId={r.merge_job_id} />
+              <SyncStepRow runId={r.id} />
+            </>
+          )}
         </div>
       </div>
 

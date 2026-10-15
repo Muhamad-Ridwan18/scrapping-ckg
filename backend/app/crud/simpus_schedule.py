@@ -1,5 +1,7 @@
 import uuid
 
+from datetime import UTC, datetime
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -45,3 +47,8 @@ def upsert(
     db.commit()
     db.refresh(obj)
     return obj
+
+
+def soft_delete(db: Session, obj: SimpusSchedule) -> None:
+    obj.deleted_at = datetime.now(UTC)
+    db.commit()

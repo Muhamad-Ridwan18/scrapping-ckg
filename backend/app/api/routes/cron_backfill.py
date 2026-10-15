@@ -56,6 +56,7 @@ _RUN_OUT_COLS = (
     CronRun.target_date, CronRun.source_scope, CronRun.status, CronRun.current_step,
     CronRun.current_step_attempt, CronRun.failed_step,
     CronRun.asik_scrape_job_id, CronRun.epus_scrape_job_id, CronRun.merge_job_id,
+    CronRun.simpus_scrape_job_id,
     CronRun.triggered_by_id, CronRun.error_message,
     CronRun.started_at, CronRun.finished_at,
     CronRun.created_at, CronRun.updated_at,
@@ -84,6 +85,11 @@ def create_backfill(
     effective_scope = (
         CronSourceScope.ASIK_ONLY if body.mandiri_only else body.source_scope
     )
+    if effective_scope is CronSourceScope.SIMPUS:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "Tarikan SIMPUS bukan backfill tanggal",
+        )
 
     # Advisory pre-checks; the two partial UNIQUE indexes on cron_runs
     # (uq_cron_runs_active_epus / _asik) are the race-safe guards. Only a

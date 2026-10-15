@@ -39,6 +39,8 @@ class CronStep(str, enum.Enum):
     # into ASIK (create), then fill them. Runs only when create_new is set (which is
     # itself gated on sync_mode != OFF). Same one-ASIK-session lane as SYNC.
     CREATE = "create"
+    # SIMPUS jawaban import. Not part of the EPUS → ASIK → MERGE chain.
+    SIMPUS = "simpus"
 
 
 class CronRun(UUIDPKMixin, TimestampMixin, SoftDeleteMixin, Base):
@@ -110,6 +112,11 @@ class CronRun(UUIDPKMixin, TimestampMixin, SoftDeleteMixin, Base):
     merge_job_id: Mapped[uuid.UUID | None] = mapped_column(
         PG_UUID(as_uuid=True),
         ForeignKey("merge_jobs.id"),
+        nullable=True,
+    )
+    simpus_scrape_job_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("scrape_jobs.id"),
         nullable=True,
     )
     triggered_by_id: Mapped[uuid.UUID | None] = mapped_column(

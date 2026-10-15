@@ -19,6 +19,8 @@ import {
   getSimpusSchedule,
   saveSimpusApi,
   saveSimpusSchedule,
+  deleteSimpusSchedule,
+  runSimpusScheduleNow,
   setCredentials,
   clearSimpusApi,
   updatePuskesmas,
@@ -34,7 +36,9 @@ import type {
   PuskesmasUpdateInput,
   SimpusSchedule,
   SimpusScheduleInput,
+  CronRun,
 } from "@/lib/api/types";
+import { cronRunKeys } from "@/lib/hooks/use-cron-runs";
 
 export const puskesmasKeys = {
   all: ["puskesmas"] as const,
@@ -224,6 +228,36 @@ export function useSaveSimpusSchedule(id: string) {
     mutationFn: (input: SimpusScheduleInput) => saveSimpusSchedule(id, input),
     onSuccess: (saved: SimpusSchedule) => {
       qc.setQueryData([...puskesmasKeys.detail(id), "simpus-schedule"], saved);
+    },
+  });
+}
+
+export function useDeleteSimpusSchedule(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => deleteSimpusSchedule(id),
+    onSuccess: () => {
+      qc.setQueryData<SimpusSchedule | null>(
+        [...puskesmasKeys.detail(id), "simpus-schedule"],
+        null,
+      );
+    },
+  });
+}
+
+export function useRunSimpusScheduleNow(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => runSimpusScheduleNow(id),
+    onSuccess: (run: CronRun) => {
+      qc.setQueryData(cronRunKeys.detail(run.id), run);
+      qc.setQueriesData<Page<CronRun>>(
+        { queryKey: cronRunKeys.lists() },
+        (old) =>
+          old
+            ? { ...old, items: [run, ...old.items], total: old.total + 1 }
+            : old,
+      );
     },
   });
 }

@@ -4,11 +4,13 @@ import {
   PuskesmasOut,
   PuskesmasDetailOut,
   SimpusScheduleOut,
+  CronRunOut,
   CredOut,
   type Puskesmas,
   type PuskesmasDetail,
   type SimpusSchedule,
   type SimpusScheduleInput,
+  type CronRun,
   type PuskesmasCreateInput,
   type PuskesmasUpdateInput,
   type CredInput,
@@ -74,6 +76,15 @@ export async function saveSimpusSchedule(
 ): Promise<SimpusSchedule> {
   const { data } = await http.put(`/puskesmas/${id}/simpus-schedule`, input);
   return SimpusScheduleOut.parse(data);
+}
+
+export async function deleteSimpusSchedule(id: string): Promise<void> {
+  await http.delete(`/puskesmas/${id}/simpus-schedule`);
+}
+
+export async function runSimpusScheduleNow(id: string): Promise<CronRun> {
+  const { data } = await http.post(`/puskesmas/${id}/simpus-schedule/run-now`);
+  return CronRunOut.parse(data);
 }
 
 export async function clearSimpusApi(id: string): Promise<PuskesmasDetail> {

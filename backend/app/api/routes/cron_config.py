@@ -14,7 +14,7 @@ from app.crud import cron_backfill as cron_backfill_crud
 from app.crud import cron_config as crud
 from app.crud import cron_run as cron_run_crud
 from app.models.cron_backfill import CronBackfill, CronBackfillStatus
-from app.models.cron_config import CronConfig
+from app.models.cron_config import CronConfig, CronSourceScope
 from app.models.cron_run import CronRun, CronRunStatus, CronStep
 from app.models.puskesmas import Puskesmas
 from app.tasks.cron import backfill_cancel_key
@@ -97,6 +97,7 @@ def _active_run_exists(db: Session, puskesmas_id: uuid.UUID) -> bool:
                 CronRun.status.in_(
                     (CronRunStatus.PENDING, CronRunStatus.RUNNING)
                 ),
+                CronRun.source_scope != CronSourceScope.SIMPUS,
             )
             .limit(1)
         )
@@ -265,6 +266,7 @@ def run_now(
         .where(
             CronRun.puskesmas_id == puskesmas_id,
             CronRun.status.in_((CronRunStatus.PENDING, CronRunStatus.RUNNING)),
+            CronRun.source_scope != CronSourceScope.SIMPUS,
         )
         .limit(1)
     )

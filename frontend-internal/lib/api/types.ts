@@ -69,11 +69,21 @@ export const SimpusConnectIn = z.object({
   api_url: z.string().trim().min(1, "URL wajib diisi"),
   email: z.string(),
   password: z.string(),
-  tanggal_dari: z.string(),
-  tanggal_sampai: z.string(),
-  jenis: z.enum(["", "umum", "sekolah"]),
 });
 export type SimpusConnectInput = z.infer<typeof SimpusConnectIn>;
+
+export const SimpusPullIn = z
+  .object({
+    tanggal_dari: z.string().min(1, "Isi tanggal mulai"),
+    tanggal_sampai: z.string().min(1, "Isi tanggal selesai"),
+    jenis: z.enum(["", "umum", "sekolah"]),
+    create_new: z.boolean(),
+  })
+  .refine((v) => v.tanggal_sampai >= v.tanggal_dari, {
+    message: "Tanggal selesai tidak boleh sebelum tanggal mulai",
+    path: ["tanggal_sampai"],
+  });
+export type SimpusPullInput = z.infer<typeof SimpusPullIn>;
 
 export const SimpusScheduleIn = z.object({
   hour: z.number().int().min(0).max(23),
@@ -459,7 +469,7 @@ export type CronRunStatus =
   | "success"
   | "failed"
   | "cancelled";
-export type CronStep = "asik" | "epus" | "merge" | "sync" | "create";
+export type CronStep = "asik" | "epus" | "merge" | "sync" | "create" | "simpus";
 
 export const CronMergeMode = z.enum(["normal", "force_remerge", "no_merge"]);
 export type CronMergeModeT = z.infer<typeof CronMergeMode>;
@@ -471,7 +481,7 @@ export type CronSyncModeT = z.infer<typeof CronSyncMode>;
 
 // "none" = sync-only backfill: no rescrape, run merge (matched-but-unmerged)
 // then the ASIK sync step over existing data. Requires sync on + not no_merge.
-export const CronSourceScope = z.enum(["both", "epus_only", "asik_only", "none"]);
+export const CronSourceScope = z.enum(["both", "epus_only", "asik_only", "none", "simpus"]);
 export type CronSourceScopeT = z.infer<typeof CronSourceScope>;
 
 export const CronConfigOut = z.object({
@@ -531,12 +541,13 @@ export const CronRunOut = z.object({
   target_date: z.string(),
   source_scope: CronSourceScope,
   status: z.enum(["pending", "running", "success", "failed", "cancelled"]),
-  current_step: z.enum(["asik", "epus", "merge", "sync", "create"]).nullable(),
+  current_step: z.enum(["asik", "epus", "merge", "sync", "create", "simpus"]).nullable(),
   current_step_attempt: z.number(),
-  failed_step: z.enum(["asik", "epus", "merge", "sync", "create"]).nullable(),
+  failed_step: z.enum(["asik", "epus", "merge", "sync", "create", "simpus"]).nullable(),
   asik_scrape_job_id: z.string().uuid().nullable(),
   epus_scrape_job_id: z.string().uuid().nullable(),
   merge_job_id: z.string().uuid().nullable(),
+  simpus_scrape_job_id: z.string().uuid().nullable(),
   triggered_by_id: z.string().uuid().nullable(),
   error_message: z.string().nullable(),
   started_at: z.string().nullable(),

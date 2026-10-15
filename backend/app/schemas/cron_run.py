@@ -24,6 +24,7 @@ class CronRunOut(BaseModel):
     asik_scrape_job_id: uuid.UUID | None
     epus_scrape_job_id: uuid.UUID | None
     merge_job_id: uuid.UUID | None
+    simpus_scrape_job_id: uuid.UUID | None
     triggered_by_id: uuid.UUID | None
     error_message: str | None
     started_at: datetime | None
@@ -67,6 +68,7 @@ def cron_run_to_out(run: CronRun, puskesmas_name: str) -> "CronRunOut":
         asik_scrape_job_id=run.asik_scrape_job_id,
         epus_scrape_job_id=run.epus_scrape_job_id,
         merge_job_id=run.merge_job_id,
+        simpus_scrape_job_id=run.simpus_scrape_job_id,
         triggered_by_id=run.triggered_by_id,
         error_message=run.error_message,
         started_at=run.started_at,

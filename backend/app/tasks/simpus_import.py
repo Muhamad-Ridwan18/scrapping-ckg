@@ -15,10 +15,13 @@ from sqlalchemy.orm import Session, load_only
 from app.celery_app import celery_app
 from app.config import settings
 from app.core.security import decrypt_json, encrypt_json
+from app.crud import cron_run as cron_run_crud
 from app.crud import patient as patient_crud
 from app.crud import scrape_job as scrape_job_crud
 from app.crud.cron_config import compute_next_run_at
 from app.database import SessionLocal
+from app.models.cron_config import CronSourceScope
+from app.models.cron_run import CronRun, CronRunStatus, CronStep
 from app.models.puskesmas import Puskesmas
 from app.models.scrape_job import ScrapeJob, ScrapeKind, ScrapeStatus, TriggererType
 from app.models.simpus_schedule import SimpusSchedule
@@ -66,6 +69,128 @@ def schedule_window(today: date, lookback_days: int) -> tuple[date, date]:
     return today - timedelta(days=days - 1), today
 
 
+def _fail_cron_run(run_id: uuid.UUID, message: str) -> None:
+    db = SessionLocal()
+    try:
+        run = db.get(CronRun, run_id)
+        if run is None or run.status not in (
+            CronRunStatus.PENDING, CronRunStatus.RUNNING
+        ):
+            return
+        cron_run_crud.mark_failed(
+            db, run, CronStep.SIMPUS, message[:2000], datetime.now(UTC)
+        )
+    finally:
+        db.close()
+
+
+def _settle_cron_run(
+    cron_run_id: str | None, outcome: str | None, error: str | None
+) -> None:
+    if not cron_run_id or not outcome:
+        return
+    try:
+        run_id = uuid.UUID(cron_run_id)
+    except ValueError:
+        return
+    db = SessionLocal()
+    try:
+        run = db.get(CronRun, run_id)
+        if run is None or run.status not in (
+            CronRunStatus.PENDING, CronRunStatus.RUNNING
+        ):
+            return
+        now = datetime.now(UTC)
+        if outcome == "success":
+            cron_run_crud.mark_success(db, run, now)
+        elif outcome == "cancelled":
+            cron_run_crud.mark_cancelled(db, run)
+        else:
+            cron_run_crud.mark_failed(
+                db, run, CronStep.SIMPUS, (error or "gagal")[:2000], now
+            )
+    finally:
+        db.close()
+
+
+def _restamp_schedule(
+    schedule_id: uuid.UUID, hour: int, minute: int, now: datetime
+) -> None:
+    db = SessionLocal()
+    try:
+        again = db.get(SimpusSchedule, schedule_id)
+        if again is None:
+            return
+        again.next_run_at = compute_next_run_at(hour, minute, from_=now)
+        again.last_fired_at = now
+        db.commit()
+    finally:
+        db.close()
+
+
+def open_simpus_run(
+    db: Session,
+    *,
+    puskesmas_id: uuid.UUID,
+    date_from: date,
+    date_to: date,
+    create_new: bool,
+    triggered_by_id: uuid.UUID,
+    triggered_by_type: TriggererType,
+) -> CronRun:
+    """Open one SIMPUS cron run and enqueue its jawaban import.
+
+    The cron run is committed before the scrape job so a second fire hits
+    uq_cron_runs_active_simpus. A scrape-job conflict (manual import already
+    running) fails that run and re-raises IntegrityError.
+    """
+    run = cron_run_crud.create(
+        db,
+        puskesmas_id=puskesmas_id,
+        target_date=date_to,
+        cron_config_id=None,
+        triggered_by_id=triggered_by_id,
+        source_scope=CronSourceScope.SIMPUS,
+    )
+    try:
+        job = scrape_job_crud.create(
+            db,
+            puskesmas_id=puskesmas_id,
+            kind=ScrapeKind.SIMPUS,
+            date_filter=date_to.isoformat(),
+            triggered_by_id=triggered_by_id,
+            triggered_by_type=triggered_by_type,
+            cron_run_id=run.id,
+        )
+    except IntegrityError:
+        db.rollback()
+        _fail_cron_run(run.id, "impor SIMPUS masih berjalan")
+        raise
+    cron_run_crud.set_step(db, run, CronStep.SIMPUS, attempt=1, job_id=job.id)
+    cron_run_crud.mark_running(db, run, datetime.now(UTC))
+    try:
+        celery_app.send_task(
+            "simpus.import_jawaban",
+            args=[str(job.id)],
+            kwargs={
+                "tanggal_dari": date_from.isoformat(),
+                "tanggal_sampai": date_to.isoformat(),
+                "create_new": create_new,
+                "cron_run_id": str(run.id),
+            },
+        )
+    except Exception as exc:
+        now = datetime.now(UTC)
+        scrape_job_crud.mark_failed(
+            db, job, f"broker unreachable: {exc}"[:2000], now
+        )
+        cron_run_crud.mark_failed(
+            db, run, CronStep.SIMPUS, f"broker unreachable: {exc}"[:2000], now
+        )
+        raise
+    return run
+
+
 @celery_app.task(name="simpus.dispatch_due")
 def dispatch_due() -> int:
     """Fire enabled SIMPUS schedules whose next_run_at has passed.
@@ -103,47 +228,23 @@ def dispatch_due() -> int:
             date_from, date_to = schedule_window(today, cfg.lookback_days)
             puskesmas_id = cfg.puskesmas_id
             hour, minute = cfg.hour, cfg.minute
+            create_new = cfg.create_new
             cfg.next_run_at = compute_next_run_at(hour, minute, from_=now)
             cfg.last_fired_at = now
             try:
-                job = scrape_job_crud.create(
+                open_simpus_run(
                     db,
                     puskesmas_id=puskesmas_id,
-                    kind=ScrapeKind.SIMPUS,
-                    date_filter=date_to.isoformat(),
+                    date_from=date_from,
+                    date_to=date_to,
+                    create_new=create_new,
                     triggered_by_id=puskesmas_id,
                     triggered_by_type=TriggererType.CRON,
                 )
             except IntegrityError:
                 db.rollback()
-                db2 = SessionLocal()
-                try:
-                    again = db2.scalar(
-                        select(SimpusSchedule).where(SimpusSchedule.id == schedule_id)
-                    )
-                    if again is not None:
-                        again.next_run_at = compute_next_run_at(hour, minute, from_=now)
-                        again.last_fired_at = now
-                        db2.commit()
-                finally:
-                    db2.close()
+                _restamp_schedule(schedule_id, hour, minute, now)
                 log.info("simpus schedule skip pk=%s — import already running", puskesmas_id)
-                continue
-            db.commit()
-            try:
-                celery_app.send_task(
-                    "simpus.import_jawaban",
-                    args=[str(job.id)],
-                    kwargs={
-                    "tanggal_dari": date_from.isoformat(),
-                    "tanggal_sampai": date_to.isoformat(),
-                    "create_new": cfg.create_new,
-                },
-                )
-            except Exception as exc:
-                scrape_job_crud.mark_failed(
-                    db, job, f"broker unreachable: {exc}"[:2000], datetime.now(UTC)
-                )
                 continue
             fired += 1
         except Exception:
@@ -173,11 +274,14 @@ def import_jawaban(
     tanggal_dari: str | None = None,
     tanggal_sampai: str | None = None,
     create_new: bool = False,
+    cron_run_id: str | None = None,
 ) -> None:
     db: Session = SessionLocal()
     rc = redis.from_url(settings.REDIS_URL, decode_responses=True)
     started = datetime.now(UTC)
     job: ScrapeJob | None = None
+    cron_outcome: str | None = None
+    cron_error: str | None = None
     try:
         job = db.scalar(
             select(ScrapeJob)
@@ -189,7 +293,12 @@ def import_jawaban(
             )
             .where(ScrapeJob.id == uuid.UUID(job_id))
         )
-        if job is None or job.status == ScrapeStatus.CANCELLED:
+        if job is None:
+            cron_outcome = "failed"
+            cron_error = "job tidak ditemukan"
+            return
+        if job.status == ScrapeStatus.CANCELLED:
+            cron_outcome = "cancelled"
             return
         puskesmas = db.scalar(
             select(Puskesmas)
@@ -201,15 +310,19 @@ def import_jawaban(
             .where(Puskesmas.id == job.puskesmas_id)
         )
         if puskesmas is None or not puskesmas.simpus_api_url or puskesmas.simpus_api_cred is None:
+            cron_outcome = "failed"
+            cron_error = "URL atau token SIMPUS belum diisi"
             scrape_job_crud.mark_failed(
-                db, job, "URL atau token SIMPUS belum diisi", datetime.now(UTC)
+                db, job, cron_error, datetime.now(UTC)
             )
             return
         try:
             stored = decrypt_json(puskesmas.simpus_api_cred)
         except Exception:
+            cron_outcome = "failed"
+            cron_error = "kredensial SIMPUS tidak bisa dibaca"
             scrape_job_crud.mark_failed(
-                db, job, "kredensial SIMPUS tidak bisa dibaca", datetime.now(UTC)
+                db, job, cron_error, datetime.now(UTC)
             )
             return
         token = stored.get("token") or ""
@@ -219,14 +332,18 @@ def import_jawaban(
             try:
                 token = login_instansi(puskesmas.simpus_api_url, email, password)
             except SimpusApiError as exc:
-                scrape_job_crud.mark_failed(db, job, str(exc)[:2000], datetime.now(UTC))
+                cron_outcome = "failed"
+                cron_error = str(exc)[:2000]
+                scrape_job_crud.mark_failed(db, job, cron_error, datetime.now(UTC))
                 return
             stored = {"email": email, "password": password, "token": token}
             puskesmas.simpus_api_cred = encrypt_json(stored)
             db.commit()
         if not token:
+            cron_outcome = "failed"
+            cron_error = "token SIMPUS kosong — simpan email dan password instansi"
             scrape_job_crud.mark_failed(
-                db, job, "token SIMPUS kosong — simpan email dan password instansi", datetime.now(UTC)
+                db, job, cron_error, datetime.now(UTC)
             )
             return
 
@@ -312,6 +429,7 @@ def import_jawaban(
         while True:
             try:
                 if consume():
+                    cron_outcome = "cancelled"
                     return
                 break
             except SimpusUnauthorized:
@@ -395,16 +513,22 @@ def import_jawaban(
                         "triggered_by_type": job.triggered_by_type.value,
                     },
                 )
+        cron_outcome = "success"
     except SimpusApiError as exc:
+        cron_outcome = "failed"
+        cron_error = str(exc)[:2000]
         db.rollback()
         if job is not None:
-            scrape_job_crud.mark_failed(db, job, str(exc)[:2000], datetime.now(UTC))
+            scrape_job_crud.mark_failed(db, job, cron_error, datetime.now(UTC))
         _publish(rc, job_id, f"[fail] {exc}")
     except Exception as exc:
+        cron_outcome = "failed"
+        cron_error = str(exc)[:2000]
         log.exception("simpus import failed")
         db.rollback()
         if job is not None:
-            scrape_job_crud.mark_failed(db, job, str(exc)[:2000], datetime.now(UTC))
+            scrape_job_crud.mark_failed(db, job, cron_error, datetime.now(UTC))
         _publish(rc, job_id, f"[fail] {exc}")
     finally:
+        _settle_cron_run(cron_run_id, cron_outcome, cron_error)
         db.close()

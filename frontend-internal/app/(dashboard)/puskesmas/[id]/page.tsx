@@ -25,11 +25,15 @@ import { Pagination } from "@/components/common/pagination";
 import { ErrorState } from "@/components/common/error-state";
 import { EmptyState } from "@/components/common/empty-state";
 import { CredentialsDialog } from "@/components/puskesmas/credentials-dialog";
-import { SimpusImportCard } from "@/components/puskesmas/simpus-import-card";
+import {
+  SimpusAccountCard,
+  SimpusPullCard,
+} from "@/components/puskesmas/simpus-import-card";
 import { StartScrapeDialog } from "@/components/scrape/start-scrape-dialog";
 import { ScrapeStatusBadge } from "@/components/scrape/scrape-status-badge";
 import { CronConfigCard } from "@/components/cron/cron-config-card";
 import { SchoolCronCard } from "@/components/school/school-cron-card";
+import { SimpusScheduleCard } from "@/components/puskesmas/simpus-schedule-card";
 import { usePuskesmas } from "@/lib/hooks/use-puskesmas";
 import { useScrapeJobList } from "@/lib/hooks/use-scrape";
 import type { CredKind } from "@/lib/api/puskesmas";
@@ -116,7 +120,7 @@ export default function PuskesmasDetailPage({
         })}
       </div>
 
-      <SimpusImportCard
+      <SimpusAccountCard
         puskesmasId={id}
         apiUrl={detail.data?.simpus_api_url}
         tokenSet={detail.data?.is_simpus_token_set}
@@ -124,8 +128,14 @@ export default function PuskesmasDetailPage({
 
       <div className="grid gap-4 md:grid-cols-2">
         <CronConfigCard puskesmasId={id} />
+        <SimpusScheduleCard puskesmasId={id} />
         <SchoolCronCard puskesmasId={id} />
       </div>
+
+      <SimpusPullCard
+        puskesmasId={id}
+        tokenSet={detail.data?.is_simpus_token_set}
+      />
 
       <div className="space-y-3">
         <h2 className="text-lg font-semibold">Job scrape terbaru</h2>

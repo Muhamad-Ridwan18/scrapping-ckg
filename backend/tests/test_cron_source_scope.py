@@ -36,11 +36,22 @@ def test_scopes_conflict_truth_table():
 
 
 def test_scopes_conflict_none_blocks_everything():
-    # NONE (sync-only) occupies both lanes → mutually exclusive with every scope,
-    # including another NONE run for the same puskesmas. No KeyError on the enum.
+    # NONE (sync-only) occupies both lanes → mutually exclusive with every
+    # EPUS/ASIK scope, including another NONE run for the same puskesmas.
     for other in (S.BOTH, S.EPUS_ONLY, S.ASIK_ONLY, S.NONE):
         assert scopes_conflict(S.NONE, other)
         assert scopes_conflict(other, S.NONE)
+
+
+def test_simpus_scope_keeps_its_own_lane():
+    for other in (S.BOTH, S.EPUS_ONLY, S.ASIK_ONLY, S.NONE):
+        assert not scopes_conflict(S.SIMPUS, other)
+        assert not scopes_conflict(other, S.SIMPUS)
+    assert scopes_conflict(S.SIMPUS, S.SIMPUS)
+    assert _first_step(S.SIMPUS) is CronStep.SIMPUS
+    assert _next_step(CronStep.SIMPUS, S.SIMPUS, False) == "done"
+    assert _prev_step_of("simpus", S.SIMPUS, False) is None
+    assert _prev_step_of("done", S.SIMPUS, False) is CronStep.SIMPUS
 
 
 def test_first_step_per_scope():
@@ -49,6 +60,7 @@ def test_first_step_per_scope():
     assert _first_step(S.ASIK_ONLY) is CronStep.ASIK
     # NONE scrapes nothing → starts straight at MERGE.
     assert _first_step(S.NONE) is CronStep.MERGE
+    assert _first_step(S.SIMPUS) is CronStep.SIMPUS
 
 
 def test_next_step_both_is_full_chain():

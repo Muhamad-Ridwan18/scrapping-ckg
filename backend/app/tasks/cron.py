@@ -127,12 +127,16 @@ def _first_step(scope: CronSourceScope) -> CronStep:
     # runs first so its (nik, ruangan) rows are seeded before ASIK fans out).
     if scope is CronSourceScope.NONE:
         return CronStep.MERGE
+    if scope is CronSourceScope.SIMPUS:
+        return CronStep.SIMPUS
     return CronStep.ASIK if scope is CronSourceScope.ASIK_ONLY else CronStep.EPUS
 
 
 def _next_step(
     step: CronStep, scope: CronSourceScope, run_sync: bool, run_create: bool = False
 ) -> str:
+    if step == CronStep.SIMPUS:
+        return "done"
     # Flow per scope ([SYNC] appended when run_sync; [CREATE] after SYNC when run_create,
     # which is itself gated on run_sync):
     #   BOTH:      EPUS → ASIK → MERGE → [SYNC] → [CREATE] → done
@@ -235,6 +239,7 @@ def dispatch_due() -> int:
                 select(CronRun.id).where(
                     CronRun.puskesmas_id == pk_id,
                     CronRun.status.in_((CronRunStatus.PENDING, CronRunStatus.RUNNING)),
+                    CronRun.source_scope != CronSourceScope.SIMPUS,
                 ).limit(1)
             )
             active_bf = db2.scalar(
@@ -577,6 +582,8 @@ def _prev_step_of(
     """The step that must have SUCCEEDED before advancing into `step`, given the
     run's source scope. Returns None when `step` is the first step (no
     predecessor to check)."""
+    if step == CronStep.SIMPUS.value:
+        return None
     if step == CronStep.ASIK.value:
         # ASIK is a successor only in BOTH (EPUS→ASIK). In ASIK_ONLY it is the
         # first step → no predecessor.
@@ -596,6 +603,8 @@ def _prev_step_of(
     if step == CronStep.CREATE.value:
         return CronStep.SYNC
     if step == "done":
+        if scope is CronSourceScope.SIMPUS:
+            return CronStep.SIMPUS
         # Last step before 'done': CREATE if enabled, else SYNC, else MERGE.
         if run_create:
             return CronStep.CREATE
@@ -680,6 +689,9 @@ def advance(cron_run_id: str, step: str) -> None:
                 return
 
         scope = _resolve_source_scope(run)
+        # The jawaban import finishes its own cron run. Do not start an EPUS scrape.
+        if scope is CronSourceScope.SIMPUS:
+            return
         # Whether this run appends a SYNC step after MERGE (sync_mode != OFF).
         # NO_MERGE runs never reach SYNC (short-circuited to 'done' below), so a
         # NO_MERGE + sync combination is inertly a no-op.
