@@ -52,24 +52,42 @@ curl -X POST http://localhost:8000/admin/auth/login \
 
 Use the returned `access_token` as `Authorization: Bearer <token>` for admin endpoints.
 
-## ASIK registration failure webhook
+## External ASIK create trigger and result webhook
 
 Set `ASIK_CREATE_WEBHOOK_URL` and `ASIK_CREATE_WEBHOOK_TOKEN` in the backend
-environment to enable outbound notifications. The endpoint must use HTTPS and
-accept a JSON `POST` with a Bearer token. Configure both values for the API and
-Celery worker, then restart them.
+environment to send results back to the external application. The receiver must
+use HTTPS and accept a JSON `POST` with a Bearer token. Set
+`ASIK_CREATE_TRIGGER_TOKEN` to a separate, random secret (at least 32
+characters) to allow the external application to trigger a create. Configure
+these values in the shared backend environment and restart the API and Celery
+worker.
 
-The webhook is queued for terminal ASIK registration failures, including
-Dukcapil rejection and local registration preflight failures. It does not fire
-for an already-registered patient or a cancelled job. HTTP failures are retried
-by Celery; the receiver should use `event_id` / `Idempotency-Key` to deduplicate
-retries.
+The external app sends the existing CKG `patient_id` (UUID), not a NIK, to:
 
-Example request:
+```http
+POST /integrations/asik/patients/{patient_id}/create
+Authorization: Bearer <ASIK_CREATE_TRIGGER_TOKEN>
+Content-Type: application/json
+```
+
+Send `{}` as the body, or `{"headless": true}`. This queues one eligible
+`epus_only + Tandai-CKG` patient for ASIK registration. The immediate `201`
+response contains the job ID and patient name/NIK; `409` means that patient's
+sync/create is already running. A response is only an acknowledgement—the
+registration runs asynchronously.
+
+When the create attempt finishes, CKG POSTs a result event to the configured
+webhook. It includes patient details and a `status`/`outcome` for validation or
+application handling. Events are sent for terminal failures and completed
+registrations; already-registered and cancelled jobs are excluded. HTTP
+delivery failures are retried by Celery. Use `event_id` /
+`Idempotency-Key` to deduplicate retries.
+
+Example result:
 
 ```json
 {
-  "event": "asik.registration.failed",
+  "event": "asik.registration.result",
   "event_id": "sync-job-uuid",
   "occurred_at": "2026-11-02T07:15:00+00:00",
   "job_id": "sync-job-uuid",
@@ -77,13 +95,17 @@ Example request:
   "patient_name": "Example Patient",
   "nik": "patient-nik",
   "puskesmas_id": "puskesmas-uuid",
+  "status": "failed",
   "outcome": "dukcapil_invalid",
   "message": "Dukcapil validation failed (NIK / name / DOB mismatch)"
 }
 ```
 
-The payload contains patient name and NIK. Only configure a trusted receiver
-authorized to process that sensitive data. A successful response must be 2xx.
+Both trigger and result payloads contain or return patient identifiers. Only
+configure a trusted external application authorized to process that sensitive
+data. Generate each token with
+`python -c "import secrets; print(secrets.token_urlsafe(32))"`. A successful
+webhook response must be 2xx.
 
 ## Soft Delete
 

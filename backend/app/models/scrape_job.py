@@ -40,6 +40,7 @@ class TriggererType(str, enum.Enum):
     ADMIN = "admin"
     USER = "user"
     CRON = "cron"
+    INTEGRATION = "integration"
 
 
 class ScrapeJob(UUIDPKMixin, TimestampMixin, SoftDeleteMixin, Base):

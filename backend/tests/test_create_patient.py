@@ -22,9 +22,9 @@ from app.services.simpus_jawaban import pendaftaran_from_row
 from app.tasks.create_patient import (
     _build_step2,
     _derive_from_nik,
-    _post_registration_failure_event,
-    _queue_registration_failure_webhook,
-    _registration_failure_payload,
+    _post_registration_result_event,
+    _queue_registration_result_webhook,
+    _registration_result_payload,
     _title_case_name,
     _wali_block_reason,
     _whatsapp_from_epus,
@@ -187,7 +187,7 @@ def test_wali_block_missing_birth_date():
     assert _wali_block_reason("3275041505180001", None, _EXAM) is not None
 
 
-def test_registration_failure_webhook_uses_bearer_and_idempotency_headers():
+def test_registration_result_webhook_uses_bearer_and_idempotency_headers():
     received = {}
 
     def handle(request):
@@ -196,12 +196,12 @@ def test_registration_failure_webhook_uses_bearer_and_idempotency_headers():
 
     client = httpx.Client(transport=httpx.MockTransport(handle))
     try:
-        status = _post_registration_failure_event(
+        status = _post_registration_result_event(
             client,
             url="https://receiver.example/events",
             token="test-token",
             event_id="job-123",
-            payload={"event": "asik.registration.failed"},
+            payload={"event": "asik.registration.result"},
         )
     finally:
         client.close()
@@ -211,10 +211,10 @@ def test_registration_failure_webhook_uses_bearer_and_idempotency_headers():
     assert request.method == "POST"
     assert request.headers["Authorization"] == "Bearer test-token"
     assert request.headers["Idempotency-Key"] == "job-123"
-    assert request.read() == b'{"event":"asik.registration.failed"}'
+    assert request.read() == b'{"event":"asik.registration.result"}'
 
 
-def test_registration_failure_webhook_payload_has_expected_validation_fields():
+def test_registration_result_webhook_payload_has_patient_and_status_fields():
     patient = SimpleNamespace(
         id="patient-456",
         nama="Example Patient",
@@ -222,25 +222,38 @@ def test_registration_failure_webhook_payload_has_expected_validation_fields():
         puskesmas_id="puskesmas-789",
     )
 
-    payload = _registration_failure_payload(
+    payload = _registration_result_payload(
         job_id="job-123",
         patient=patient,
+        status="failed",
         outcome="dukcapil_invalid",
         message="Dukcapil validation failed.",
     )
 
-    assert payload["event"] == "asik.registration.failed"
+    assert payload["event"] == "asik.registration.result"
     assert payload["event_id"] == payload["job_id"] == "job-123"
     assert payload["patient_id"] == "patient-456"
     assert payload["patient_name"] == "Example Patient"
     assert payload["nik"] == "1234567890123456"
     assert payload["puskesmas_id"] == "puskesmas-789"
+    assert payload["status"] == "failed"
     assert payload["outcome"] == "dukcapil_invalid"
     assert payload["message"] == "Dukcapil validation failed."
     assert payload["occurred_at"]
 
+    success_payload = _registration_result_payload(
+        job_id="job-124",
+        patient=patient,
+        status="success",
+        outcome="created",
+        message="Patient registered in ASIK.",
+    )
+    assert success_payload["event"] == "asik.registration.result"
+    assert success_payload["status"] == "success"
+    assert success_payload["outcome"] == "created"
 
-def test_registration_failure_webhook_is_queued_without_patient_data(monkeypatch):
+
+def test_registration_result_webhook_is_queued_without_patient_data(monkeypatch):
     sent = []
     monkeypatch.setattr(settings, "ASIK_CREATE_WEBHOOK_URL", "https://receiver.example/events")
     monkeypatch.setattr(
@@ -251,20 +264,22 @@ def test_registration_failure_webhook_is_queued_without_patient_data(monkeypatch
     job = SimpleNamespace(id="job-123")
     patient = SimpleNamespace(id="patient-456", nik="not-in-broker")
 
-    _queue_registration_failure_webhook(
+    _queue_registration_result_webhook(
         job=job,
         patient=patient,
+        status="failed",
         outcome="dukcapil_invalid",
         message="Dukcapil validation failed.",
     )
 
     assert sent == [
         (
-            ("create.notify_registration_failure",),
+            ("create.notify_registration_result",),
             {
                 "args": [
                     "job-123",
                     "patient-456",
+                    "failed",
                     "dukcapil_invalid",
                     "Dukcapil validation failed.",
                 ]

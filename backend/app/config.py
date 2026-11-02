@@ -57,6 +57,7 @@ class Settings(BaseSettings):
     SCRAPER_SESSIONS_ROOT: str | None = None
     ASIK_CREATE_WEBHOOK_URL: str | None = None
     ASIK_CREATE_WEBHOOK_TOKEN: str | None = None
+    ASIK_CREATE_TRIGGER_TOKEN: str | None = None
 
     # ---- Loop agent (self-maintaining EPUS scraper/converter agent, PLAN §8.1) ----
     # The throwaway container image the loop task launches per run, built from
@@ -162,14 +163,25 @@ class Settings(BaseSettings):
         Fernet key means stored credentials can't be decrypted at all.
         """
         if self.ASIK_CREATE_WEBHOOK_URL:
-            if not self.ASIK_CREATE_WEBHOOK_TOKEN or not self.ASIK_CREATE_WEBHOOK_TOKEN.strip():
+            if (
+                not self.ASIK_CREATE_WEBHOOK_TOKEN
+                or len(self.ASIK_CREATE_WEBHOOK_TOKEN) < _MIN_JWT_SECRET_LEN
+            ):
                 raise ValueError(
-                    "ASIK_CREATE_WEBHOOK_TOKEN is required when "
-                    "ASIK_CREATE_WEBHOOK_URL is set"
+                    "ASIK_CREATE_WEBHOOK_TOKEN must be at least "
+                    f"{_MIN_JWT_SECRET_LEN} characters when ASIK_CREATE_WEBHOOK_URL is set"
                 )
             parsed_url = urlsplit(self.ASIK_CREATE_WEBHOOK_URL)
             if parsed_url.scheme != "https" or not parsed_url.netloc:
                 raise ValueError("ASIK_CREATE_WEBHOOK_URL must be a valid HTTPS URL")
+        if (
+            self.ASIK_CREATE_TRIGGER_TOKEN
+            and len(self.ASIK_CREATE_TRIGGER_TOKEN) < _MIN_JWT_SECRET_LEN
+        ):
+            raise ValueError(
+                "ASIK_CREATE_TRIGGER_TOKEN must be at least "
+                f"{_MIN_JWT_SECRET_LEN} characters"
+            )
         if not self.is_production:
             return self
         if (

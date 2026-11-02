@@ -153,36 +153,39 @@ def _wali_block_reason(nik: str, birth_date: date | None, exam_date: date) -> st
     return None
 
 
-def _queue_registration_failure_webhook(
+def _queue_registration_result_webhook(
     *,
     job: SyncJob,
     patient: Patient,
+    status: str,
     outcome: str,
     message: str,
 ) -> None:
-    """Queue an outbound event without putting patient data in the broker message."""
+    """Queue a result event without putting patient data in the broker message."""
     if not settings.ASIK_CREATE_WEBHOOK_URL:
         log.warning(
-            "ASIK registration webhook is not configured; failure event not sent "
-            "(job=%s outcome=%s)",
+            "ASIK registration webhook is not configured; result event not sent "
+            "(job=%s status=%s outcome=%s)",
             job.id,
+            status,
             outcome,
         )
         return
     try:
         celery_app.send_task(
-            "create.notify_registration_failure",
-            args=[str(job.id), str(patient.id), outcome, message],
+            "create.notify_registration_result",
+            args=[str(job.id), str(patient.id), status, outcome, message],
         )
     except OperationalError:
         log.exception(
-            "Could not queue ASIK registration webhook (job=%s outcome=%s)",
+            "Could not queue ASIK registration webhook (job=%s status=%s outcome=%s)",
             job.id,
+            status,
             outcome,
         )
 
 
-def _post_registration_failure_event(
+def _post_registration_result_event(
     client: httpx.Client,
     *,
     url: str,
@@ -202,15 +205,16 @@ def _post_registration_failure_event(
     return response.status_code
 
 
-def _registration_failure_payload(
+def _registration_result_payload(
     *,
     job_id: str,
     patient: Patient,
+    status: str,
     outcome: str,
     message: str,
 ) -> dict[str, Any]:
     return {
-        "event": "asik.registration.failed",
+        "event": "asik.registration.result",
         "event_id": job_id,
         "occurred_at": datetime.now(UTC).isoformat(),
         "job_id": job_id,
@@ -218,6 +222,7 @@ def _registration_failure_payload(
         "patient_name": patient.nama,
         "nik": patient.nik,
         "puskesmas_id": str(patient.puskesmas_id),
+        "status": status,
         "outcome": outcome,
         "message": message,
     }
@@ -747,9 +752,10 @@ def create_one_patient(
         msg = f"cannot create via own NIK — {block} (wali flow not yet supported)"
         _log_line(redis_client, log_key, chan, f"[create] {msg}")
         sync_job_crud.mark_failed(db, job, msg, datetime.now(UTC))
-        _queue_registration_failure_webhook(
+        _queue_registration_result_webhook(
             job=job,
             patient=patient,
+            status="failed",
             outcome="needs_wali",
             message="Registration requires guardian data and cannot use the patient's NIK.",
         )
@@ -764,9 +770,10 @@ def create_one_patient(
         msg = "puskesmas has no ASIK default alamat configured — cannot register"
         _log_line(redis_client, log_key, chan, f"[create] {msg}")
         sync_job_crud.mark_failed(db, job, msg, datetime.now(UTC))
-        _queue_registration_failure_webhook(
+        _queue_registration_result_webhook(
             job=job,
             patient=patient,
+            status="failed",
             outcome="missing_default_address",
             message="The health center has no default ASIK address configured.",
         )
@@ -793,9 +800,10 @@ def create_one_patient(
         msg = f"cannot derive DOB/gender from NIK — not registerable: {exc}"
         _log_line(redis_client, log_key, chan, f"[create] {msg}")
         sync_job_crud.mark_failed(db, job, msg, datetime.now(UTC))
-        _queue_registration_failure_webhook(
+        _queue_registration_result_webhook(
             job=job,
             patient=patient,
+            status="failed",
             outcome="invalid_identity_data",
             message="The NIK does not contain valid registration identity data.",
         )
@@ -840,9 +848,10 @@ def create_one_patient(
             webhook_message = _REGISTER_FAIL_REASON.get(
                 outcome, f"ASIK registration failed with outcome '{outcome}'."
             )
-            _queue_registration_failure_webhook(
+            _queue_registration_result_webhook(
                 job=job,
                 patient=patient,
+                status="failed",
                 outcome=outcome,
                 message=webhook_message,
             )
@@ -878,6 +887,18 @@ def create_one_patient(
         celery_task_id=celery_task_id,
         cancel_key_str=cancel_key_str,
     )
+    if status != "cancelled":
+        _queue_registration_result_webhook(
+            job=job,
+            patient=patient,
+            status=status,
+            outcome="created",
+            message=(
+                "Patient registered in ASIK and examination data filled."
+                if status == "success"
+                else "Patient registered in ASIK, but filling examination data failed."
+            ),
+        )
     return "created", status
 
 
@@ -1167,6 +1188,7 @@ def run_create_one(self, job_id: str, headless: bool = True) -> None:
     db = SessionLocal()
     redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
     chan = _stream_chan(job_id)
+    patient = None
     try:
         job = db.scalar(select(SyncJob).where(SyncJob.id == uuid.UUID(job_id)))
         if job is None:
@@ -1201,6 +1223,13 @@ def run_create_one(self, job_id: str, headless: bool = True) -> None:
                 "patient is not an epus_only + tandai_ckg candidate with ePus data",
                 datetime.now(UTC),
             )
+            _queue_registration_result_webhook(
+                job=job,
+                patient=patient,
+                status="failed",
+                outcome="ineligible_patient",
+                message="Patient is no longer eligible for ASIK registration.",
+            )
             _publish_terminal(redis_client, chan, "__failed__")
             return
 
@@ -1214,17 +1243,38 @@ def run_create_one(self, job_id: str, headless: bool = True) -> None:
         )
         if puskesmas is None:
             sync_job_crud.mark_failed(db, job, "puskesmas not found", datetime.now(UTC))
+            _queue_registration_result_webhook(
+                job=job,
+                patient=patient,
+                status="failed",
+                outcome="puskesmas_not_found",
+                message="The patient's health center could not be found.",
+            )
             _publish_terminal(redis_client, chan, "__failed__")
             return
 
         creds = puskesmas_crud.get_cred_decrypted(puskesmas, "asik")
         if creds is None:
             sync_job_crud.mark_failed(db, job, "asik credentials not set", datetime.now(UTC))
+            _queue_registration_result_webhook(
+                job=job,
+                patient=patient,
+                status="failed",
+                outcome="missing_asik_credentials",
+                message="ASIK credentials are not configured for the health center.",
+            )
             _publish_terminal(redis_client, chan, "__failed__")
             return
         base_url = f"https://{puskesmas.asik_url}" if puskesmas.asik_url else None
         if not base_url:
             sync_job_crud.mark_failed(db, job, "asik_url not set", datetime.now(UTC))
+            _queue_registration_result_webhook(
+                job=job,
+                patient=patient,
+                status="failed",
+                outcome="missing_asik_url",
+                message="ASIK URL is not configured for the health center.",
+            )
             _publish_terminal(redis_client, chan, "__failed__")
             return
 
@@ -1234,10 +1284,24 @@ def run_create_one(self, job_id: str, headless: bool = True) -> None:
             sync_job_crud.mark_failed(
                 db, job, f"scraped_epus_data could not be decrypted: {exc}", datetime.now(UTC)
             )
+            _queue_registration_result_webhook(
+                job=job,
+                patient=patient,
+                status="failed",
+                outcome="patient_data_unavailable",
+                message="The patient's source data could not be read.",
+            )
             _publish_terminal(redis_client, chan, "__failed__")
             return
         if not epus:
             sync_job_crud.mark_failed(db, job, "scraped_epus_data is empty", datetime.now(UTC))
+            _queue_registration_result_webhook(
+                job=job,
+                patient=patient,
+                status="failed",
+                outcome="patient_data_unavailable",
+                message="The patient's source data is empty.",
+            )
             _publish_terminal(redis_client, chan, "__failed__")
             return
 
@@ -1258,14 +1322,25 @@ def run_create_one(self, job_id: str, headless: bool = True) -> None:
         )
     except Exception as e:
         db.rollback()
+        j = None
+        notify_result = False
         try:
             j = db.scalar(select(SyncJob).where(SyncJob.id == uuid.UUID(job_id)))
             if j is not None:
                 db.refresh(j, ["status"])
                 if j.status != SyncStatus.CANCELLED:
                     sync_job_crud.mark_failed(db, j, str(e)[:2000], datetime.now(UTC))
+                    notify_result = True
         except Exception:
-            pass
+            log.exception("Failed to finalize create job after error (job=%s)", job_id)
+        if notify_result and j is not None and patient is not None:
+            _queue_registration_result_webhook(
+                job=j,
+                patient=patient,
+                status="failed",
+                outcome="internal_error",
+                message="An unexpected error occurred during ASIK registration.",
+            )
         _publish_terminal(redis_client, chan, "__failed__")
         raise
     finally:
@@ -1274,20 +1349,21 @@ def run_create_one(self, job_id: str, headless: bool = True) -> None:
 
 @celery_app.task(
     bind=True,
-    name="create.notify_registration_failure",
+    name="create.notify_registration_result",
     autoretry_for=(httpx.HTTPError,),
     retry_backoff=True,
     retry_jitter=True,
     retry_kwargs={"max_retries": 5},
 )
-def notify_registration_failure(
+def notify_registration_result(
     self,
     job_id: str,
     patient_id: str,
+    status: str,
     outcome: str,
     message: str,
 ) -> None:
-    """POST a failed-registration event; transient HTTP errors get Celery retries."""
+    """POST a registration result; transient HTTP errors get Celery retries."""
     url = settings.ASIK_CREATE_WEBHOOK_URL
     token = settings.ASIK_CREATE_WEBHOOK_TOKEN
     if not url or not token:
@@ -1300,14 +1376,16 @@ def notify_registration_failure(
             .options(load_only(
                 Patient.id, Patient.puskesmas_id, Patient.nik, Patient.nama,
             ))
+            .execution_options(include_deleted=True)
             .where(Patient.id == uuid.UUID(patient_id))
         )
         if patient is None:
             raise LookupError(f"patient {patient_id} not found for ASIK webhook")
         event_id = job_id
-        payload = _registration_failure_payload(
+        payload = _registration_result_payload(
             job_id=job_id,
             patient=patient,
+            status=status,
             outcome=outcome,
             message=message,
         )
@@ -1316,7 +1394,7 @@ def notify_registration_failure(
 
     try:
         with httpx.Client(timeout=10.0, follow_redirects=False) as client:
-            status_code = _post_registration_failure_event(
+            status_code = _post_registration_result_event(
                 client,
                 url=url,
                 token=token,
@@ -1325,15 +1403,18 @@ def notify_registration_failure(
             )
     except httpx.HTTPError:
         log.exception(
-            "ASIK registration webhook delivery failed (job=%s outcome=%s attempt=%s)",
+            "ASIK registration webhook delivery failed "
+            "(job=%s status=%s outcome=%s attempt=%s)",
             job_id,
+            status,
             outcome,
             self.request.retries + 1,
         )
         raise
     log.info(
-        "ASIK registration webhook delivered (job=%s outcome=%s status=%s)",
+        "ASIK registration webhook delivered (job=%s result=%s outcome=%s http=%s)",
         job_id,
+        status,
         outcome,
         status_code,
     )
@@ -1437,6 +1518,7 @@ def create_simpus_patients(
                 and birth is not None
                 and patient.filter_date.year >= date.today().year
             )
+            registration_outcome = None
             if can_register:
                 held = patient.birth_date
                 if held is None:
@@ -1450,9 +1532,10 @@ def create_simpus_patients(
                 if block or step2 is None:
                     reason = block or "alamat default ASIK kosong"
                     sync_job_crud.mark_failed(db, job, reason[:2000], datetime.now(UTC))
-                    _queue_registration_failure_webhook(
+                    _queue_registration_result_webhook(
                         job=job,
                         patient=patient,
+                        status="failed",
                         outcome="needs_wali" if block else "missing_default_address",
                         message=(
                             "Registration requires guardian data and cannot use the patient's NIK."
@@ -1477,9 +1560,10 @@ def create_simpus_patients(
                     )
                 except ValueError as exc:
                     sync_job_crud.mark_failed(db, job, str(exc)[:2000], datetime.now(UTC))
-                    _queue_registration_failure_webhook(
+                    _queue_registration_result_webhook(
                         job=job,
                         patient=patient,
+                        status="failed",
                         outcome="invalid_identity_data",
                         message="The NIK does not contain valid registration identity data.",
                     )
@@ -1502,12 +1586,14 @@ def create_simpus_patients(
                 if outcome == "cancelled":
                     sync_job_crud.mark_cancelled(db, job)
                     continue
+                registration_outcome = outcome
                 if outcome not in ("created", "already_served"):
                     reason = _REGISTER_FAIL_REASON.get(outcome) or out.get("error") or outcome
                     sync_job_crud.mark_failed(db, job, f"{outcome}: {reason}"[:2000], datetime.now(UTC))
-                    _queue_registration_failure_webhook(
+                    _queue_registration_result_webhook(
                         job=job,
                         patient=patient,
+                        status="failed",
                         outcome=outcome,
                         message=_REGISTER_FAIL_REASON.get(
                             outcome, f"ASIK registration failed with outcome '{outcome}'."
@@ -1519,7 +1605,7 @@ def create_simpus_patients(
                         redis_client, log_key, chan,
                         "[create] sudah ada di ASIK, mengisi pemeriksaan dari SIMPUS",
                     )
-            _execute_sync(
+            fill_status = _execute_sync(
                 db=db,
                 redis_client=redis_client,
                 job=job,
@@ -1533,6 +1619,18 @@ def create_simpus_patients(
                 celery_task_id=raw_id,
                 cancel_key_str=cancel_key_str,
             )
+            if registration_outcome == "created" and fill_status != "cancelled":
+                _queue_registration_result_webhook(
+                    job=job,
+                    patient=patient,
+                    status=fill_status,
+                    outcome=registration_outcome,
+                    message=(
+                        "Patient registered in ASIK and examination data filled."
+                        if fill_status == "success"
+                        else "Patient registered in ASIK, but filling examination data failed."
+                    ),
+                )
     finally:
         db.close()
 

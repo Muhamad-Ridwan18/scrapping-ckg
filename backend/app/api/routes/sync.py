@@ -1,3 +1,4 @@
+import secrets
 import time
 import uuid
 from datetime import UTC, datetime
@@ -5,6 +6,7 @@ from datetime import UTC, datetime
 import redis.asyncio as aioredis
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, contains_eager, load_only
@@ -28,6 +30,8 @@ from app.schemas.sync_job import SyncJobLogOut, SyncJobOut, SyncStart
 from app.tasks.sync import ALLOW_EPUS_ONLY_SYNC
 
 router = APIRouter(tags=["sync"])
+_external_trigger_bearer = HTTPBearer(auto_error=False)
+_INTEGRATION_ACTOR_ID = uuid.UUID(int=0)
 
 _LOG_BACKLOG_MAX = 500
 _LOG_BACKLOG_DEFAULT = 200
@@ -92,6 +96,116 @@ def _trigger_kind(principal: Principal) -> tuple[uuid.UUID, TriggererType]:
     if principal.typ == "admin":
         return principal.id, TriggererType.ADMIN
     return principal.id, TriggererType.USER
+
+
+def _require_external_create_token(
+    credentials: HTTPAuthorizationCredentials | None = Depends(_external_trigger_bearer),
+) -> None:
+    expected = settings.ASIK_CREATE_TRIGGER_TOKEN
+    if not expected:
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            "External ASIK create trigger is not configured",
+        )
+    if (
+        credentials is None
+        or credentials.scheme.lower() != "bearer"
+        or not secrets.compare_digest(credentials.credentials, expected)
+    ):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid bearer token")
+
+
+def _start_create_job(
+    patient_id: uuid.UUID,
+    *,
+    body: SyncStart,
+    db: Session,
+    principal: Principal | None = None,
+) -> SyncJobOut:
+    patient = db.scalar(
+        select(Patient)
+        .options(load_only(
+            Patient.id, Patient.puskesmas_id, Patient.nik, Patient.nama,
+            Patient.match_status, Patient.epus_tandai_ckg, Patient.scraped_epus_data,
+        ))
+        .where(Patient.id == patient_id)
+    )
+    if patient is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Patient not found")
+    if principal is not None:
+        _authorize(principal, patient.puskesmas_id)
+    if not (
+        patient.match_status == MatchStatus.EPUS_ONLY
+        and patient.epus_tandai_ckg
+        and patient.scraped_epus_data is not None
+    ):
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "Create requires an epus_only + Tandai-CKG patient with ePus data",
+        )
+
+    row = db.execute(
+        select(
+            Puskesmas.name,
+            Puskesmas.asik_cred.isnot(None),
+            Puskesmas.asik_url,
+            Puskesmas.asik_default_alamat,
+        ).where(Puskesmas.id == patient.puskesmas_id)
+    ).one_or_none()
+    if row is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Puskesmas not found")
+    puskesmas_name, has_cred, base_url, default_alamat = row
+    if not has_cred:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "ASIK credentials not set")
+    if not base_url:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "asik_url not set for this puskesmas",
+        )
+    if not default_alamat:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            "puskesmas has no default ASIK alamat configured — set it in the "
+            "puskesmas form first",
+        )
+
+    if principal is None:
+        triggered_by_id = _INTEGRATION_ACTOR_ID
+        triggered_by_type = TriggererType.INTEGRATION
+    else:
+        triggered_by_id, triggered_by_type = _trigger_kind(principal)
+    try:
+        job = crud.create(
+            db,
+            puskesmas_id=patient.puskesmas_id,
+            patient_id=patient.id,
+            triggered_by_id=triggered_by_id,
+            triggered_by_type=triggered_by_type,
+        )
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "a sync or create is already in progress for this patient",
+        ) from e
+
+    try:
+        celery_app.send_task(
+            "create.run_one",
+            args=[str(job.id)],
+            kwargs={"headless": body.headless},
+        )
+    except Exception as e:
+        crud.mark_failed(db, job, f"broker unreachable: {e}"[:2000], datetime.now(UTC))
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE, "create broker unavailable"
+        ) from e
+    return _to_job_out(
+        job,
+        puskesmas_name=puskesmas_name,
+        patient_name=patient.nama,
+        patient_nik=patient.nik,
+    )
 
 
 @router.post(
@@ -201,83 +315,30 @@ def start_create(
     streams to the SAME sync-jobs log/history UI as a normal sync (celery `create.run_one`).
     Requires the puskesmas to have a default ASIK alamat configured (the mandatory 4-level
     domicile cascade the create flow fills)."""
-    patient = db.scalar(
-        select(Patient)
-        .options(load_only(
-            Patient.id, Patient.puskesmas_id, Patient.nik, Patient.nama,
-            Patient.match_status, Patient.epus_tandai_ckg, Patient.scraped_epus_data,
-        ))
-        .where(Patient.id == patient_id)
+    return _start_create_job(
+        patient_id,
+        body=body,
+        db=db,
+        principal=principal,
     )
-    if patient is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Patient not found")
-    _authorize(principal, patient.puskesmas_id)
-    if not (
-        patient.match_status == MatchStatus.EPUS_ONLY
-        and patient.epus_tandai_ckg
-        and patient.scraped_epus_data is not None
-    ):
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST,
-            "Create requires an epus_only + Tandai-CKG patient with ePus data",
-        )
 
-    row = db.execute(
-        select(
-            Puskesmas.name,
-            Puskesmas.asik_cred.isnot(None),
-            Puskesmas.asik_url,
-            Puskesmas.asik_default_alamat,
-        ).where(Puskesmas.id == patient.puskesmas_id)
-    ).one_or_none()
-    if row is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Puskesmas not found")
-    puskesmas_name, has_cred, base_url, default_alamat = row
-    if not has_cred:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "ASIK credentials not set")
-    if not base_url:
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST, "asik_url not set for this puskesmas"
-        )
-    if not default_alamat:
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST,
-            "puskesmas has no default ASIK alamat configured — set it in the "
-            "puskesmas form first",
-        )
 
-    triggered_by_id, triggered_by_type = _trigger_kind(principal)
-    try:
-        job = crud.create(
-            db,
-            puskesmas_id=patient.puskesmas_id,
-            patient_id=patient.id,
-            triggered_by_id=triggered_by_id,
-            triggered_by_type=triggered_by_type,
-        )
-    except IntegrityError as e:
-        db.rollback()
-        raise HTTPException(
-            status.HTTP_409_CONFLICT,
-            "a sync or create is already in progress for this patient",
-        ) from e
-
-    try:
-        celery_app.send_task(
-            "create.run_one",
-            args=[str(job.id)],
-            kwargs={"headless": body.headless},
-        )
-    except Exception as e:
-        crud.mark_failed(db, job, f"broker unreachable: {e}"[:2000], datetime.now(UTC))
-        raise HTTPException(
-            status.HTTP_503_SERVICE_UNAVAILABLE, "create broker unavailable"
-        ) from e
-    return _to_job_out(
-        job,
-        puskesmas_name=puskesmas_name,
-        patient_name=patient.nama,
-        patient_nik=patient.nik,
+@router.post(
+    "/integrations/asik/patients/{patient_id}/create",
+    response_model=SyncJobOut,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(_require_external_create_token)],
+)
+def start_external_create(
+    patient_id: uuid.UUID,
+    body: SyncStart = SyncStart(),
+    db: Session = Depends(get_db),
+) -> SyncJobOut:
+    """Machine-to-machine trigger for creating one eligible CKG patient in ASIK."""
+    return _start_create_job(
+        patient_id,
+        body=body,
+        db=db,
     )
 
 
