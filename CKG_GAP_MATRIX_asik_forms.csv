@@ -1,0 +1,127 @@
+﻿frm_code,paket_name,layanan_name,modul,demos,q_total,q_matched_in_ilp,coverage,bucket
+FRM000002,Tingkat Aktivitas Fisik,Tingkat Aktivitas Fisik,Aktivitas Fisik,Laki-laki 18-24 Tahun; Laki-laki 25-39 Tahun; Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun; Perempuan 18-24 Tahun; Perempuan 25-29 Tahun; Perempuan 30-39 Tahun; Perempuan 40-59 Tahun; Perempuan 60-69 Tahun,4,0,0%,missing_in_ilp
+FRM000006,Demografi Dewasa Laki-Laki,Demografi Dewasa Laki-Laki,Demografi,Laki-laki 18-24 Tahun; Laki-laki 25-39 Tahun; Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun,3,0,0%,missing_in_ilp
+FRM000007,Demografi Dewasa Perempuan,Demografi Dewasa Perempuan,Demografi,Perempuan 18-24 Tahun; Perempuan 25-29 Tahun; Perempuan 30-39 Tahun; Perempuan 40-44 Tahun; Perempuan 40-59 Tahun; Perempuan 45-59 Tahun,4,0,0%,missing_in_ilp
+FRM000008,Demografi Lansia,Demografi Lansia,Demografi,Laki-laki >=60 Tahun; Perempuan 60-69 Tahun; Perempuan >=70 Tahun,2,0,0%,missing_in_ilp
+FRM000106,Demografi Anak,Demografi Anak,Demografi Anak,Balita 12-17 Bulan,1,0,0%,missing_in_ilp
+FRM000187,Pemeriksaan EID,Pemeriksaan EID,EID HIV,BBL; Balita 12-17 Bulan,1,0,0%,missing_in_ilp
+FRM000038,SKILAS Pemeriksaan Gejala Depresi - Lansia,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,,3,0,0%,missing_in_ilp
+FRM000051,Gizi (BB - TB - Lingkar Perut) Perempuan,"Skrining Gizi, Tekanan Darah, dan Gula Darah Perempuan",Gizi,Perempuan 18-24 Tahun; Perempuan 25-29 Tahun; Perempuan 30-39 Tahun; Perempuan 40-59 Tahun,4,0,0%,missing_in_ilp
+FRM000054,Pemeriksaan Gula Darah Lanjutan (GDP & GD 2 PP),"Skrining Laboratorium =>40 thn Laki-laki Gula Darah, Fungsi Ginjal, Hati, Profil Lipid",Gula Darah,Laki-laki 18-24 Tahun; Laki-laki 25-39 Tahun; Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun; Perempuan 18-24 Tahun; Perempuan 25-29 Tahun; Perempuan 30-39 Tahun; Perempuan 40-59 Tahun; Perempuan 60-69 Tahun; Perempuan >=70 Tahun,2,0,0%,missing_in_ilp
+FRM000087,Riwayat Hipertensi & Diabetes,Riwayat Hipertensi & Diabetes,Gula Darah,Laki-laki 18-24 Tahun; Laki-laki 25-39 Tahun; Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun; Perempuan 18-24 Tahun; Perempuan 25-29 Tahun; Perempuan 30-39 Tahun; Perempuan 40-44 Tahun; Perempuan 40-59 Tahun; Perempuan 45-59 Tahun; Perempuan 60-69 Tahun; Perempuan >=70 Tahun,3,0,0%,missing_in_ilp
+FRM000047,POCT Lipid Panel (Khusus usia >=40 thn dan penyandang HT dan/atau DM),"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun; Perempuan 40-59 Tahun,6,0,0%,missing_in_ilp
+FRM000044,Pemeriksaan Hepatitis,"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,,3,0,0%,missing_in_ilp
+FRM000245,Skrining Fungsi Ginjal Perempuan (hanya untuk =>40 tahun dengan risiko HT DM),"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun; Perempuan 40-59 Tahun,7,0,0%,missing_in_ilp
+FRM000248,Skrining Kerusakan Ginjal (hanya untuk =>40 tahun dengan risiko HT DM),"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,,3,0,0%,missing_in_ilp
+FRM000259,Penapisan dan Pemeriksaan HIV Anak,Penapisan dan Pemeriksaan HIV & Sifilis Anak,IMS,Anak Pra Sekolah 5-6 Tahun; Balita 18-23 Bulan; Balita 2 Tahun; Balita 3-4 Tahun; Laki-laki 18-24 Tahun; Laki-laki 25-39 Tahun; Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Perempuan 18-24 Tahun; Perempuan 25-29 Tahun; Perempuan 30-39 Tahun; Perempuan 40-44 Tahun; Perempuan 45-59 Tahun,1,0,0%,missing_in_ilp
+FRM000264,Penapisan dan Pemeriksaan Sifilis Anak,Penapisan dan Pemeriksaan HIV & Sifilis Anak,IMS,,2,0,0%,missing_in_ilp
+FRM000190,Skrining AIDS (hanya untuk HIV positif),Skrining AIDS,Infeksi Menular Seksual,Laki-laki 18-24 Tahun; Laki-laki 25-39 Tahun; Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Perempuan 18-24 Tahun; Perempuan 25-29 Tahun; Perempuan 30-39 Tahun; Perempuan 40-44 Tahun; Perempuan 40-59 Tahun; Perempuan 45-59 Tahun,1,0,0%,missing_in_ilp
+FRM000058,Detail Abnormalitas - Skrining Jantung,Skrining Jantung (Pemeriksaan EKG - hanya penyandang HIPERTENSI),Jantung dan Stroke,,2,0,0%,missing_in_ilp
+FRM000100,Prediksi Risiko Jantung dan Stroke,Prediksi Risiko Jantung dan Stroke,Jantung dan Stroke,Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun; Perempuan 40-59 Tahun,1,0,0%,missing_in_ilp
+FRM000059,Skrining Kanker Payudara,Skrining Kanker Payudara,Kanker Payudara,Perempuan 30-39 Tahun; Perempuan 40-44 Tahun; Perempuan 45-59 Tahun; Perempuan 60-69 Tahun,3,0,0%,missing_in_ilp
+FRM000081,Skrining Kelainan Saluran Empedu (2-4 bulan),Skrining Kelainan Saluran Empedu (2-4 bulan),Kelainan Saluran Empedu,BBL,3,0,0%,missing_in_ilp
+FRM000112,Gejala Cemas Remaja,Kesehatan Jiwa Remaja,Keswa Anak Remaja,,4,0,0%,missing_in_ilp
+FRM000125,Gejala Depresi Remaja,Kesehatan Jiwa Remaja,Keswa Anak Remaja,,4,0,0%,missing_in_ilp
+,Gizi Anak Sekolah,Gizi Anak Sekolah,PEDIATRIK,,13,0,0%,missing_in_ilp
+FRM000075,[Bayi & Anak Pra Sekolah] Riwayat Kesehatan (2),[Bayi & Anak Pra Sekolah] Riwayat Kesehatan (2),RIWAYAT KESEHATAN,,2,0,0%,missing_in_ilp
+FRM000076,[Bayi & Anak Pra Sekolah] Riwayat Kesehatan (3),[Bayi & Anak Pra Sekolah] Riwayat Kesehatan (3),RIWAYAT KESEHATAN,,1,0,0%,missing_in_ilp
+FRM000171,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,Anak Pra Sekolah 5-6 Tahun; Balita 2 Tahun; Balita 3-4 Tahun; Balita 3-6 Tahun,22,0,0%,missing_in_ilp
+FRM000024,Skrining Lanjutan Talasemia - Balita dan Anak Prasekolah,Skrining Lanjutan Talasemia - Balita dan Anak Prasekolah,SKRINING LANJUTAN TALASEMIA,Balita 2 Tahun,8,0,0%,missing_in_ilp
+FRM000132,Tindak Lanjut Pemeriksaan Talasemia - Anak Sekolah,Tindak Lanjut Pemeriksaan Talasemia - Anak Sekolah,SKRINING LANJUTAN TALASEMIA,,7,0,0%,missing_in_ilp
+FRM000011,Pemeriksaan PJB,Skrining PJB,SKRINING PENYAKIT JANTUNG BAWAAN,BBL,3,0,0%,missing_in_ilp
+FRM000086,Kuesioner Gangguan Pemusatan Perhatian dan Hiperaktivitas (GPPH) - bila ada indikasi,Skrining Perkembangan Balita 3-6 Tahun,SKRINING PERKEMBANGAN,,1,0,0%,missing_in_ilp
+FRM000018,Kuesioner Masalah Perilaku dan Emosional (KMPE) - Jika terindikasi memiliki masalah perilaku dan emosi,Skrining Perkembangan Balita 3-6 Tahun,SKRINING PERKEMBANGAN,,1,0,0%,missing_in_ilp
+FRM000017,Kuesioner Pra Skrining Perkembangan (KPSP),Skrining Perkembangan Balita 12-17 Bln,SKRINING PERKEMBANGAN,Balita 12-17 Bulan; Balita 18-23 Bulan; Balita 2 Tahun,1,0,0%,missing_in_ilp
+FRM000095,M-CHAT - 1. Penapisan,Skrining Perkembangan Balita 18 Bulan -2 Tahun,SKRINING PERKEMBANGAN,,1,0,0%,missing_in_ilp
+FRM000019,"M-CHAT 2. Lanjutan jika terindikasi terlambat bicara, ada gangguan komunikasi atau interaksi sosial dan perilaku yang berulang-ulang",Skrining Perkembangan Balita 18 Bulan -2 Tahun,SKRINING PERKEMBANGAN,,1,0,0%,missing_in_ilp
+FRM000197,Pemeriksaan Gula Darah Remaja,Pemeriksaan Gula Darah - Remaja,SKRINING TALASEMIA DAN DIABETES,,5,0,0%,missing_in_ilp
+FRM000105,Rapid Test Hemoglobin - Balita,Skrining Talasemia (Rapid Test Hemoglobin),SKRINING TALASEMIA DAN DIABETES,Balita 2 Tahun,1,0,0%,missing_in_ilp
+FRM000097,Talasemia,Faktor Risiko Talasemia,SKRINING TALASEMIA DAN DIABETES,,3,0,0%,missing_in_ilp
+FRM000021,Skrining Telinga dan Mata - Balita dan Anak Prasekolah,Skrining Telinga dan Mata - Balita dan Anak Prasekolah,SKRINING TELINGA DAN MATA,,5,0,0%,missing_in_ilp
+FRM000174,Faktor Risiko TB - Anak 1-9 tahun,Tuberkulosis - Skrining Mandiri Anak 1-9 tahun,SKRINING TUBERKULOSIS,Anak Pra Sekolah 5-6 Tahun; Balita 12-17 Bulan; Balita 18-23 Bulan; Balita 2 Tahun; Balita 3-4 Tahun,1,0,0%,missing_in_ilp
+FRM000180,Faktor Risiko TB - Dewasa & Lansia,Faktor Risiko Tuberkulosis Dewasa & Lansia,SKRINING TUBERKULOSIS,Laki-laki 18-24 Tahun; Laki-laki 25-39 Tahun; Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun; Perempuan 18-24 Tahun; Perempuan 25-29 Tahun; Perempuan 30-39 Tahun; Perempuan 40-44 Tahun; Perempuan 40-59 Tahun; Perempuan 45-59 Tahun; Perempuan 60-69 Tahun; Perempuan >=70 Tahun,1,0,0%,missing_in_ilp
+FRM000179,Faktor Risiko dan Skrining X-Ray TB (Anak Kelas 1-3),Tuberkulosis - Skrining Nakes Kelas 1-3,SKRINING TUBERKULOSIS,,10,0,0%,missing_in_ilp
+FRM000048,"Pemeriksaan Sputum - Tuberkulosis
+
+
+
+
+
+
+
+",Pemeriksaan Tuberkulosis,SKRINING TUBERKULOSIS,Laki-laki 18-24 Tahun; Laki-laki 25-39 Tahun; Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun; Perempuan 18-24 Tahun; Perempuan 25-29 Tahun; Perempuan 30-39 Tahun; Perempuan 40-59 Tahun; Perempuan >=70 Tahun,5,0,0%,missing_in_ilp
+FRM000184,Pemeriksaan Tuberkulosis (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Dewasa & Lansia,SKRINING TUBERKULOSIS,,8,0,0%,missing_in_ilp
+FRM000178,Pemeriksaan Tuberkulosis Anak,Tuberkulosis - Skrining Nakes Anak 1-9 tahun,SKRINING TUBERKULOSIS,,10,0,0%,missing_in_ilp
+FRM000025,Skoring TB - Hanya Apabila Tes Mantoux,"Skrining Tuberkulosis - Balita dan Anak Prasekolah
+",SKRINING TUBERKULOSIS,Balita 1 Tahun; Balita 2 Tahun; Balita 3-6 Tahun,7,0,0%,missing_in_ilp
+FRM000133,Skrining Tuberkulosis Anak (Kelas 1-8),Tuberkulosis - Skrining Mandiri Kelas 1-8,SKRINING TUBERKULOSIS,,6,0,0%,missing_in_ilp
+FRM000134,Skrining Tuberkulosis Anak Sekolah (Kelas 9-12),Tuberkulosis - Skrining Mandiri Kelas 9-12,SKRINING TUBERKULOSIS,,6,0,0%,missing_in_ilp
+FRM000065,Tuberkulosis,Tuberkulosis Dewasa & Lansia,SKRINING TUBERKULOSIS,Laki-laki 18-24 Tahun; Laki-laki 25-39 Tahun; Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun; Perempuan 18-24 Tahun; Perempuan 25-29 Tahun; Perempuan 30-39 Tahun; Perempuan 40-59 Tahun; Perempuan 60-69 Tahun; Perempuan >=70 Tahun,3,0,0%,missing_in_ilp
+FRM000098,Riwayat dan Gejala DM Anak,DM Anak (3-6 tahun),SM DM Anak 3-6 Tahun,,10,0,0%,missing_in_ilp
+FRM000010,Berat Lahir,Skrining Berat Lahir,Skrining Pertumbuhan,BBL,3,0,0%,missing_in_ilp
+FRM000012,"Hasil Pemeriksaan SHK, G6PD, HAK","Skrining SHK, Defisiensi Enzim G6PD, Sindrom HAK,","Skrining SHK,  Defisiensi Enzim G6PD, Sindrom HAK,",BBL,4,0,0%,missing_in_ilp
+FRM000083,"Tes Konfirmasi Pemeriksaan SHK, G6PD, HAK","Skrining SHK, Defisiensi Enzim G6PD, Sindrom HAK,","Skrining SHK,  Defisiensi Enzim G6PD, Sindrom HAK,",,6,0,0%,missing_in_ilp
+FRM000137,Skrining telinga dan mata (anak sekolah),,Skrining telinga dan mata (anak sekolah),,8,0,0%,missing_in_ilp
+FRM000265,Tekanan Darah Dewasa Lansia,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Tekanan Darah,,9,0,0%,missing_in_ilp
+FRM000186,Pemeriksaan Kadar CO (Hanya Diisi Apabila Merokok atau Terpapar Asap Rokok),,,,1,1,100%,mostly_covered
+FRM000205,Pemeriksaan Calon Pengantin Perempuan,Pemeriksaan Calon Pengantin Perempuan,Calon Pengantin,Perempuan 18-24 Tahun; Perempuan 25-29 Tahun; Perempuan 30-39 Tahun; Perempuan 40-44 Tahun; Perempuan 40-59 Tahun; Perempuan 45-59 Tahun,1,1,100%,mostly_covered
+FRM000191,Pemeriksaan Sifilis,Pemeriksaan Calon Pengantin Laki-laki,Calon Pengantin,,1,1,100%,mostly_covered
+FRM000032,SKILAS Mobilisasi - Lansia,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,,1,1,100%,mostly_covered
+FRM000056,Skrining Penyakit Periodontal,Skrining Gigi - Dewasa >=25 tahun,Gigi,,2,2,100%,mostly_covered
+FRM000091,Pemeriksaan Gula Darah Lanjutan (HbA1C),"Skrining Laboratorium =>40 thn Laki-laki Gula Darah, Fungsi Ginjal, Hati, Profil Lipid",Gula Darah,,1,1,100%,mostly_covered
+FRM000045,Pemeriksaan Fibrosis/Sirosis Hati,"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,,3,3,100%,mostly_covered
+FRM000088,Kanker Leher Rahim,Kanker Leher Rahim,Kanker Leher Rahim,Perempuan 30-39 Tahun; Perempuan 40-59 Tahun; Perempuan 60-69 Tahun,1,1,100%,mostly_covered
+FRM000060,Pemeriksaan Inspekulo dan IVA,Skrining Kanker Leher Rahim,Kanker Leher Rahim,Perempuan 30-39 Tahun; Perempuan 40-59 Tahun; Perempuan 60-69 Tahun,2,2,100%,mostly_covered
+FRM000050,Pemeriksaan Lanjutan Kanker Usus,Skrining Kanker Usus (TL APCS),Kanker Usus,Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun; Perempuan 45-59 Tahun; Perempuan 60-69 Tahun; Perempuan >=70 Tahun,3,3,100%,mostly_covered
+FRM000079,Edukasi Warna Kulit dan Tinja Bayi,Skrining Bayi Kuning (0-2 hari),Kelainan Saluran Empedu,BBL,1,1,100%,mostly_covered
+FRM000240,Hasil Kremer pada Bayi Kuning,Skrining Bayi Kuning (0-2 hari),Kelainan Saluran Empedu,,1,1,100%,mostly_covered
+FRM000115,Faktor Risiko Malaria,Kuesioner Malaria,Malaria,Anak Pra Sekolah 5-6 Tahun; Balita 2 Tahun; Balita 3-4 Tahun; Balita 3-6 Tahun; Laki-laki 18-24 Tahun; Laki-laki 25-39 Tahun; Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun; Perempuan 18-24 Tahun; Perempuan 25-29 Tahun; Perempuan 30-39 Tahun; Perempuan 40-44 Tahun; Perempuan 40-59 Tahun; Perempuan 45-59 Tahun; Perempuan 60-69 Tahun; Perempuan >=70 Tahun,5,4,80%,mostly_covered
+FRM000117,Pemeriksaan RDT Malaria (untuk daerah endemis atau berisiko malaria),Hasil Pemeriksaan RDT Malaria,Malaria,BBL; Balita 1 Tahun; Balita 2 Tahun; Balita 3-6 Tahun,1,1,100%,mostly_covered
+FRM000064,Perilaku Merokok,Perilaku Merokok - Dewasa Lansia,Merokok,Laki-laki 18-24 Tahun; Laki-laki 25-39 Tahun; Laki-laki 40-44 Tahun; Perempuan 18-24 Tahun; Perempuan 40-44 Tahun; Perempuan 40-59 Tahun; Perempuan 45-59 Tahun,9,8,89%,mostly_covered
+FRM000201,Pemeriksaan Penyakit Skabies,Layanan Penyakit Tropis Terabaikan,Penyakit Tropis Terabaikan (NTD) - mandiri,,1,1,100%,mostly_covered
+FRM000078,[Bayi & Anak Pra Sekolah] Riwayat Kesehatan (1),[Bayi & Anak Pra Sekolah] Riwayat Kesehatan (anak usia 3-6 tahun),RIWAYAT KESEHATAN,,2,2,100%,mostly_covered
+FRM000130,Riwayat imunisasi HPV,Riwayat Imunisasi HPV,Riwayat Imunisasi HPV,,1,1,100%,mostly_covered
+FRM000172,Riwayat Imunisasi Tetanus(Status T) - Hanya untuk Catin,Riwayat Imunisasi Tetanus(Status T),Riwayat Imunisasi Tetanus (Status T),Perempuan 18-24 Tahun; Perempuan 25-29 Tahun; Perempuan 30-39 Tahun,1,1,100%,mostly_covered
+FRM000131,Pemeriksaan Gigi - Anak,Skrining Gigi - Anak,SKRINING GIGI,Anak Pra Sekolah 5-6 Tahun; Balita 1 Tahun; Balita 12-17 Bulan; Balita 18-23 Bulan; Balita 2 Tahun; Balita 3-4 Tahun; Balita 3-6 Tahun,1,1,100%,mostly_covered
+FRM000022,Skrining Gigi - Balita dan Anak Prasekolah,Skrining Gigi - Balita dan Anak Prasekolah,SKRINING GIGI,,1,1,100%,mostly_covered
+FRM000096,Penapisan KMPE dan GPPH,Skrining Perkembangan Balita 3-6 Tahun,SKRINING PERKEMBANGAN,,2,2,100%,mostly_covered
+FRM000094,Tuberkulosis Bayi & Anak Pra Sekolah,"Tuberkulosis Bayi & Anak Pra Sekolah
+Tuberkulosis Bayi Balita & Anak Pra Sekolah",SKRINING TUBERKULOSIS,Balita 1 Tahun; Balita 2 Tahun; Balita 3-6 Tahun,6,5,83%,mostly_covered
+FRM000169,Tingkat Aktivitas Fisik (sedang dan berat),Tingkat Aktivitas Fisik,Aktivitas Fisik,Laki-laki 18-24 Tahun; Laki-laki 25-39 Tahun; Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun; Perempuan 18-24 Tahun; Perempuan 25-29 Tahun; Perempuan 30-39 Tahun; Perempuan 40-44 Tahun; Perempuan 40-59 Tahun; Perempuan 45-59 Tahun; Perempuan 60-69 Tahun; Perempuan >=70 Tahun,10,6,60%,partial
+FRM000188,Pemeriksaan HIV,Pemeriksaan Calon Pengantin Laki-laki,Calon Pengantin,Laki-laki 18-24 Tahun; Laki-laki 25-39 Tahun; Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Perempuan 18-24 Tahun; Perempuan 25-29 Tahun; Perempuan 30-39 Tahun; Perempuan 40-44 Tahun; Perempuan 40-59 Tahun; Perempuan 45-59 Tahun,5,1,20%,partial
+FRM000033,Mobilisasi - Pemeriksaan Lanjutan (SPBB),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,,10,5,50%,partial
+FRM000040,Pemeriksaan Gangguan Fungsional/Barthel Index - Lansia,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,,11,2,18%,partial
+FRM000039,Pemeriksaan Gejala Depresi - Pemeriksaan Lanjutan,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,,6,2,33%,partial
+FRM000031,Penurunan Kognitif - Tindak Lanjut (AD-8 INA),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,,16,8,50%,partial
+FRM000030,Penurunan Kognitif - Tindak Lanjut (Mini Cog-Clock Draw),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,,4,3,75%,partial
+FRM000034,SKILAS Malnutrisi,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,,6,3,50%,partial
+FRM000029,SKILAS Penurunan Kognitif - Lansia,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,Laki-laki >=60 Tahun,4,3,75%,partial
+FRM000035,Skrining Malnutrisi - Pemeriksaan Lanjutan (MNSF),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,,14,7,50%,partial
+FRM000055,Skrining Karies dan Gigi Hilang,Skrining Gigi - Dewasa >=25 tahun,Gigi,Laki-laki 18-24 Tahun; Laki-laki 25-39 Tahun; Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun; Perempuan 18-24 Tahun; Perempuan 25-29 Tahun; Perempuan 30-39 Tahun; Perempuan 60-69 Tahun; Perempuan >=70 Tahun,2,1,50%,partial
+FRM000093,Gizi (BB - TB - Lingkar Perut) Laki-laki,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Gizi,Laki-laki 18-24 Tahun; Laki-laki 25-39 Tahun; Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun,4,3,75%,partial
+FRM000256,Pemeriksaan Gula Darah Dewasa Lansia,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Gula Darah,Laki-laki 18-24 Tahun; Laki-laki 25-39 Tahun; Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun; Perempuan 18-24 Tahun; Perempuan 25-29 Tahun; Perempuan 30-39 Tahun; Perempuan 40-44 Tahun; Perempuan 45-59 Tahun; Perempuan 60-69 Tahun; Perempuan >=70 Tahun,9,2,22%,partial
+FRM000028,Hati,Hati,Hati/Hepatitis,Laki-laki 18-24 Tahun; Laki-laki 25-39 Tahun; Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun; Perempuan 18-24 Tahun; Perempuan 25-29 Tahun; Perempuan 30-39 Tahun; Perempuan 40-59 Tahun; Perempuan 60-69 Tahun,12,5,42%,partial
+FRM000244,Skrining Fungsi Ginjal Laki-Laki (hanya untuk =>40 tahun dengan risiko HT DM),"Skrining Laboratorium =>40 thn Laki-laki Gula Darah, Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun; Perempuan 40-59 Tahun,4,1,25%,partial
+FRM000173,Faktor Risiko HIV dan Sifilis,Faktor Risiko HIV & Sifilis,Infeksi Menular Seksual,Laki-laki 18-24 Tahun; Laki-laki 25-39 Tahun; Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Perempuan 18-24 Tahun; Perempuan 25-29 Tahun; Perempuan 30-39 Tahun; Perempuan 40-44 Tahun; Perempuan 40-59 Tahun; Perempuan 45-59 Tahun,12,4,33%,partial
+FRM000057,Hasil Pemeriksaan - Skrining Jantung,Skrining Jantung (Pemeriksaan EKG - hanya penyandang HIPERTENSI),Jantung dan Stroke,Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun; Perempuan 40-59 Tahun,2,1,50%,partial
+FRM000067,Kesehatan Jiwa,Kesehatan Jiwa,Jiwa,Laki-laki 18-24 Tahun; Laki-laki 25-39 Tahun; Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun; Perempuan 18-24 Tahun; Perempuan 25-29 Tahun; Perempuan 30-39 Tahun; Perempuan 40-59 Tahun; Perempuan 60-69 Tahun; Perempuan >=70 Tahun,6,4,67%,partial
+FRM000061,Hasil Pemeriksaan HPV-DNA,Skrining Kanker Leher Rahim,Kanker Leher Rahim,,5,1,20%,partial
+FRM000138,Skrining Kanker Paru (Laki-Laki >=45 Tahun) - Penapisan Risiko Kanker Paru,Skrining Kanker Paru (Laki-Laki >=45 Tahun) - Penapisan Risiko Kanker Paru,Kanker Paru,Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun,7,3,43%,partial
+FRM000041,"Skrining Kanker Paru (Laki-laki, =>45 thn)",Skrining Kanker Paru (Laki-laki =>45 tahun),Kanker Paru,Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun,11,7,64%,partial
+FRM000027,Faktor Risiko Kanker Usus,Kanker Usus,Kanker Usus,Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun; Perempuan 45-59 Tahun; Perempuan 60-69 Tahun; Perempuan >=70 Tahun,5,2,40%,partial
+FRM000252,Penilaian Warna Kulit dan Warna Tinja (14-28 hari),Skrining Bayi Kuning (14- 28 hari),Kelainan Saluran Empedu,BBL,4,1,25%,partial
+FRM000109,Gejala Cemas Anak,Kesehatan Jiwa Anak,Keswa Anak Remaja,,4,3,75%,partial
+FRM000124,Gejala Depresi Anak,Kesehatan Jiwa Anak,Keswa Anak Remaja,,4,3,75%,partial
+FRM000101,Pemeriksaan PPOK (Skrining PUMA),Pemeriksaan PPOK (Skrining PUMA),PPOK,Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun; Perempuan 40-59 Tahun,8,5,62%,partial
+FRM000199,Pemeriksaan Penyakit Frambusia (untuk daerah endemis atau berisiko frambusia),Layanan Penyakit Tropis Terabaikan,Penyakit Tropis Terabaikan (NTD) - mandiri,,2,1,50%,partial
+FRM000198,Pemeriksaan Penyakit Kusta,Layanan Penyakit Tropis Terabaikan,Penyakit Tropis Terabaikan (NTD) - mandiri,Anak Pra Sekolah 5-6 Tahun; Balita 3-4 Tahun; Laki-laki 18-24 Tahun; Laki-laki 25-39 Tahun; Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun; Perempuan 18-24 Tahun; Perempuan 25-29 Tahun; Perempuan 30-39 Tahun; Perempuan 40-44 Tahun; Perempuan 40-59 Tahun; Perempuan 45-59 Tahun; Perempuan 60-69 Tahun; Perempuan >=70 Tahun,3,1,33%,partial
+FRM000129,Riwayat Imunisasi Rutin Anak Sekolah,Riwayat Imunisasi Rutin Anak Sekolah,Riwayat Imunisasi Rutin Anak Sekolah,,10,1,10%,partial
+FRM000016,Skrining Pertumbuhan - Balita dan Anak Prasekolah 1-5 Tahun,Skrining Pertumbuhan - Balita dan Anak Prasekolah 1- 5 Tahun,SKRINING PERTUMBUHAN,,7,1,14%,partial
+FRM000110,Faktor Risiko Gula Darah Anak,Faktor Risiko Gula Darah Anak,SKRINING TALASEMIA DAN DIABETES,,10,5,50%,partial
+FRM000195,Pemeriksaan Gula Darah Anak,Pemeriksaan Gula Darah Anak,SKRINING TALASEMIA DAN DIABETES,,4,1,25%,partial
+FRM000085,Skrining Telinga dan Mata (1-2 tahun),Skrining Telinga dan Mata (1-2 tahun),SKRINING TELINGA DAN MATA,,5,1,20%,partial
+FRM000182,"Faktor Risiko dan Skrining X-Ray TB (Anak Sekolah, Dewasa & Lansia)",Tuberkulosis - Skrining Nakes Usia 10-14 tahun,SKRINING TUBERKULOSIS,Laki-laki 18-24 Tahun; Laki-laki 25-39 Tahun; Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun; Perempuan 18-24 Tahun; Perempuan 25-29 Tahun; Perempuan 30-39 Tahun; Perempuan 40-44 Tahun; Perempuan 40-59 Tahun; Perempuan 45-59 Tahun; Perempuan 60-69 Tahun; Perempuan >=70 Tahun,18,6,33%,partial
+FRM000175,Faktor Risiko dan Skrining X-Ray TB (Balita & Anak Pra Sekolah),Tuberkulosis - Skrining Nakes Anak 1-9 tahun,SKRINING TUBERKULOSIS,Anak Pra Sekolah 5-6 Tahun; Balita 12-17 Bulan; Balita 18-23 Bulan; Balita 2 Tahun; Balita 3-4 Tahun,8,1,12%,partial
+FRM000052,Pemeriksaan Tekanan Darah,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Tekanan Darah,Laki-laki 18-24 Tahun; Laki-laki 25-39 Tahun; Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun; Perempuan 18-24 Tahun; Perempuan 25-29 Tahun; Perempuan 30-39 Tahun; Perempuan 60-69 Tahun; Perempuan >=70 Tahun,7,3,43%,partial
+FRM000042,Skrining Telinga dan Mata (18-39 tahun),Skrining Telinga dan Mata (18-39 tahun),Telinga dan Mata,Laki-laki 18-24 Tahun; Laki-laki 25-39 Tahun; Perempuan 18-24 Tahun; Perempuan 25-29 Tahun; Perempuan 30-39 Tahun,9,5,56%,partial
+FRM000099,Skrining Telinga dan Mata (=>40 tahun),Skrining Telinga dan Mata (=>40 tahun),Telinga dan Mata,Laki-laki 40-44 Tahun; Laki-laki 45-59 Tahun; Laki-laki >=60 Tahun; Perempuan 60-69 Tahun; Perempuan >=70 Tahun,10,1,10%,partial

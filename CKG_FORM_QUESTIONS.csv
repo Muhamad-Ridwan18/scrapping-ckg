@@ -1,0 +1,619 @@
+﻿form_no,form_title,layanan,modul,frm_code,q_no,label,tipe,live_name,status_2026
+1,[Bayi & Anak Pra Sekolah] Riwayat Kesehatan (1),[Bayi & Anak Pra Sekolah] Riwayat Kesehatan (anak usia 3-6 tahun),RIWAYAT KESEHATAN,FRM000078,1,"Apakah ada anggota keluarga kandung  Anda dinyatakan menderita Talasemia,  atau kelainan darah atau pernah menjalani transfusi darah secara rutin?",Skrining Mandiri,,
+1,[Bayi & Anak Pra Sekolah] Riwayat Kesehatan (1),[Bayi & Anak Pra Sekolah] Riwayat Kesehatan (anak usia 3-6 tahun),RIWAYAT KESEHATAN,FRM000078,2,Apakah ada anggota keluarga  kandung Anda dinyatakan sebagai pembawa sifat talasemia (mereka yang memiliki genetik yang tidak normal sehingga berpotensi menurunkan penyakit Talasemia)?,,,
+2,[Bayi & Anak Pra Sekolah] Riwayat Kesehatan (2),[Bayi & Anak Pra Sekolah] Riwayat Kesehatan (2),RIWAYAT KESEHATAN,FRM000075,1,Mengalami batuk >2 minggu,Layanan,,
+2,[Bayi & Anak Pra Sekolah] Riwayat Kesehatan (2),[Bayi & Anak Pra Sekolah] Riwayat Kesehatan (2),RIWAYAT KESEHATAN,FRM000075,2,BB turun tanpa penyebab jelas/BB tidak naik dalam 2 bulan sebelumnya/nafsu makan turun,,,
+3,[Bayi & Anak Pra Sekolah] Riwayat Kesehatan (3),[Bayi & Anak Pra Sekolah] Riwayat Kesehatan (3),RIWAYAT KESEHATAN,FRM000076,1,Apakah ada riwayat kontak serumah dengan pasien/penderita Tuberkulosis (TBC)?,Layanan,,
+4,Berat Lahir,Skrining Berat Lahir,Skrining Pertumbuhan,FRM000010,1,Berat Lahir,Layanan,,Tetap
+4,Berat Lahir,Skrining Berat Lahir,Skrining Pertumbuhan,FRM000010,2,Panjang Badan Lahir (unpublished),,,Dihapus
+4,Berat Lahir,Skrining Berat Lahir,Skrining Pertumbuhan,FRM000010,3,Berat Badan Saat Ini (usia >24 jam),,,Berubah
+5,Demografi Anak,Demografi Anak,Demografi Anak,FRM000106,1,Apakah Anda penyandang disabilitas?,Skrining Mandiri,,Tetap
+6,Demografi Dewasa Laki-Laki,Demografi Dewasa Laki-Laki,Demografi,FRM000006,1,Status Perkawinan,Skrining Mandiri,LPM000056|FRM000006|PPM00000172|text,Tetap
+6,Demografi Dewasa Laki-Laki,Demografi Dewasa Laki-Laki,Demografi,FRM000006,2,"Apabila belum menikah/ status cerai, apakah ada rencana menikah dalam kurun waktu 1 tahun ke depan?",,,Tetap
+6,Demografi Dewasa Laki-Laki,Demografi Dewasa Laki-Laki,Demografi,FRM000006,3,Apakah Anda penyandang disabilitas?,radio,LPM000056|FRM000006|PPM00000299|text,Tetap
+7,Demografi Dewasa Perempuan,Demografi Dewasa Perempuan,Demografi,FRM000007,1,Status Perkawinan,Skrining Mandiri,LPM000063|FRM000007|PPM00000172|text,Tetap
+7,Demografi Dewasa Perempuan,Demografi Dewasa Perempuan,Demografi,FRM000007,2,"Apabila belum menikah/ status cerai, apakah ada rencana menikah dalam kurun waktu 1 tahun ke depan?",,,Tetap
+7,Demografi Dewasa Perempuan,Demografi Dewasa Perempuan,Demografi,FRM000007,3,Apakah Anda sedang hamil?,radio,LPM000063|FRM000007|PPM00000173|text,Tetap
+7,Demografi Dewasa Perempuan,Demografi Dewasa Perempuan,Demografi,FRM000007,4,Apakah Anda penyandang disabilitas?,radio,LPM000063|FRM000007|PPM00000299|text,Tetap
+8,Demografi Lansia,Demografi Lansia,Demografi,FRM000008,1,Status Perkawinan,Skrining Mandiri,LPM000064|FRM000008|PPM00000172|text,Tetap
+8,Demografi Lansia,Demografi Lansia,Demografi,FRM000008,2,Apakah Anda penyandang disabilitas?,radio,LPM000064|FRM000008|PPM00000299|text,Tetap
+9,Detail Abnormalitas - Skrining Jantung,Skrining Jantung (Pemeriksaan EKG - hanya penyandang HIPERTENSI),Jantung dan Stroke,FRM000058,1,Pemeriksaan EKG,,,
+9,Detail Abnormalitas - Skrining Jantung,Skrining Jantung (Pemeriksaan EKG - hanya penyandang HIPERTENSI),Jantung dan Stroke,FRM000058,2,Detail Abnormalitas (EKG),,,
+10,Edukasi Warna Kulit dan Tinja Bayi,Skrining Bayi Kuning (0-2 hari),Kelainan Saluran Empedu,FRM000079,1,Apakah dilakukan edukasi skrining bayi kuning dan warna tinja bayi?,Layanan,,Tetap
+11,Faktor Risiko dan Skrining X-Ray TB (Anak Kelas 1-3),Tuberkulosis - Skrining Nakes Kelas 1-3,SKRINING TUBERKULOSIS,FRM000179,1,Tuberkulosis - Gejala TB 01 - Batuk (Anak),Layanan,,Baru
+11,Faktor Risiko dan Skrining X-Ray TB (Anak Kelas 1-3),Tuberkulosis - Skrining Nakes Kelas 1-3,SKRINING TUBERKULOSIS,FRM000179,2,Tuberkulosis - Gejala TB 02 - BB Turun (Anak),,,
+11,Faktor Risiko dan Skrining X-Ray TB (Anak Kelas 1-3),Tuberkulosis - Skrining Nakes Kelas 1-3,SKRINING TUBERKULOSIS,FRM000179,3,Tuberkulosis - Gejala TB 03 - Demam (Anak),,,Baru
+11,Faktor Risiko dan Skrining X-Ray TB (Anak Kelas 1-3),Tuberkulosis - Skrining Nakes Kelas 1-3,SKRINING TUBERKULOSIS,FRM000179,4,Tuberkulosis - Gejala TB 05 - Lesu (Anak),,,Baru
+11,Faktor Risiko dan Skrining X-Ray TB (Anak Kelas 1-3),Tuberkulosis - Skrining Nakes Kelas 1-3,SKRINING TUBERKULOSIS,FRM000179,5,Tuberkulosis - Gejala TB 06 - Pembesaran KGB (Anak),,,Baru
+11,Faktor Risiko dan Skrining X-Ray TB (Anak Kelas 1-3),Tuberkulosis - Skrining Nakes Kelas 1-3,SKRINING TUBERKULOSIS,FRM000179,6,Gejala Tambahan Tuberkulosis (Anak),,,Baru
+11,Faktor Risiko dan Skrining X-Ray TB (Anak Kelas 1-3),Tuberkulosis - Skrining Nakes Kelas 1-3,SKRINING TUBERKULOSIS,FRM000179,7,Gejala Tambahan Tuberkulosis (Anak) lanjutan,,,
+11,Faktor Risiko dan Skrining X-Ray TB (Anak Kelas 1-3),Tuberkulosis - Skrining Nakes Kelas 1-3,SKRINING TUBERKULOSIS,FRM000179,8,Skrining X-Ray,,,Baru
+11,Faktor Risiko dan Skrining X-Ray TB (Anak Kelas 1-3),Tuberkulosis - Skrining Nakes Kelas 1-3,SKRINING TUBERKULOSIS,FRM000179,9,Hasil Skrining X-Ray,,,Baru
+11,Faktor Risiko dan Skrining X-Ray TB (Anak Kelas 1-3),Tuberkulosis - Skrining Nakes Kelas 1-3,SKRINING TUBERKULOSIS,FRM000179,10,Faktor Risiko Tuberkulosis (Anak),,,Baru
+12,Faktor Risiko dan Skrining X-Ray TB (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Usia 10-14 tahun,SKRINING TUBERKULOSIS,FRM000182,1,Tuberkulosis - Gejala TB 01 - Batuk (Dewasa),Layanan,,Baru
+12,Faktor Risiko dan Skrining X-Ray TB (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Usia 10-14 tahun,SKRINING TUBERKULOSIS,FRM000182,2,Tuberkulosis - Gejala TB 02 - BB Turun (Dewasa),,,
+12,Faktor Risiko dan Skrining X-Ray TB (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Usia 10-14 tahun,SKRINING TUBERKULOSIS,FRM000182,3,Tuberkulosis - Gejala TB 03 - Demam (Dewasa),,,Baru
+12,Faktor Risiko dan Skrining X-Ray TB (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Usia 10-14 tahun,SKRINING TUBERKULOSIS,FRM000182,4,Tuberkulosis - Gejala TB 04 - Berkeringat (Dewasa),,,Baru
+12,Faktor Risiko dan Skrining X-Ray TB (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Usia 10-14 tahun,SKRINING TUBERKULOSIS,FRM000182,5,Tuberkulosis - Gejala TB 06 - Pembesaran KGB (Dewasa),,,Baru
+12,Faktor Risiko dan Skrining X-Ray TB (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Usia 10-14 tahun,SKRINING TUBERKULOSIS,FRM000182,6,Gejala Tambahan Tuberkulosis (Dewasa),,,Baru
+12,Faktor Risiko dan Skrining X-Ray TB (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Usia 10-14 tahun,SKRINING TUBERKULOSIS,FRM000182,7,Skrining X-Ray,,,Baru
+12,Faktor Risiko dan Skrining X-Ray TB (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Usia 10-14 tahun,SKRINING TUBERKULOSIS,FRM000182,8,Hasil Skrining X-Ray,,,Baru
+12,Faktor Risiko dan Skrining X-Ray TB (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Usia 10-14 tahun,SKRINING TUBERKULOSIS,FRM000182,9,Faktor Risiko Tuberkulosis (Dewasa),,,Baru
+12,Faktor Risiko dan Skrining X-Ray TB (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Usia 10-14 tahun,SKRINING TUBERKULOSIS,FRM000182,10,Apakah Anda pernah atau sedang mengalami batuk yang tidak sembuh-sembuh?,Layanan,LPM000133|FRM000182|PPM00000694|text,Baru
+12,Faktor Risiko dan Skrining X-Ray TB (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Usia 10-14 tahun,SKRINING TUBERKULOSIS,FRM000182,11,Apakah berat badan Anda turun tanpa penyebab jelas/ BB tidak naik/ nafsu makan turun?,radio,LPM000133|FRM000182|PPM00000480|text,
+12,Faktor Risiko dan Skrining X-Ray TB (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Usia 10-14 tahun,SKRINING TUBERKULOSIS,FRM000182,12,Apakah Anda mengalami demam hilang timbul tanpa sebab yang jelas?,radio,LPM000133|FRM000182|PPM00000481|text,Baru
+12,Faktor Risiko dan Skrining X-Ray TB (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Usia 10-14 tahun,SKRINING TUBERKULOSIS,FRM000182,13,Apakah Anda mengalami berkeringat di malam hari tanpa kegiatan?,radio,LPM000133|FRM000182|PPM00000482|text,Baru
+12,Faktor Risiko dan Skrining X-Ray TB (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Usia 10-14 tahun,SKRINING TUBERKULOSIS,FRM000182,14,Apakah pasien memiliki pembesaran kelenjar getah bening?,radio,LPM000133|FRM000182|PPM00000483|text,Baru
+12,Faktor Risiko dan Skrining X-Ray TB (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Usia 10-14 tahun,SKRINING TUBERKULOSIS,FRM000182,15,Risiko Tuberkulosis Dewasa,,,Baru
+12,Faktor Risiko dan Skrining X-Ray TB (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Usia 10-14 tahun,SKRINING TUBERKULOSIS,FRM000182,16,Apakah dilakukan pemeriksaan radiografi toraks?,radio,LPM000133|FRM000182|PPM00000495|text,Baru
+12,Faktor Risiko dan Skrining X-Ray TB (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Usia 10-14 tahun,SKRINING TUBERKULOSIS,FRM000182,17,Hasil rontgen (foto toraks),,,Baru
+12,Faktor Risiko dan Skrining X-Ray TB (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Usia 10-14 tahun,SKRINING TUBERKULOSIS,FRM000182,18,Faktor Risiko Tuberkulosis Dewasa,,,Baru
+13,Faktor Risiko dan Skrining X-Ray TB (Balita & Anak Pra Sekolah),Tuberkulosis - Skrining Nakes Anak 1-9 tahun,SKRINING TUBERKULOSIS,FRM000175,1,Apakah anak Anda pernah atau sedang mengalami batuk yang tidak sembuh-sembuh?,Layanan,,Baru
+13,Faktor Risiko dan Skrining X-Ray TB (Balita & Anak Pra Sekolah),Tuberkulosis - Skrining Nakes Anak 1-9 tahun,SKRINING TUBERKULOSIS,FRM000175,2,Apakah berat badan anak Anda turun tanpa penyebab jelas/ BB tidak naik dalam 2 bulan sebelumnya/ nafsu makan turun?,,,
+13,Faktor Risiko dan Skrining X-Ray TB (Balita & Anak Pra Sekolah),Tuberkulosis - Skrining Nakes Anak 1-9 tahun,SKRINING TUBERKULOSIS,FRM000175,3,Apakah anak anda mengalami demam hilang timbul tanpa sebab yang jelas lebih dari 2 minggu?,,,Baru
+13,Faktor Risiko dan Skrining X-Ray TB (Balita & Anak Pra Sekolah),Tuberkulosis - Skrining Nakes Anak 1-9 tahun,SKRINING TUBERKULOSIS,FRM000175,4,"Apakah anak Anda mengalami lesu atau malaise, anak kurang aktif bermain?",,,Baru
+13,Faktor Risiko dan Skrining X-Ray TB (Balita & Anak Pra Sekolah),Tuberkulosis - Skrining Nakes Anak 1-9 tahun,SKRINING TUBERKULOSIS,FRM000175,5,Apakah pasien memiliki pembesaran kelenjar getah bening?,,,Baru
+13,Faktor Risiko dan Skrining X-Ray TB (Balita & Anak Pra Sekolah),Tuberkulosis - Skrining Nakes Anak 1-9 tahun,SKRINING TUBERKULOSIS,FRM000175,6,Risiko Tuberkulosis Anak,,,Baru
+13,Faktor Risiko dan Skrining X-Ray TB (Balita & Anak Pra Sekolah),Tuberkulosis - Skrining Nakes Anak 1-9 tahun,SKRINING TUBERKULOSIS,FRM000175,7,Apakah dilakukan pemeriksaan radiografi toraks?,,,Baru
+13,Faktor Risiko dan Skrining X-Ray TB (Balita & Anak Pra Sekolah),Tuberkulosis - Skrining Nakes Anak 1-9 tahun,SKRINING TUBERKULOSIS,FRM000175,8,Hasil rontgen (foto toraks),,,Baru
+14,Faktor Risiko Gula Darah Anak,Faktor Risiko Gula Darah Anak,SKRINING TALASEMIA DAN DIABETES,FRM000110,1,Apakah Anak Anda pernah dinyatakan diabetes atau kencing manis oleh Dokter?,Skrining Mandiri,,Berubah
+14,Faktor Risiko Gula Darah Anak,Faktor Risiko Gula Darah Anak,SKRINING TALASEMIA DAN DIABETES,FRM000110,2,"Sudah Berapa Bulan Anak Anda Didiagnosis Diabetes Melitus Oleh Dokter? Isi Total Bulan Sejak didiagnosis dokter hingga saat ini, misal didiagnosis 1 tahun yang lalu = 12, dst",,,
+14,Faktor Risiko Gula Darah Anak,Faktor Risiko Gula Darah Anak,SKRINING TALASEMIA DAN DIABETES,FRM000110,3,Apakah anak bapak/ibu sering merasa sangat lapar dan makan lebih banyak dari biasanya?,,,
+14,Faktor Risiko Gula Darah Anak,Faktor Risiko Gula Darah Anak,SKRINING TALASEMIA DAN DIABETES,FRM000110,4,Apakah anak bapak/ibu sering merasa haus meskipun sudah banyak minum?,,,Baru
+14,Faktor Risiko Gula Darah Anak,Faktor Risiko Gula Darah Anak,SKRINING TALASEMIA DAN DIABETES,FRM000110,5,Apakah anak bapak/ibu tetap mengalami penurunan berat badan meskipun nafsu makan meningkat?,,,
+14,Faktor Risiko Gula Darah Anak,Faktor Risiko Gula Darah Anak,SKRINING TALASEMIA DAN DIABETES,FRM000110,6,Apakah bapak/ibu atau anggota keluarga lainnya (saudara kandung) yang pernah di diagnosis Kencing Manis oleh Dokter?,,,Berubah
+14,Faktor Risiko Gula Darah Anak,Faktor Risiko Gula Darah Anak,SKRINING TALASEMIA DAN DIABETES,FRM000110,7,Faktor Risiko Gula Darah,,,Baru
+14,Faktor Risiko Gula Darah Anak,Faktor Risiko Gula Darah Anak,SKRINING TALASEMIA DAN DIABETES,FRM000110,8,Apakah anak bapak/ibu sering terbangun pada malam hari untuk buang air kecil atau harus ke toilet lebih dari 2x per malam?,,,
+14,Faktor Risiko Gula Darah Anak,Faktor Risiko Gula Darah Anak,SKRINING TALASEMIA DAN DIABETES,FRM000110,9,"Apakah anak bapak/ibu kembali sering mengompol di malam hari, meskipun sebelumnya sudah bisa mengontrol buang air kecil?",,,
+14,Faktor Risiko Gula Darah Anak,Faktor Risiko Gula Darah Anak,SKRINING TALASEMIA DAN DIABETES,FRM000110,10,Faktor Risiko Gula,,,
+15,Faktor Risiko HIV dan Sifilis,Faktor Risiko HIV & Sifilis,Infeksi Menular Seksual,FRM000173,1,"Apabila belum menikah/ status cerai, apakah ada rencana menikah dalam kurun waktu 1 tahun ke depan?",Skrining Mandiri,,
+15,Faktor Risiko HIV dan Sifilis,Faktor Risiko HIV & Sifilis,Infeksi Menular Seksual,FRM000173,2,Apakah Anda sedang hamil?,,,
+15,Faktor Risiko HIV dan Sifilis,Faktor Risiko HIV & Sifilis,Infeksi Menular Seksual,FRM000173,3,Saya sedang terdiagnosis: TBC (Tuberkulosis),,,
+15,Faktor Risiko HIV dan Sifilis,Faktor Risiko HIV & Sifilis,Infeksi Menular Seksual,FRM000173,4,Apakah Anda pernah menjalani tes untuk Hepatitis B dan mendapatkan hasil positif?,,,
+15,Faktor Risiko HIV dan Sifilis,Faktor Risiko HIV & Sifilis,Infeksi Menular Seksual,FRM000173,5,Apakah Anda pernah mendapatkan pengobatan Hepatitis C dan tidak sembuh?,,,
+15,Faktor Risiko HIV dan Sifilis,Faktor Risiko HIV & Sifilis,Infeksi Menular Seksual,FRM000173,6,"Saya sedang mengalami gejala Infeksi Menular Seksual (IMS), atau mengalami penurunan kondisi fisik drastis (demam berkepanjangan/berat badan turun/sering sakit-sakitan)",,,
+15,Faktor Risiko HIV dan Sifilis,Faktor Risiko HIV & Sifilis,Infeksi Menular Seksual,FRM000173,7,Apakah anda pernah berhubungan seksual berisiko/tanpa pengaman dengan bukan pasangan suami/istri?,,,
+15,Faktor Risiko HIV dan Sifilis,Faktor Risiko HIV & Sifilis,Infeksi Menular Seksual,FRM000173,8,"Apakah Anda pernah menggunakan narkoba, obat terlarang, atau bahan adiktif lainnya dengan cara disuntik?",,,
+15,Faktor Risiko HIV dan Sifilis,Faktor Risiko HIV & Sifilis,Infeksi Menular Seksual,FRM000173,9,"Pasangan saya memiliki status HIV positif, termasuk dalam kelompok risiko tinggi (seperti WBP dan pengguna narkoba suntik), atau saya memiliki anak dengan diagnosis HIV.",,,
+15,Faktor Risiko HIV dan Sifilis,Faktor Risiko HIV & Sifilis,Infeksi Menular Seksual,FRM000173,10,Saya saat ini menjadi tahanan atau warga binaan pemasyarakatan  (WBP) atau pernah menjadi WBP.,,,
+15,Faktor Risiko HIV dan Sifilis,Faktor Risiko HIV & Sifilis,Infeksi Menular Seksual,FRM000173,11,Skrining Mandiri HIV,,,
+15,Faktor Risiko HIV dan Sifilis,Faktor Risiko HIV & Sifilis,Infeksi Menular Seksual,FRM000173,12,Skrining Mandiri Sifilis,,,
+16,Faktor Risiko Kanker Usus,Kanker Usus,Kanker Usus,FRM000027,1,"Apakah ada anggota keluarga Anda, yang pernah dinyatakan menderita kanker kolorektal atau kanker usus?",Skrining Mandiri,LPM000060|FRM000027|PPM00000175|text,Tetap
+16,Faktor Risiko Kanker Usus,Kanker Usus,Kanker Usus,FRM000027,2,Apakah Anda merokok?,radio,LPM000060|FRM000027|PPM00000288|text,Tetap
+16,Faktor Risiko Kanker Usus,Kanker Usus,Kanker Usus,FRM000027,3,Usia - skor APCS,,,Tetap
+16,Faktor Risiko Kanker Usus,Kanker Usus,Kanker Usus,FRM000027,4,Jenis Kelamin - skor APCS,,,Tetap
+16,Faktor Risiko Kanker Usus,Kanker Usus,Kanker Usus,FRM000027,5,Skor APCS,,,Tetap
+17,Faktor Risiko Malaria,Kuesioner Malaria,Malaria,FRM000115,1,"Apakah terdapat salah satu atau lebih gejala seperti; demam, sakit kepala, dan menggigil?",Skrining Mandiri,,Tetap
+17,Faktor Risiko Malaria,Kuesioner Malaria,Malaria,FRM000115,2,Apakah pernah sakit malaria dan obat tidak habis diminum?,,,Tetap
+17,Faktor Risiko Malaria,Kuesioner Malaria,Malaria,FRM000115,3,Apakah ada orang sakit malaria di wilayah tempat tinggal (di rumah atau tetangga sekitar rumah)?,,,Tetap
+17,Faktor Risiko Malaria,Kuesioner Malaria,Malaria,FRM000115,4,Apakah anda tinggal atau ada riwayat kedatangan dari daerah berisiko tinggi malaria selama 1 bulan terakhir?,,,Baru
+17,Faktor Risiko Malaria,Kuesioner Malaria,Malaria,FRM000115,5,Faktor Resiko malaria,,,Berubah
+18,Faktor Risiko TB - Anak 1-9 tahun,Tuberkulosis - Skrining Mandiri Anak 1-9 tahun,SKRINING TUBERKULOSIS,FRM000174,1,Apakah anak Anda pernah atau sedang mengalami batuk yang tidak sembuh-sembuh?,Skrining Mandiri,,Baru
+19,Faktor Risiko TB - Dewasa & Lansia,Faktor Risiko Tuberkulosis Dewasa & Lansia,SKRINING TUBERKULOSIS,FRM000180,1,Apakah Anda pernah atau sedang mengalami batuk yang tidak sembuh-sembuh?,Skrining Mandiri,LPM000131|FRM000180|PPM00000477|text,Baru
+20,Gejala Cemas Anak,Kesehatan Jiwa Anak,Keswa Anak Remaja,FRM000109,1,"Dalam 2 minggu terakhir, anak sering merasa khawatir atau tidak tenang, tegang, deg-degan dan gelisah terutama terhadap hal-hal negatif atau yang belum tentu terjadi.",Skrining Mandiri,,Tetap
+20,Gejala Cemas Anak,Kesehatan Jiwa Anak,Keswa Anak Remaja,FRM000109,2,"Dalam 2 minggu terakhir, anak berpikir berlebihan dan tidak bisa mengendalikan diri, terutama terhadap hal-hal negatif atau yang belum tentu terjadi.",,,Tetap
+20,Gejala Cemas Anak,Kesehatan Jiwa Anak,Keswa Anak Remaja,FRM000109,3,"Dalam 2 minggu terakhir, anak sulit tidur dan berkonsentrasi terutama saat memikirkan hal-hal negatif yang belum tentu terjadi.",,,Tetap
+20,Gejala Cemas Anak,Kesehatan Jiwa Anak,Keswa Anak Remaja,FRM000109,4,Jiwa Gejala Cemas Anak (Skala A),,,Tetap
+21,Gejala Cemas Remaja,Kesehatan Jiwa Remaja,Keswa Anak Remaja,FRM000112,1,"Dalam 2 minggu terakhir, saya sering merasa khawatir atau tidak tenang, tegang, deg-degan dan gelisah terutama terhadap hal-hal negatif atau yang belum tentu terjadi.",,,Tetap
+21,Gejala Cemas Remaja,Kesehatan Jiwa Remaja,Keswa Anak Remaja,FRM000112,2,"Dalam 2 minggu terakhir, Saya berpikir berlebihan dan tidak bisa mengendalikan diri, terutama terhadap hal-hal negatif atau yang belum tentu terjadi",,,Tetap
+21,Gejala Cemas Remaja,Kesehatan Jiwa Remaja,Keswa Anak Remaja,FRM000112,3,"Dalam 2 minggu terakhir, Saya sulit tidur dan berkonsentrasi terutama saat memikirkan hal-hal negatif yang belum tentu terjadi",,,Tetap
+21,Gejala Cemas Remaja,Kesehatan Jiwa Remaja,Keswa Anak Remaja,FRM000112,4,Jiwa gejala Cemas Remaja (Skala A),,,Tetap
+22,Gejala Depresi Anak,Kesehatan Jiwa Anak,Keswa Anak Remaja,FRM000124,1,"Dalam 2 minggu terakhir, anak sering merasa sedih atau tertekan padahal tidak ada penyebab yang jelas.",,,Tetap
+22,Gejala Depresi Anak,Kesehatan Jiwa Anak,Keswa Anak Remaja,FRM000124,2,"Dalam 2 minggu terakhir, anak tidak tertarik lagi dengan kegiatan atau hal-hal yang biasanya dia suka",,,Tetap
+22,Gejala Depresi Anak,Kesehatan Jiwa Anak,Keswa Anak Remaja,FRM000124,3,"Dalam 2 minggu terakhir, anak merasa sering capek, sulit tidur, dan sulit fokus saat belajar atau melakukan kegiatan.",,,Tetap
+22,Gejala Depresi Anak,Kesehatan Jiwa Anak,Keswa Anak Remaja,FRM000124,4,Jiwa Gejala Depresi Anak (Skala B),,,Tetap
+23,Gejala Depresi Remaja,Kesehatan Jiwa Remaja,Keswa Anak Remaja,FRM000125,1,"Dalam 2 minggu terakhir, saya sering merasa sedih atau tertekan padahal tidak ada penyebab yang jelas.",,,Tetap
+23,Gejala Depresi Remaja,Kesehatan Jiwa Remaja,Keswa Anak Remaja,FRM000125,2,"Dalam 2 minggu terakhir, saya tidak tertarik lagi dengan kegiatan atau hal-hal yang biasanya saya suka.",,,Tetap
+23,Gejala Depresi Remaja,Kesehatan Jiwa Remaja,Keswa Anak Remaja,FRM000125,3,"Dalam 2 minggu terakhir, saya merasa sering capek, sulit tidur, dan sulit fokus saat belajar atau melakukan kegiatan.",,,Tetap
+23,Gejala Depresi Remaja,Kesehatan Jiwa Remaja,Keswa Anak Remaja,FRM000125,4,Jiwa Gejala Depresi Remaja (Skala B),,,Tetap
+24,Gizi (BB - TB - Lingkar Perut) Laki-laki,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Gizi,FRM000093,1,Berat Badan (Kg),Layanan,LPM000073|FRM000093|PPM00000248|number,Tetap
+24,Gizi (BB - TB - Lingkar Perut) Laki-laki,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Gizi,FRM000093,2,Pengukuran Tinggi Badan (cm),number,LPM000073|FRM000093|PPM00000086|number,Tetap
+24,Gizi (BB - TB - Lingkar Perut) Laki-laki,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Gizi,FRM000093,3,Index Massa Tubuh,,,Berubah
+24,Gizi (BB - TB - Lingkar Perut) Laki-laki,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Gizi,FRM000093,4,Pengukuran Lingkar Perut,number,LPM000073|FRM000093|PPM00000202|number,Tetap
+25,Gizi (BB - TB - Lingkar Perut) Perempuan,"Skrining Gizi, Tekanan Darah, dan Gula Darah Perempuan",Gizi,FRM000051,1,Berat Badan (Kg),Layanan,LPM000072|FRM000051|PPM00000248|number,Tetap
+25,Gizi (BB - TB - Lingkar Perut) Perempuan,"Skrining Gizi, Tekanan Darah, dan Gula Darah Perempuan",Gizi,FRM000051,2,Pengukuran Tinggi Badan (cm),number,LPM000072|FRM000051|PPM00000086|number,Tetap
+25,Gizi (BB - TB - Lingkar Perut) Perempuan,"Skrining Gizi, Tekanan Darah, dan Gula Darah Perempuan",Gizi,FRM000051,3,Index Massa Tubuh,,,Berubah
+25,Gizi (BB - TB - Lingkar Perut) Perempuan,"Skrining Gizi, Tekanan Darah, dan Gula Darah Perempuan",Gizi,FRM000051,4,Pengukuran Lingkar Perut,number,LPM000072|FRM000051|PPM00000090|number,Tetap
+26,Hasil Kremer pada Bayi Kuning,Skrining Bayi Kuning (0-2 hari),Kelainan Saluran Empedu,FRM000240,1,Berapa Hasil Kramer pada Bayi Kuning ?,,,
+27,Hasil Pemeriksaan - Skrining Jantung,Skrining Jantung (Pemeriksaan EKG - hanya penyandang HIPERTENSI),Jantung dan Stroke,FRM000057,1,Hasil Pemeriksaan EKG,radio,LPM000034|FRM000057|PPM00000200|text,
+27,Hasil Pemeriksaan - Skrining Jantung,Skrining Jantung (Pemeriksaan EKG - hanya penyandang HIPERTENSI),Jantung dan Stroke,FRM000057,2,Pemeriksaan EKG,,Pemeriksaan EKG,
+28,Hasil Pemeriksaan HPV-DNA,Skrining Kanker Leher Rahim,Kanker Leher Rahim,FRM000061,1,Hasil pemeriksaan DNA HPV,radio,LPM000036|FRM000061|PPM00000643|text,Tetap
+28,Hasil Pemeriksaan HPV-DNA,Skrining Kanker Leher Rahim,Kanker Leher Rahim,FRM000061,2,Apakah positif HPV tipe 16?,,,Dihapus
+28,Hasil Pemeriksaan HPV-DNA,Skrining Kanker Leher Rahim,Kanker Leher Rahim,FRM000061,3,Apakah positif HPV tipe 18?,,,
+28,Hasil Pemeriksaan HPV-DNA,Skrining Kanker Leher Rahim,Kanker Leher Rahim,FRM000061,4,Apakah positif HPV tipe 52?,,,
+28,Hasil Pemeriksaan HPV-DNA,Skrining Kanker Leher Rahim,Kanker Leher Rahim,FRM000061,5,"Apakah positif HPV tipe onkogenik lain (selain tipe 16, 18 dan 52)?",,,
+29,"Hasil Pemeriksaan SHK, G6PD, HAK","Skrining SHK, Defisiensi Enzim G6PD, Sindrom HAK,","Skrining SHK,  Defisiensi Enzim G6PD, Sindrom HAK,",FRM000012,1,Pengambilan Darah Tumit,Layanan,,Tetap
+29,"Hasil Pemeriksaan SHK, G6PD, HAK","Skrining SHK, Defisiensi Enzim G6PD, Sindrom HAK,","Skrining SHK,  Defisiensi Enzim G6PD, Sindrom HAK,",FRM000012,2,Skrining Hipotiroid Kongenital - Hasil pemeriksaan laboratorium (m[IU]/L),,,
+29,"Hasil Pemeriksaan SHK, G6PD, HAK","Skrining SHK, Defisiensi Enzim G6PD, Sindrom HAK,","Skrining SHK,  Defisiensi Enzim G6PD, Sindrom HAK,",FRM000012,3,Skrining Defisiensi G6PD - hasil pemeriksaan laboratorium (U/dL),,,
+29,"Hasil Pemeriksaan SHK, G6PD, HAK","Skrining SHK, Defisiensi Enzim G6PD, Sindrom HAK,","Skrining SHK,  Defisiensi Enzim G6PD, Sindrom HAK,",FRM000012,4,Skrining Hiperplasia Adrenal Kongenital (HAK)- hasil pemeriksaan laboratorium,,,
+30,Hati,Hati,Hati/Hepatitis,FRM000028,1,Apakah Anda pernah menjalani tes untuk Hepatitis B dan mendapatkan hasil positif?,Skrining Mandiri,LPM000061|FRM000028|PPM00000176|text,
+30,Hati,Hati,Hati/Hepatitis,FRM000028,2,Apakah Anda memiliki ibu kandung/saudara sekandung yang menderita Hepatitis B?,radio,LPM000061|FRM000028|PPM00000177|text,
+30,Hati,Hati,Hati/Hepatitis,FRM000028,3,Apakah anda pernah berhubungan seksual berisiko/tanpa pengaman dengan bukan pasangan suami/istri?,radio,LPM000061|FRM000028|PPM00000178|text,
+30,Hati,Hati,Hati/Hepatitis,FRM000028,4,Apakah Anda pernah menerima transfusi darah sebelumnya?,radio,LPM000061|FRM000028|PPM00000179|text,
+30,Hati,Hati,Hati/Hepatitis,FRM000028,5,Apakah Anda pernah menjalani cuci darah atau hemodialisis?,radio,LPM000061|FRM000028|PPM00000180|text,
+30,Hati,Hati,Hati/Hepatitis,FRM000028,6,"Apakah Anda pernah menggunakan narkoba, obat terlarang, atau bahan adiktif lainnya dengan cara disuntik?",radio,LPM000061|FRM000028|PPM00000181|text,
+30,Hati,Hati,Hati/Hepatitis,FRM000028,7,Apakah Anda adalah orang dengan HIV (ODHIV)?,radio,LPM000061|FRM000028|PPM00000182|text,
+30,Hati,Hati,Hati/Hepatitis,FRM000028,8,Apakah Anda pernah mendapatkan pengobatan Hepatitis C dan tidak sembuh?,radio,LPM000061|FRM000028|PPM00000221|text,
+30,Hati,Hati,Hati/Hepatitis,FRM000028,9,Apakah Anda pernah didiagnosa atau mendapatkan hasil pemeriksaan kolesterol (lemak darah) tinggi?,radio,LPM000061|FRM000028|PPM00000230|text,
+30,Hati,Hati,Hati/Hepatitis,FRM000028,10,Faktor Risiko Hepatitis B,,,
+30,Hati,Hati,Hati/Hepatitis,FRM000028,11,Faktor Risiko Hepatitis C,,,
+30,Hati,Hati,Hati/Hepatitis,FRM000028,12,Faktor Risiko Hepatitis,,,
+31,Kanker Leher Rahim,Kanker Leher Rahim,Kanker Leher Rahim,FRM000088,1,Apakah pernah melakukan hubungan intim/seksual?,Skrining Mandiri,LPM000062|FRM000088|PPM00000171|text,Tetap
+32,Kesehatan Jiwa,Kesehatan Jiwa,Jiwa,FRM000067,1,"Dalam 2 minggu terakhir, seberapa sering anda kurang/ tidak bersemangat dalam melakukan kegiatan sehari-hari?",Skrining Mandiri,LPM000023|FRM000067|PPM00000192|text,Tetap
+32,Kesehatan Jiwa,Kesehatan Jiwa,Jiwa,FRM000067,2,"Dalam 2 minggu terakhir, seberapa sering anda merasa murung, tertekan, atau putus asa?",radio,LPM000023|FRM000067|PPM00000193|text,Tetap
+32,Kesehatan Jiwa,Kesehatan Jiwa,Jiwa,FRM000067,3,Gejala Depresi,,,Tetap
+32,Kesehatan Jiwa,Kesehatan Jiwa,Jiwa,FRM000067,4,"Dalam 2 minggu terakhir, seberapa sering anda merasa gugup, cemas, atau gelisah?",radio,LPM000023|FRM000067|PPM00000194|text,Tetap
+32,Kesehatan Jiwa,Kesehatan Jiwa,Jiwa,FRM000067,5,"Dalam 2 minggu terakhir, seberapa sering anda tidak mampu mengendalikan rasa khawatir?",radio,LPM000023|FRM000067|PPM00000195|text,Tetap
+32,Kesehatan Jiwa,Kesehatan Jiwa,Jiwa,FRM000067,6,Gejala Kecemasan,,,Tetap
+33,Kuesioner Gangguan Pemusatan Perhatian dan Hiperaktivitas (GPPH) - bila ada indikasi,Skrining Perkembangan Balita 3-6 Tahun,SKRINING PERKEMBANGAN,FRM000086,1,Hasil Pemeriksaan Kuesioner GPPH,,,
+34,Kuesioner Masalah Perilaku dan Emosional (KMPE) - Jika terindikasi memiliki masalah perilaku dan emosi,Skrining Perkembangan Balita 3-6 Tahun,SKRINING PERKEMBANGAN,FRM000018,1,Hasil pemeriksaan KMPE,,,
+35,Kuesioner Pra Skrining Perkembangan (KPSP),Skrining Perkembangan Balita 12-17 Bln,SKRINING PERKEMBANGAN,FRM000017,1,Hasil pemeriksaan KPSP,Layanan,,
+36,M-CHAT - 1. Penapisan,Skrining Perkembangan Balita 18 Bulan -2 Tahun,SKRINING PERKEMBANGAN,FRM000095,1,"Apakah anak Anda memiliki satu atau lebih kondisi berikut ini: 1) Masalah interaksi dengan orang lain seperti kontak mata tidak adekuat; 2) Masalah bahasa dan bicara seperti kosakata bermakna kurang dari 50 dan anak belum mampu merangkai kata, belum bisa menunjuk sesuatu, belum paham instruksi sederhana, atau bicara bahasa planet; 3) Memiliki perilaku berulang tanpa tujuan atau perilaku aneh seperti senang melihat benda berputar, menjejerkan mainan, gerakan stereotipik (flapping, clapping, body rocking), preokupasi terhadap suatu benda, masalah sensoris",,,
+37,"M-CHAT 2. Lanjutan jika terindikasi terlambat bicara, ada gangguan komunikasi atau interaksi sosial dan perilaku yang berulang-ulang",Skrining Perkembangan Balita 18 Bulan -2 Tahun,SKRINING PERKEMBANGAN,FRM000019,1,Masukkan hasil M-CHAT-REVISED,,,
+38,Mobilisasi - Pemeriksaan Lanjutan (SPPB),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000033,1,Tes keseimbangan: berdiri selama 10 detik dengan kaki di masing-masing : Berdiri berdampingan,dropdown,LPM000025|FRM000033|PPM00000125|text,
+38,Mobilisasi - Pemeriksaan Lanjutan (SPPB),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000033,2,Tes keseimbangan: berdiri selama 10 detik dengan kaki di masing-masing : Berdiri semi tandem,dropdown,LPM000025|FRM000033|PPM00000127|text,
+38,Mobilisasi - Pemeriksaan Lanjutan (SPPB),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000033,3,SKILAS Lanjutan-Keterbatasan Mobilisasi 02,,,
+38,Mobilisasi - Pemeriksaan Lanjutan (SPPB),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000033,4,Tes keseimbangan: berdiri selama 10 detik dengan kaki di masing-masing : Berdiri Tandem,dropdown,LPM000025|FRM000033|PPM00000130|text,
+38,Mobilisasi - Pemeriksaan Lanjutan (SPPB),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000033,5,SKILAS Lanjutan-Keterbatasan Mobilisasi 03,,,
+38,Mobilisasi - Pemeriksaan Lanjutan (SPPB),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000033,6,tes kecepatan berjalan: Waktu untuk berjalan sejauh empat meter,dropdown,LPM000025|FRM000033|PPM00000132|text,
+38,Mobilisasi - Pemeriksaan Lanjutan (SPPB),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000033,7,SKILAS Lanjutan-Keterbatasan Mobilisasi 04,,,
+38,Mobilisasi - Pemeriksaan Lanjutan (SPPB),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000033,8,Tes berdiri dari kursi: Waktu untuk bangkit dari kursi lima kali,dropdown,LPM000025|FRM000033|PPM00000133|text,
+38,Mobilisasi - Pemeriksaan Lanjutan (SPPB),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000033,9,SKILAS Lanjutan Keterbatasan Mobilisasi-05,,,
+38,Mobilisasi - Pemeriksaan Lanjutan (SPPB),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000033,10,Interpretasi SPBB,,,
+39,Pemeriksaan Calon Pengantin Perempuan,Pemeriksaan Calon Pengantin Perempuan,Calon Pengantin,FRM000205,1,Kadar Hemoglobin,Layanan,LPM000125|FRM000205|PPM00000583|number,Berubah
+40,Pemeriksaan EID,Pemeriksaan EID,EID HIV,FRM000187,1,Pemeriksaan EID,Layanan,,Baru
+41,Pemeriksaan Fibrosis/Sirosis Hati,"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,FRM000045,1,Nilai SGOT,number,LPM000166|FRM000045|PPM00000102|number,Tetap
+41,Pemeriksaan Fibrosis/Sirosis Hati,"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,FRM000045,2,Pemeriksaan Trombosit,number,LPM000166|FRM000045|PPM00000103|number,Tetap
+41,Pemeriksaan Fibrosis/Sirosis Hati,"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,FRM000045,3,Hasil APRI Score (hitung manual dari kalkulator online APRI Score),,,Berubah
+42,Pemeriksaan Gangguan Fungsional/Barthel Index - Lansia,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000040,1,Dapat mengendalikan rangsang buang air besar (BAB)?,,,
+42,Pemeriksaan Gangguan Fungsional/Barthel Index - Lansia,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000040,2,Dapat mengendalikan rangsang berkemih/buar air kecil (BAK)?,,,
+42,Pemeriksaan Gangguan Fungsional/Barthel Index - Lansia,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000040,3,"Membersihkan diri (seka wajah, sisir rambut, sikat gigi)?",,,
+42,Pemeriksaan Gangguan Fungsional/Barthel Index - Lansia,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000040,4,"Penggunaan jamban (keluar masuk jamban, melepas/memakai celana, membersihkan, menyiram)?",,,
+42,Pemeriksaan Gangguan Fungsional/Barthel Index - Lansia,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000040,5,"Makan dan Minum (jika makan harus berupa potongan, dianggap dibantu)",,,
+42,Pemeriksaan Gangguan Fungsional/Barthel Index - Lansia,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000040,6,Berubah sikap dari berbaring ke duduk,,,
+42,Pemeriksaan Gangguan Fungsional/Barthel Index - Lansia,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000040,7,Berpindah/berjalan,,,
+42,Pemeriksaan Gangguan Fungsional/Barthel Index - Lansia,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000040,8,Memakai baju,,,
+42,Pemeriksaan Gangguan Fungsional/Barthel Index - Lansia,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000040,9,Naik turun tangga,,,
+42,Pemeriksaan Gangguan Fungsional/Barthel Index - Lansia,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000040,10,Mandi,,,
+42,Pemeriksaan Gangguan Fungsional/Barthel Index - Lansia,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000040,11,Interpretasi ADL,,,
+43,Pemeriksaan Gejala Depresi - Pemeriksaan Lanjutan,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000039,1,"Apakah dalam 2 minggu terakhir Anda merasa sedih, tertekan, atau putus asa?",,,
+43,Pemeriksaan Gejala Depresi - Pemeriksaan Lanjutan,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000039,2,Apakah dalam 2 minggu terakhir Anda sedikit minat atau kesenangan dalam melakukan sesuatu?,,,
+43,Pemeriksaan Gejala Depresi - Pemeriksaan Lanjutan,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000039,3,SKILAS Lanjutan-Gejala Depresi-02 (GDS04),,,
+43,Pemeriksaan Gejala Depresi - Pemeriksaan Lanjutan,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000039,4,SKILAS Lanjutan-Gejala Depresi-03 (GDS04),,,
+43,Pemeriksaan Gejala Depresi - Pemeriksaan Lanjutan,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000039,5,SKILAS Lanjutan-Gejala Depresi-04 (GDS04),,,
+43,Pemeriksaan Gejala Depresi - Pemeriksaan Lanjutan,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000039,6,Interpretasi Gejala Depresi,,,
+44,Pemeriksaan Gigi - Anak,Skrining Gigi - Anak,SKRINING GIGI,FRM000131,1,Berapa jumlah gigi karies?,Layanan,,Berubah
+45,Pemeriksaan Gula Darah Anak,Pemeriksaan Gula Darah Anak,SKRINING TALASEMIA DAN DIABETES,FRM000195,1,Apakah Anak Anda pernah dinyatakan diabetes atau kencing manis oleh Dokter?,Layanan,,Baru
+45,Pemeriksaan Gula Darah Anak,Pemeriksaan Gula Darah Anak,SKRINING TALASEMIA DAN DIABETES,FRM000195,2,"Sudah Berapa Bulan Anak Anda Didiagnosis Diabetes Melitus Oleh Dokter? Isi Total Bulan Sejak didiagnosis dokter hingga saat ini, misal didiagnosis 1 tahun yang lalu = 12, dst",,,
+45,Pemeriksaan Gula Darah Anak,Pemeriksaan Gula Darah Anak,SKRINING TALASEMIA DAN DIABETES,FRM000195,3,Gula Darah Sewaktu (GDS),,,
+45,Pemeriksaan Gula Darah Anak,Pemeriksaan Gula Darah Anak,SKRINING TALASEMIA DAN DIABETES,FRM000195,4,Gula Darah Anak dan Remaja,,,
+46,Pemeriksaan Gula Darah Dewasa Lansia,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Gula Darah,FRM000256,1,Apakah Anda pernah dinyatakan diabetes atau kencing manis oleh Dokter?,Layanan,LPM000073|FRM000256|PPM00000160|text,Berubah
+46,Pemeriksaan Gula Darah Dewasa Lansia,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Gula Darah,FRM000256,2,"Sudah Berapa Bulan Anda Didiagnosis Diabetes Melitus Oleh Dokter? Isi Total Bulan Sejak didiagnosis dokter hingga saat ini, misal didiagnosis 1 tahun yang lalu = 12, dst",,,
+46,Pemeriksaan Gula Darah Dewasa Lansia,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Gula Darah,FRM000256,3,Gula Darah Sewaktu (GDS) (mg/dl),number,LPM000073|FRM000256|PPM00000731|number,
+46,Pemeriksaan Gula Darah Dewasa Lansia,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Gula Darah,FRM000256,4,Gula Darah Sewaktu Kedua (GDS 2). Lakukan jika hasil GDS 1 Prediabetes (≥140-199mg/dl) atau Hiperglikemia (≥200mg/dl) dan BELUM PERNAH didiagnosis Diabetes,number,LPM000073|FRM000256|PPM00000732|number,
+46,Pemeriksaan Gula Darah Dewasa Lansia,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Gula Darah,FRM000256,5,Gula Darah Puasa (GDP) (mg/dl),number,LPM000073|FRM000256|PPM00000733|number,
+46,Pemeriksaan Gula Darah Dewasa Lansia,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Gula Darah,FRM000256,6,Gula Darah 2 Jam PP (mg/dl),number,LPM000073|FRM000256|PPM00000734|number,
+46,Pemeriksaan Gula Darah Dewasa Lansia,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Gula Darah,FRM000256,7,Hasil Gula Darah Ke-1,,,
+46,Pemeriksaan Gula Darah Dewasa Lansia,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Gula Darah,FRM000256,8,Hasil GDS1,,,Baru
+46,Pemeriksaan Gula Darah Dewasa Lansia,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Gula Darah,FRM000256,9,Hasil Gula Darah Lanjutan,,,Baru
+47,Pemeriksaan Gula Darah Lanjutan (GDP & GD 2 PP),"Skrining Laboratorium =>40 thn Laki-laki Gula Darah, Fungsi Ginjal, Hati, Profil Lipid",Gula Darah,FRM000054,1,Gula Darah Puasa Lanjutan (GDP) (mg/dl),Layanan,,Dihapus
+47,Pemeriksaan Gula Darah Lanjutan (GDP & GD 2 PP),"Skrining Laboratorium =>40 thn Laki-laki Gula Darah, Fungsi Ginjal, Hati, Profil Lipid",Gula Darah,FRM000054,2,Gula Darah 2 Jam PP (mg/dl),,,Berubah
+48,Pemeriksaan Gula Darah Lanjutan (HbA1C),"Skrining Laboratorium =>40 thn Laki-laki Gula Darah, Fungsi Ginjal, Hati, Profil Lipid",Gula Darah,FRM000091,1,Pemeriksaan Hb1AC,,,
+49,Pemeriksaan Gula Darah Remaja,Pemeriksaan Gula Darah - Remaja,SKRINING TALASEMIA DAN DIABETES,FRM000197,1,Apakah Anak Anda pernah dinyatakan diabetes atau kencing manis oleh Dokter?,Layanan,,Baru
+49,Pemeriksaan Gula Darah Remaja,Pemeriksaan Gula Darah - Remaja,SKRINING TALASEMIA DAN DIABETES,FRM000197,2,"Sudah Berapa Bulan Anak Anda Didiagnosis Diabetes Melitus Oleh Dokter? Isi Total Bulan Sejak didiagnosis dokter hingga saat ini, misal didiagnosis 1 tahun yang lalu = 12, dst",,,
+49,Pemeriksaan Gula Darah Remaja,Pemeriksaan Gula Darah - Remaja,SKRINING TALASEMIA DAN DIABETES,FRM000197,3,Gula Darah Sewaktu (GDS),,,
+49,Pemeriksaan Gula Darah Remaja,Pemeriksaan Gula Darah - Remaja,SKRINING TALASEMIA DAN DIABETES,FRM000197,4,Gula Darah Anak dan Remaja,,,
+49,Pemeriksaan Gula Darah Remaja,Pemeriksaan Gula Darah - Remaja,SKRINING TALASEMIA DAN DIABETES,FRM000197,5,Gula Darah Sewaktu Kedua (GDS 2). Lakukan jika hasil GDS 1 Prediabetes (≥144-199mg/dl) atau Hiperglikemia (≥200mg/dl) dan BELUM PERNAH didiagnosis Diabetes,,,
+50,Pemeriksaan Hepatitis,"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,FRM000044,1,Hasil Rapid Test Hepatitis B,radio,LPM000166|FRM000044|PPM00000022|text,
+50,Pemeriksaan Hepatitis,"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,FRM000044,2,Hasil Rapid Test Hepatitis C,radio,LPM000166|FRM000044|PPM00000039|text,
+50,Pemeriksaan Hepatitis,"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,FRM000044,3,Hasil Pemeriksaan VL HCV RNA Hepatitis C,,,
+51,Pemeriksaan HIV,Pemeriksaan Calon Pengantin Laki-laki,Calon Pengantin,FRM000188,1,Hasil Pemeriksaan Rapid Test HIV,Layanan,LPM000177|FRM000188|PPM00000069|text,Baru
+51,Pemeriksaan HIV,Pemeriksaan Calon Pengantin Laki-laki,Calon Pengantin,FRM000188,2,Hasil R2 HIV,,,
+51,Pemeriksaan HIV,Pemeriksaan Calon Pengantin Laki-laki,Calon Pengantin,FRM000188,3,Hasil Pemeriksaan Rapid Test HIV R1 Ulang,,,Baru
+51,Pemeriksaan HIV,Pemeriksaan Calon Pengantin Laki-laki,Calon Pengantin,FRM000188,4,Hasil R3 HIV,,,Baru
+51,Pemeriksaan HIV,Pemeriksaan Calon Pengantin Laki-laki,Calon Pengantin,FRM000188,5,Hasil Pemeriksaan HIV,,,Baru
+52,Pemeriksaan Inspekulo dan IVA,Skrining Kanker Leher Rahim,Kanker Leher Rahim,FRM000060,1,Pemeriksaan Inspekulo,Layanan,LPM000036|FRM000060|PPM00000092|text,Tetap
+52,Pemeriksaan Inspekulo dan IVA,Skrining Kanker Leher Rahim,Kanker Leher Rahim,FRM000060,2,Pemeriksaan Inspeksi Visual Asam Asetat (IVA),radio,LPM000036|FRM000060|PPM00000093|text,Berubah
+53,Pemeriksaan Kadar CO (Hanya Diisi Apabila Merokok atau Terpapar Asap Rokok),,,FRM000186,1,Kadar CO Pernapasan,number,LPM000114|FRM000186|PPM00000545|number,
+54,Pemeriksaan Lanjutan Kanker Usus,Skrining Kanker Usus (TL APCS),Kanker Usus,FRM000050,1,Kesediaan untuk diperiksa Colok Dubur,Layanan,LPM000037|FRM000050|PPM00000076|text,Tetap
+54,Pemeriksaan Lanjutan Kanker Usus,Skrining Kanker Usus (TL APCS),Kanker Usus,FRM000050,2,Colok Dubur (hanya apabila bersedia),radio,LPM000037|FRM000050|PPM00000105|text,Tetap
+54,Pemeriksaan Lanjutan Kanker Usus,Skrining Kanker Usus (TL APCS),Kanker Usus,FRM000050,3,Hasil pemeriksaan Darah Samar (hanya apabila bersedia),radio,LPM000037|FRM000050|PPM00000114|text,Tetap
+55,Pemeriksaan Penyakit Frambusia (untuk daerah endemis atau berisiko frambusia),Layanan Penyakit Tropis Terabaikan,Penyakit Tropis Terabaikan (NTD) - mandiri,FRM000199,1,Apakah ada papul/nodul/ulkus/krusta papiloma?,radio,LPM000121|FRM000199|PPM00000587|text,Baru
+55,Pemeriksaan Penyakit Frambusia (untuk daerah endemis atau berisiko frambusia),Layanan Penyakit Tropis Terabaikan,Penyakit Tropis Terabaikan (NTD) - mandiri,FRM000199,2,Apa hasil pemeriksaan RDT Treponema Frambusia?,,,Baru
+56,Pemeriksaan Penyakit Kusta,Layanan Penyakit Tropis Terabaikan,Penyakit Tropis Terabaikan (NTD) - mandiri,FRM000198,1,"Apakah tubuh anda ada bercak kulit putih atau merah yang tidak/kurang rasa/ kebal saat disentuh panas/dingin, tidak gatal/ tidak nyeri ?",Layanan,LPM000121|FRM000198|PPM00000585|text,Baru
+56,Pemeriksaan Penyakit Kusta,Layanan Penyakit Tropis Terabaikan,Penyakit Tropis Terabaikan (NTD) - mandiri,FRM000198,2,Hasil pemeriksaan BTA atau observasi 3-6 bulan,,,Baru
+56,Pemeriksaan Penyakit Kusta,Layanan Penyakit Tropis Terabaikan,Penyakit Tropis Terabaikan (NTD) - mandiri,FRM000198,3,Pemeriksaan BTA Kusta atau observasi 3-6 bulan,,,Baru
+57,Pemeriksaan Penyakit Skabies,Layanan Penyakit Tropis Terabaikan,Penyakit Tropis Terabaikan (NTD) - mandiri,FRM000201,1,Apakah ada koreng/ruam/bentol/kudis bergerombol yang gatal terutama di malam hari walaupun sudah diberi bedak atau lotion?,Layanan,LPM000121|FRM000201|PPM00000593|text,Baru
+58,Pemeriksaan PJB,Skrining PJB,SKRINING PENYAKIT JANTUNG BAWAAN,FRM000011,1,Pemeriksaan PJB - Tangan kanan (Oksimeter),Layanan,,Tetap
+58,Pemeriksaan PJB,Skrining PJB,SKRINING PENYAKIT JANTUNG BAWAAN,FRM000011,2,Pemeriksaan PJB - Kaki,,,
+58,Pemeriksaan PJB,Skrining PJB,SKRINING PENYAKIT JANTUNG BAWAAN,FRM000011,3,Hasil Pemeriksaan Penyakit Jantung Bawaan,,,
+59,Pemeriksaan PPOK (Skrining PUMA),Pemeriksaan PPOK (Skrining PUMA),PPOK,FRM000101,1,Usia - skor PUMA,Layanan,,
+59,Pemeriksaan PPOK (Skrining PUMA),Pemeriksaan PPOK (Skrining PUMA),PPOK,FRM000101,2,Apakah anda sedang/mempunyai riwayat merokok?,radio,LPM000070|FRM000101|PPM00000250|text,
+59,Pemeriksaan PPOK (Skrining PUMA),Pemeriksaan PPOK (Skrining PUMA),PPOK,FRM000101,3,"Jika Perokok Aktif, berapa bungkus per tahun?",,,
+59,Pemeriksaan PPOK (Skrining PUMA),Pemeriksaan PPOK (Skrining PUMA),PPOK,FRM000101,4,Apakah Anda pernah merasa napas pendek ketika berjalan lebih cepat pada jalan yang datar atau pada jalan yang sedikit menanjak?,radio,LPM000070|FRM000101|PPM00000088|text,
+59,Pemeriksaan PPOK (Skrining PUMA),Pemeriksaan PPOK (Skrining PUMA),PPOK,FRM000101,5,Apakah Anda biasanya mempunyai dahak yang berasal dari paru atau kesulitan mengeluarkan dahak saat Anda sedang tidak menderita selesma/flu?,radio,LPM000070|FRM000101|PPM00000100|text,
+59,Pemeriksaan PPOK (Skrining PUMA),Pemeriksaan PPOK (Skrining PUMA),PPOK,FRM000101,6,Apakah Anda biasanya batuk saat sedang tidak menderita selesma/flu?,radio,LPM000070|FRM000101|PPM00000104|text,
+59,Pemeriksaan PPOK (Skrining PUMA),Pemeriksaan PPOK (Skrining PUMA),PPOK,FRM000101,7,Apakah Dokter atau tenaga medis lainnya pernah meminta Anda untuk melakukan pemeriksaan spirometri atau peak flow meter (meniup ke dalam suatu alat) untuk mengetahui fungsi paru?,radio,LPM000070|FRM000101|PPM00000107|text,
+59,Pemeriksaan PPOK (Skrining PUMA),Pemeriksaan PPOK (Skrining PUMA),PPOK,FRM000101,8,Hasil Skor Kuesioner PUMA,,,
+60,Pemeriksaan RDT Malaria (untuk daerah endemis atau berisiko malaria),Hasil Pemeriksaan RDT Malaria,Malaria,FRM000117,1,Hasil Pemeriksaan RDT Malaria,Layanan,,Tetap
+61,Pemeriksaan Sifilis,Pemeriksaan Calon Pengantin Laki-laki,Calon Pengantin,FRM000191,1,Hasil Pemeriksaan Rapid Test Sifilis,Layanan,LPM000177|FRM000191|PPM00000056|text,Baru
+62,"Pemeriksaan Sputum - Tuberkulosis
+
+
+
+
+
+
+
+",Pemeriksaan Tuberkulosis,SKRINING TUBERKULOSIS,FRM000048,1,Riwayat Kontak Tuberkulosis (Layanan),Layanan,,Dihapus
+62,"Pemeriksaan Sputum - Tuberkulosis
+
+
+
+
+
+
+
+",Pemeriksaan Tuberkulosis,SKRINING TUBERKULOSIS,FRM000048,2,Tuberkulosis - Jenis Kontak TBC (Layanan),,,Dihapus
+62,"Pemeriksaan Sputum - Tuberkulosis
+
+
+
+
+
+
+
+",Pemeriksaan Tuberkulosis,SKRINING TUBERKULOSIS,FRM000048,3,Metode Pemeriksaan TB,,,Dihapus
+62,"Pemeriksaan Sputum - Tuberkulosis
+
+
+
+
+
+
+
+",Pemeriksaan Tuberkulosis,SKRINING TUBERKULOSIS,FRM000048,4,Hasil Pemeriksaan TB TCM,,,Dihapus
+62,"Pemeriksaan Sputum - Tuberkulosis
+
+
+
+
+
+
+
+",Pemeriksaan Tuberkulosis,SKRINING TUBERKULOSIS,FRM000048,5,Hasil Pemeriksaan TB BTA,,,Dihapus
+63,Pemeriksaan Tekanan Darah,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Tekanan Darah,FRM000052,1,Pemeriksaan Tekanan Darah (Sistolik),Layanan,,Tetap
+63,Pemeriksaan Tekanan Darah,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Tekanan Darah,FRM000052,2,Pemeriksaan Tekanan Darah (Diastolik),,,Tetap
+63,Pemeriksaan Tekanan Darah,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Tekanan Darah,FRM000052,3,Hasil Tekanan Darah,,,Tetap
+63,Pemeriksaan Tekanan Darah,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Tekanan Darah,FRM000052,4,Apakah Anda pernah dinyatakan tekanan darah tinggi?,Layanan,,Tetap
+63,Pemeriksaan Tekanan Darah,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Tekanan Darah,FRM000052,5,"Sudah Berapa Bulan Anda Didiagnosis Hipertensi Oleh Dokter? Isi Total Bulan Sejak didiagnosis dokter hingga saat ini, misal didiagnosis 1 tahun yang lalu = 12, dst",,,Tetap
+63,Pemeriksaan Tekanan Darah,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Tekanan Darah,FRM000052,6,Tekanan Darah Sistolik,,,Tetap
+63,Pemeriksaan Tekanan Darah,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Tekanan Darah,FRM000052,7,Tekanan darah diastolik,,,Tetap
+64,Pemeriksaan Tuberkulosis (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Dewasa & Lansia,SKRINING TUBERKULOSIS,FRM000184,1,Apakah anda ada kontak dengan pasien Tuberkulosis (TBC)?,dropdown,LPM000133|FRM000184|PPM00000387|text,Baru
+64,Pemeriksaan Tuberkulosis (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Dewasa & Lansia,SKRINING TUBERKULOSIS,FRM000184,2,Apakah jeanis TBC dari pasien Tuberkulosis (TBC) yang berkontak dengan anda?,,,Baru
+64,Pemeriksaan Tuberkulosis (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Dewasa & Lansia,SKRINING TUBERKULOSIS,FRM000184,3,Metode Pemeriksaan (untuk terduga TB),dropdown,LPM000133|FRM000184|PPM00000504|text,Baru
+64,Pemeriksaan Tuberkulosis (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Dewasa & Lansia,SKRINING TUBERKULOSIS,FRM000184,4,Hasil Pemeriksaan TCM,,,Baru
+64,Pemeriksaan Tuberkulosis (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Dewasa & Lansia,SKRINING TUBERKULOSIS,FRM000184,5,Hasil Pemeriksaan BTA,,,Baru
+64,Pemeriksaan Tuberkulosis (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Dewasa & Lansia,SKRINING TUBERKULOSIS,FRM000184,6,Hasil Pemeriksaan NPOC,,,Baru
+64,Pemeriksaan Tuberkulosis (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Dewasa & Lansia,SKRINING TUBERKULOSIS,FRM000184,7,Hasil Uji Resistensi Dewasa (BTA),,,
+64,Pemeriksaan Tuberkulosis (Dewasa & Lansia),Tuberkulosis - Skrining Nakes Dewasa & Lansia,SKRINING TUBERKULOSIS,FRM000184,8,Hasil Uji Resistensi Dewasa (NPOC),,,
+65,Pemeriksaan Tuberkulosis Anak,Tuberkulosis - Skrining Nakes Anak 1-9 tahun,SKRINING TUBERKULOSIS,FRM000178,1,Apakah anda ada kontak dengan pasien Tuberkulosis (TBC)?,,,Berubah
+65,Pemeriksaan Tuberkulosis Anak,Tuberkulosis - Skrining Nakes Anak 1-9 tahun,SKRINING TUBERKULOSIS,FRM000178,2,Apakah jenis TBC dari pasien Tuberkulosis (TBC) yang berkontak dengan anda?,,,Berubah
+65,Pemeriksaan Tuberkulosis Anak,Tuberkulosis - Skrining Nakes Anak 1-9 tahun,SKRINING TUBERKULOSIS,FRM000178,3,Metode Pemeriksaan (untuk terduga TB),,,Baru
+65,Pemeriksaan Tuberkulosis Anak,Tuberkulosis - Skrining Nakes Anak 1-9 tahun,SKRINING TUBERKULOSIS,FRM000178,4,Hasil Pemeriksaan TCM,,,Baru
+65,Pemeriksaan Tuberkulosis Anak,Tuberkulosis - Skrining Nakes Anak 1-9 tahun,SKRINING TUBERKULOSIS,FRM000178,5,Hasil Pemeriksaan BTA,,,Baru
+65,Pemeriksaan Tuberkulosis Anak,Tuberkulosis - Skrining Nakes Anak 1-9 tahun,SKRINING TUBERKULOSIS,FRM000178,6,Hasil Pemeriksaan NPOC,,,Baru
+65,Pemeriksaan Tuberkulosis Anak,Tuberkulosis - Skrining Nakes Anak 1-9 tahun,SKRINING TUBERKULOSIS,FRM000178,7,Skoring Anak,,,Tetap
+65,Pemeriksaan Tuberkulosis Anak,Tuberkulosis - Skrining Nakes Anak 1-9 tahun,SKRINING TUBERKULOSIS,FRM000178,8,Hasil Tes Infeksi TB,,,Baru
+65,Pemeriksaan Tuberkulosis Anak,Tuberkulosis - Skrining Nakes Anak 1-9 tahun,SKRINING TUBERKULOSIS,FRM000178,9,Hasil Uji Resistensi Anak (BTA),,,
+65,Pemeriksaan Tuberkulosis Anak,Tuberkulosis - Skrining Nakes Anak 1-9 tahun,SKRINING TUBERKULOSIS,FRM000178,10,Hasil Uji Resistensi Anak (NPOC),,,
+66,Penapisan dan Pemeriksaan HIV Anak,Penapisan dan Pemeriksaan HIV & Sifilis Anak,IMS,FRM000259,1,Apakah bayi/anak lahir dari Ibu dengan HIV Positif (ODHIV)?,Layanan,,
+67,Penapisan dan Pemeriksaan Sifilis Anak,Penapisan dan Pemeriksaan HIV & Sifilis Anak,IMS,FRM000264,1,Apakah bayi/anak lahir dari Ibu dengan Sifilis?,,,Baru
+67,Penapisan dan Pemeriksaan Sifilis Anak,Penapisan dan Pemeriksaan HIV & Sifilis Anak,IMS,FRM000264,2,Hasil Pemeriksaan Rapid Test Sifilis,,,Berubah
+68,Penapisan KMPE dan GPPH,Skrining Perkembangan Balita 3-6 Tahun,SKRINING PERKEMBANGAN,FRM000096,1,"Apakah anak Anda memiliki satu atau lebih kondisi berikut ini : 1) Sering tantrum (mengganggu aktivitas sehari-hari) ; 2) Mudah menangis atau marah tanpa alasan yang jelas; 3) memukul, menggigit atau mendorong orang lain tanpa alasan yang jelas; 4) Perubahan emosi/perilaku yang menimbulkan gangguan",,,
+68,Penapisan KMPE dan GPPH,Skrining Perkembangan Balita 3-6 Tahun,SKRINING PERKEMBANGAN,FRM000096,2,Apakah anak Anda memiliki satu atau lebih kondisi berikut ini : 1) ⁠Anak tidak bisa duduk tenang; 2) ⁠Anak selalu bergerak tanpa tujuan dan tanpa mengenal lelah; 3) ⁠Suasana hati sangat mudah berubah; 4) Emosi anak meledak-ledak/impulsif,,,
+69,Penilaian Warna Kulit dan Warna Tinja (14-28 hari),Skrining Bayi Kuning (14- 28 hari),Kelainan Saluran Empedu,FRM000252,1,Tanggal Pemeriksaan (cth: 05122025),Layanan,,Tetap
+69,Penilaian Warna Kulit dan Warna Tinja (14-28 hari),Skrining Bayi Kuning (14- 28 hari),Kelainan Saluran Empedu,FRM000252,2,Berapa Hasil Kramer pada Bayi Kuning ?,,,
+69,Penilaian Warna Kulit dan Warna Tinja (14-28 hari),Skrining Bayi Kuning (14- 28 hari),Kelainan Saluran Empedu,FRM000252,3,Berapa hasil derajat penilaian warna tinja bayi?,,,
+69,Penilaian Warna Kulit dan Warna Tinja (14-28 hari),Skrining Bayi Kuning (14- 28 hari),Kelainan Saluran Empedu,FRM000252,4,Hasil Penilaian Warna Kulit dan Warna Tinja,,,
+70,Penurunan Kognitif - Tindak Lanjut (AD-8 INA),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000031,1,"Apakah klien/pasien lansia mengalami kesulitan dalam membuat keputusan? Misalnya tidak mempu memberi saran dengan benar, tidak mampu mengurus keuangan, membeli hadiah yang tidak layak untuk orang lain, bermasalah dengan pemikiran?",dropdown,LPM000025|FRM000031|PPM00000116|text,
+70,Penurunan Kognitif - Tindak Lanjut (AD-8 INA),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000031,2,"Apakah klien/pasien lansia anda sudah tidak menekuni hobi/ kegiatan yang sebelumnya disenangi? Misalnya merajut, menjahit, berkebun, memasak kue, membaca buku, bermain catur, memainkan alat musik atau bernyanyi?",dropdown,LPM000025|FRM000031|PPM00000117|text,
+70,Penurunan Kognitif - Tindak Lanjut (AD-8 INA),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000031,3,"Apakah keluarga anda mengulang-ngulang pertanyaan, cerita atau pernyataan yang sama?",dropdown,LPM000025|FRM000031|PPM00000118|text,
+70,Penurunan Kognitif - Tindak Lanjut (AD-8 INA),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000031,4,SKILAS Lanjutan-Penurunan Kognitif-03 (AD-8),,,
+70,Penurunan Kognitif - Tindak Lanjut (AD-8 INA),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000031,5,"Apakah klien/pasien lansia mengalami kesulitan belajar menggunakan perkakas dan peralatan? Seperti TV, radio, komputer, microwave, remote control, setrika, blender?",dropdown,LPM000025|FRM000031|PPM00000119|text,
+70,Penurunan Kognitif - Tindak Lanjut (AD-8 INA),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000031,6,SKILAS Lanjutan-Penurunan Kognitif-04 (AD-8),,,
+70,Penurunan Kognitif - Tindak Lanjut (AD-8 INA),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000031,7,Apakah klien/pasien lansia lupa nama bulan atau tahun?,dropdown,LPM000025|FRM000031|PPM00000120|text,
+70,Penurunan Kognitif - Tindak Lanjut (AD-8 INA),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000031,8,SKILAS Lanjutan-Penurunan Kognitif-05 (AD-8),,,
+70,Penurunan Kognitif - Tindak Lanjut (AD-8 INA),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000031,9,"Apakah klien/pasien lansia mengalami kesulitan mengatur keuangan? Misalnya membayar rekening air/listrik, periksa buku cek, pajak pendapatan, mengambil yang pensiun di bank?",dropdown,LPM000025|FRM000031|PPM00000121|text,
+70,Penurunan Kognitif - Tindak Lanjut (AD-8 INA),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000031,10,SKILAS Lanjutan-Penurunan Kognitif-06 (AD-8),,,
+70,Penurunan Kognitif - Tindak Lanjut (AD-8 INA),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000031,11,Apakah klien/pasien lansia mengalami kesulitan mengingat janji terhadap orang lain?,dropdown,LPM000025|FRM000031|PPM00000123|text,
+70,Penurunan Kognitif - Tindak Lanjut (AD-8 INA),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000031,12,SKILAS Lanjutan-Penurunan Kognitif-07 (AD-8),,,
+70,Penurunan Kognitif - Tindak Lanjut (AD-8 INA),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000031,13,"Apakah klien/pasien lansia sehari-harinya mengalami gangguan memori dan pemikiran yang konsisten? Misalnya lupa meletakkan kaca mata, kunci kendaraan, meletakkan barang tidak sesuai pada tempatnya?",dropdown,LPM000025|FRM000031|PPM00000124|text,
+70,Penurunan Kognitif - Tindak Lanjut (AD-8 INA),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000031,14,SKILAS Lanjutan-Penurunan Kognitif-08 (AD-8),,,
+70,Penurunan Kognitif - Tindak Lanjut (AD-8 INA),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000031,15,Interpretasi AD-8,,,
+70,Penurunan Kognitif - Tindak Lanjut (AD-8 INA),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000031,16,Intepretasi Mini-Cog dan AD8-INA,,,
+71,Penurunan Kognitif - Tindak Lanjut (Mini Cog-Clock Draw),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000030,1,"Mintalah pasien untuk mendengarkan dengan cermat dan mengingat tiga kata dgn pilihan : versi 1: Pisang, bulan, kursi ; versi 2 ; pemimpin, musim meja ; versi 3 : desa, dapur, bayi",radio,LPM000025|FRM000030|PPM00000269|text,
+71,Penurunan Kognitif - Tindak Lanjut (Mini Cog-Clock Draw),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000030,2,"Katakan seluruh frase berikut sesuai urutannya:  “Tolong gambar sebuah jam pada lembar ini. Mulailah dengan menggambar sebuah lingkaran besar. Kemudian, tuliskan angka-angka pada lingkaran dan atur jarum jam mengarah pukul 11:10 (11 lewat 10 menit).”Bila subjek tidak dapat menyelesaikan gambar jam dalam waktu 3 menit, hentikan pemeriksaan langkah ini dan lanjut ke langkah ke-3.""",radio,LPM000025|FRM000030|PPM00000115|text,
+71,Penurunan Kognitif - Tindak Lanjut (Mini Cog-Clock Draw),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000030,3,Mintalah pasien untuk MENGULANG 3 kata yang disebutkan pada pertanyaan no 1,radio,LPM000025|FRM000030|PPM00000108|text,
+71,Penurunan Kognitif - Tindak Lanjut (Mini Cog-Clock Draw),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000030,4,Intepretasi Mini-Cog,,,
+72,Perilaku Merokok,Perilaku Merokok - Dewasa Lansia,Merokok,FRM000064,1,Apakah Anda merokok dalam setahun terakhir ini?,radio,LPM000057|FRM000064|PPM00000183|text,
+72,Perilaku Merokok,Perilaku Merokok - Dewasa Lansia,Merokok,FRM000064,2,"Jika perokok, jenis rokok apa yang dikonsumsi?",,,
+72,Perilaku Merokok,Perilaku Merokok - Dewasa Lansia,Merokok,FRM000064,3,Sudah berapa tahun Anda merokok?,,,
+72,Perilaku Merokok,Perilaku Merokok - Dewasa Lansia,Merokok,FRM000064,4,"Biasanya, berapa batang rokok yang Anda hisap dalam sehari?",,,
+72,Perilaku Merokok,Perilaku Merokok - Dewasa Lansia,Merokok,FRM000064,5,Apakah Anda pernah merokok sebelumnya?,,,
+72,Perilaku Merokok,Perilaku Merokok - Dewasa Lansia,Merokok,FRM000064,6,Berapa lama (tahun) Anda merokok sebelumnya?,,,
+72,Perilaku Merokok,Perilaku Merokok - Dewasa Lansia,Merokok,FRM000064,7,Kapan Anda berhenti merokok?,,,
+72,Perilaku Merokok,Perilaku Merokok - Dewasa Lansia,Merokok,FRM000064,8,Apakah Anda terpapar asap rokok atau menghirup asap rokok dari orang lain dalam sebulan terakhir?,radio,LPM000057|FRM000064|PPM00000218|text,
+72,Perilaku Merokok,Perilaku Merokok - Dewasa Lansia,Merokok,FRM000064,9,Derajat Merokok (Indeks Brinkman),,,
+73,POCT Lipid Panel (Khusus usia >=40 thn dan penyandang HT dan/atau DM),"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,FRM000047,1,Kolesterol Total,Layanan,LPM000166|FRM000047|PPM00000010|number,
+73,POCT Lipid Panel (Khusus usia >=40 thn dan penyandang HT dan/atau DM),"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,FRM000047,2,Masukkan nilai HDL,,,
+73,POCT Lipid Panel (Khusus usia >=40 thn dan penyandang HT dan/atau DM),"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,FRM000047,3,LDL,number,LPM000166|FRM000047|PPM00000026|number,
+73,POCT Lipid Panel (Khusus usia >=40 thn dan penyandang HT dan/atau DM),"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,FRM000047,4,Trigliserida,number,LPM000166|FRM000047|PPM00000029|number,
+73,POCT Lipid Panel (Khusus usia >=40 thn dan penyandang HT dan/atau DM),"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,FRM000047,5,Interpretasi Dislipidemia,,,Berubah
+73,POCT Lipid Panel (Khusus usia >=40 thn dan penyandang HT dan/atau DM),"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,FRM000047,6,HDL,number,LPM000166|FRM000047|PPM00000021|number,
+74,Prediksi Risiko Jantung dan Stroke,Prediksi Risiko Jantung dan Stroke,Jantung dan Stroke,FRM000100,1,Prediksi Risiko Penyakit Kardiovaskular,Layanan,,
+75,Rapid Test Hemoglobin - Balita,Skrining Talasemia (Rapid Test Hemoglobin),SKRINING TALASEMIA DAN DIABETES,FRM000105,1,Hasil Pemeriksaan Rapid Test Hb Balita,Layanan,,Tetap
+76,Riwayat dan Gejala DM Anak,DM Anak (3-6 tahun),SM DM Anak 3-6 Tahun,FRM000098,1,Apakah Anak Anda pernah dinyatakan diabetes atau kencing manis oleh Dokter?,Skrining Mandiri,,
+76,Riwayat dan Gejala DM Anak,DM Anak (3-6 tahun),SM DM Anak 3-6 Tahun,FRM000098,2,"Sudah Berapa Bulan Anak Anda Didiagnosis Diabetes Melitus Oleh Dokter? Isi Total Bulan Sejak didiagnosis dokter hingga saat ini, misal didiagnosis 1 tahun yang lalu = 12, dst",,,
+76,Riwayat dan Gejala DM Anak,DM Anak (3-6 tahun),SM DM Anak 3-6 Tahun,FRM000098,3,Apakah anak bapak/ibu sering merasa sangat lapar dan makan lebih banyak dari biasanya?,,,Dihapus
+76,Riwayat dan Gejala DM Anak,DM Anak (3-6 tahun),SM DM Anak 3-6 Tahun,FRM000098,4,Apakah anak bapak/ibu sering merasa haus meskipun sudah banyak minum?,,,
+76,Riwayat dan Gejala DM Anak,DM Anak (3-6 tahun),SM DM Anak 3-6 Tahun,FRM000098,5,Apakah anak bapak/ibu sering terbangun pada malam hari untuk buang air kecil atau harus ke toilet lebih dari 2x per malam?,,,
+76,Riwayat dan Gejala DM Anak,DM Anak (3-6 tahun),SM DM Anak 3-6 Tahun,FRM000098,6,"Apakah anak bapak/ibu kembali sering mengompol di malam hari, meskipun sebelumnya sudah bisa mengontrol buang air kecil?",,,
+76,Riwayat dan Gejala DM Anak,DM Anak (3-6 tahun),SM DM Anak 3-6 Tahun,FRM000098,7,Apakah anak bapak/ibu tetap mengalami penurunan berat badan meskipun nafsu makan meningkat?,,,
+76,Riwayat dan Gejala DM Anak,DM Anak (3-6 tahun),SM DM Anak 3-6 Tahun,FRM000098,8,Apakah bapak/ibu atau anggota keluarga lainnya (saudara kandung) yang pernah di diagnosis Kencing Manis oleh Dokter?,,,
+76,Riwayat dan Gejala DM Anak,DM Anak (3-6 tahun),SM DM Anak 3-6 Tahun,FRM000098,9,Faktor Risiko Gula,,,
+76,Riwayat dan Gejala DM Anak,DM Anak (3-6 tahun),SM DM Anak 3-6 Tahun,FRM000098,10,Keluhan & Gejala DM Bayi & Anak Pra Sekolah,,,
+77,Riwayat Hipertensi & Diabetes,Riwayat Hipertensi & Diabetes,Gula Darah,FRM000087,1,Apakah Anda pernah dinyatakan tekanan darah tinggi?,Layanan,,Dihapus
+77,Riwayat Hipertensi & Diabetes,Riwayat Hipertensi & Diabetes,Gula Darah,FRM000087,2,Apakah Anda pernah dinyatakan diabetes atau kencing manis oleh Dokter?,,,
+77,Riwayat Hipertensi & Diabetes,Riwayat Hipertensi & Diabetes,Gula Darah,FRM000087,3,"Sudah Berapa Bulan Anda Didiagnosis Diabetes Melitus Oleh Dokter? Isi Total Bulan Sejak didiagnosis dokter hingga saat ini, misal didiagnosis 1 tahun yang lalu = 12, dst",,,
+78,Riwayat imunisasi HPV,Riwayat Imunisasi HPV,Riwayat Imunisasi HPV,FRM000130,1,Apakah pernah mendapatkan imunisasi HPV untuk mencegah kanker leher rahim minimal satu kali?,Skrining Mandiri,,Tetap
+79,Riwayat Imunisasi Rutin Anak Sekolah,Riwayat Imunisasi Rutin Anak Sekolah,Riwayat Imunisasi Rutin Anak Sekolah,FRM000129,1,Apakah anak pernah memperoleh imunisasi polio tetes dan atau campak rubela saat usia 0 sd 24 bulan?,Skrining Mandiri,,Tetap
+79,Riwayat Imunisasi Rutin Anak Sekolah,Riwayat Imunisasi Rutin Anak Sekolah,Riwayat Imunisasi Rutin Anak Sekolah,FRM000129,2,Apakah memiliki catatan imunisasi (buku KIA atau dokumen catatan lainnya) atau mengingat riwayat imunisasi yang diberikan pada anak?,,,
+79,Riwayat Imunisasi Rutin Anak Sekolah,Riwayat Imunisasi Rutin Anak Sekolah,Riwayat Imunisasi Rutin Anak Sekolah,FRM000129,3,Apakah anak sudah mendapatkan imunisasi Polio tetes (OPV) dosis ke-1 saat bayi?,,,
+79,Riwayat Imunisasi Rutin Anak Sekolah,Riwayat Imunisasi Rutin Anak Sekolah,Riwayat Imunisasi Rutin Anak Sekolah,FRM000129,4,Apakah anak sudah mendapatkan imunisasi Polio Tetes (OPV) dosis ke-2 saat bayi?,,,
+79,Riwayat Imunisasi Rutin Anak Sekolah,Riwayat Imunisasi Rutin Anak Sekolah,Riwayat Imunisasi Rutin Anak Sekolah,FRM000129,5,Apakah anak sudah mendapatkan imunisasi Polio Tetes (OPV) dosis ke-3 saat bayi?,,,
+79,Riwayat Imunisasi Rutin Anak Sekolah,Riwayat Imunisasi Rutin Anak Sekolah,Riwayat Imunisasi Rutin Anak Sekolah,FRM000129,6,Apakah anak sudah mendapatkan imunisasi Polio tetes (OPV) dosis ke-4 saat bayi?,,,
+79,Riwayat Imunisasi Rutin Anak Sekolah,Riwayat Imunisasi Rutin Anak Sekolah,Riwayat Imunisasi Rutin Anak Sekolah,FRM000129,7,Apakah anak sudah mendapatkan imunisasi Campak-Rubela dosis ke-1 saat bayi?,,,
+79,Riwayat Imunisasi Rutin Anak Sekolah,Riwayat Imunisasi Rutin Anak Sekolah,Riwayat Imunisasi Rutin Anak Sekolah,FRM000129,8,Apakah anak sudah mendapatkan imunisasi lanjutan Campak-Rubela dosis ke-2?,,,
+79,Riwayat Imunisasi Rutin Anak Sekolah,Riwayat Imunisasi Rutin Anak Sekolah,Riwayat Imunisasi Rutin Anak Sekolah,FRM000129,9,Status Imunisasi Rutin,,,
+79,Riwayat Imunisasi Rutin Anak Sekolah,Riwayat Imunisasi Rutin Anak Sekolah,Riwayat Imunisasi Rutin Anak Sekolah,FRM000129,10,Status Imunisasi Rutin Anak Sekolah,,,
+80,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,FRM000171,1,Apakah anak pernah memperoleh imunisasi saat usia 0 sd 24 bulan,Skrining Mandiri,,Baru
+80,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,FRM000171,2,Apakah memiliki dan membawa catatan imunisasi anak ( buku KIA atau dokumen catatan lainnya) atau mengingat riwayat imunisasi anak?,,,
+80,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,FRM000171,3,Apakah orang tua mengingat riwayat imunisasi yang diperoleh anak saat bayi dan baduta,,,
+80,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,FRM000171,4,Apakah anak anda sudah pernah menerima imunisasi Hepatitis B pada usia <24 jam?,,,
+80,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,FRM000171,5,Apakah anak anda sudah pernah menerima imunisasi BCG pada usia <1 bulan?,,,
+80,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,FRM000171,6,Apakah anak anda sudah menerima imunisasi Polio tetes (OPV) dosis ke-1 pada usia 1 bulan?,,,
+80,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,FRM000171,7,Apakah anak anda sudah menerima imunisasi DPT-HB-Hib dosis ke-1 pada usia 2 bulan?,,,
+80,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,FRM000171,8,Apakah anak anda sudah menerima imunisasi Polio Tetes (OPV) dosis ke-2 pada usia 2 bulan?,,,
+80,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,FRM000171,9,Apakah anak anda sudah menerima imunisasi PCV dosis ke-1 pada usia 2 bulan?,,,
+80,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,FRM000171,10,Apakah anak anda sudah pernah menerima imunisasi Rotavirus dosis ke-1 pada usia 2 bulan?,,,
+80,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,FRM000171,11,Apakah anak anda sudah menerima imunisasi DPT-HB-Hib dosis ke-2 pada usia 3 bulan?,,,
+80,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,FRM000171,12,Apakah anak anda sudah menerima imunisasi Polio Tetes (OPV) dosis ke-3 pada usia 3 bulan?,,,
+80,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,FRM000171,13,Apakah anak anda sudah pernah menerima Imunisasi PCV 2 pada usia 3? bulan?,,,
+80,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,FRM000171,14,Apakak anak anda pernah menerima Imunisasi Rotavirus dosis ke-2 pada usia 3 bulan?,,,
+80,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,FRM000171,15,Apakah anak anda sudah menerima imunisasi Polio tetes DPT-HB-Hib dosis ke-3 pada usia 4 bulan?,,,
+80,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,FRM000171,16,Apakah anak anda sudah menerima imunisasi Polio tetes (OPV) dosis ke-4 pada usia 4 bulan?,,,
+80,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,FRM000171,17,Apakah anak anda pernah menerima imunisasi Rotavirus dosis ke-3 pada usia 4 bulan?,,,
+80,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,FRM000171,18,Apakah anak anda sudah menerima imunisasi polio suntik (IPV) dosis ke-1 pada usia 4 bulan?,,,
+80,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,FRM000171,19,Apakah anak anda sudah menerima imunisasi Campak-Rubela dosis ke-1 pada usia 9 bulan?,,,
+80,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,FRM000171,20,Apakah anak anda sudah menerima imunisasi lanjutan DPT-HB-Hib dosis ke-4 pada usia 18-24 bulan?,,,
+80,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,FRM000171,21,Apakah anak anda sudah menerima imunisasi lanjutan campak-rubela dosis ke-2 pada usia 18-24 bulan?,,,
+80,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,Riwayat Imunisasi Rutin Balita,FRM000171,22,Status Imunisasi Rutin Balita,,,
+81,Riwayat Imunisasi Tetanus(Status T) - Hanya untuk Catin,Riwayat Imunisasi Tetanus(Status T),Riwayat Imunisasi Tetanus (Status T),FRM000172,1,"Apakah anda pernah mendapatkan imunisasi tetanus minimal 2 kali? (imunisasi tetanus biasanya didapatkan pada vaksin DPT saat bayi, vaksin TT/Td saat usia sekolah dasar)",Skrining Mandiri,LPM000113|FRM000172|PPM00000505|text,Baru
+82,SKILAS Mobilisasi - Lansia,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000032,1,Tes Berdiri di kursi: Berdiri dari kursi lima kali tanpa bantuan tangan. Apakah orang tersebut dapat berdiri dari kursi utuh sebanyak lima kali dalam 14 detik ?,radio,LPM000025|FRM000032|PPM00000122|text,
+83,SKILAS Pemeriksaan Gejala Depresi - Lansia,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000038,1,"Apakah dalam 2 minggu terakhir Anda merasa sedih, tertekan, atau putus asa?",,,
+83,SKILAS Pemeriksaan Gejala Depresi - Lansia,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000038,2,Apakah dalam 2 minggu terakhir Anda sedikit minat atau kesenangan dalam melakukan sesuatu?,,,
+83,SKILAS Pemeriksaan Gejala Depresi - Lansia,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000038,3,SKILAS-Gejala Depresi-Interpretasi,,,
+84,SKILAS Penurunan Kognitif - Lansia,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000029,1,"Apakah dapat mengingat tiga kata: bunga, pintu, nasi (contoh)?",Layanan,LPM000025|FRM000029|PPM00000037|text,Tetap
+84,SKILAS Penurunan Kognitif - Lansia,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000029,2,"Tanggal berapakah hari ini secara lengkap (tanggal/bulan/tahun)? atau- Dimanakah Anda saat ini (Puskesmas, rumah, klinik, dll)?",radio,LPM000025|FRM000029|PPM00000066|text,
+84,SKILAS Penurunan Kognitif - Lansia,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000029,3,Apakah peserta dapat mengingat tiga kata sebelumnya?,radio,LPM000025|FRM000029|PPM00000085|text,
+84,SKILAS Penurunan Kognitif - Lansia,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000029,4,Interpretasi SKILAS Penurunan Kognitif,,,
+85,Skoring TB - Hanya Apabila Tes Mantoux,"Skrining Tuberkulosis - Balita dan Anak Prasekolah
+",SKRINING TUBERKULOSIS,FRM000025,1,Tuberkulosis - Riwayat TB,Layanan,,Dihapus
+85,Skoring TB - Hanya Apabila Tes Mantoux,"Skrining Tuberkulosis - Balita dan Anak Prasekolah
+",SKRINING TUBERKULOSIS,FRM000025,2,TB-Mantoux-04 demam,,,Dihapus
+85,Skoring TB - Hanya Apabila Tes Mantoux,"Skrining Tuberkulosis - Balita dan Anak Prasekolah
+",SKRINING TUBERKULOSIS,FRM000025,3,TB-Mantoux-05 Pembesaran kelenjar,,,Dihapus
+85,Skoring TB - Hanya Apabila Tes Mantoux,"Skrining Tuberkulosis - Balita dan Anak Prasekolah
+",SKRINING TUBERKULOSIS,FRM000025,4,TB-Mantoux-06 Pembengkakan tulang,,,Dihapus
+85,Skoring TB - Hanya Apabila Tes Mantoux,"Skrining Tuberkulosis - Balita dan Anak Prasekolah
+",SKRINING TUBERKULOSIS,FRM000025,5,TB-Mantoux-02 Input indurasi,,,Dihapus
+85,Skoring TB - Hanya Apabila Tes Mantoux,"Skrining Tuberkulosis - Balita dan Anak Prasekolah
+",SKRINING TUBERKULOSIS,FRM000025,6,TB-Mantoux-03 Interpretasi Mantoux,,,Dihapus
+85,Skoring TB - Hanya Apabila Tes Mantoux,"Skrining Tuberkulosis - Balita dan Anak Prasekolah
+",SKRINING TUBERKULOSIS,FRM000025,7,Hasil Skoring TB Anak - dengan kontak (all),,,Dihapus
+86,Skrining AIDS (hanya untuk HIV positif),Skrining AIDS,Infeksi Menular Seksual,FRM000190,1,Pemeriksaan CD4,Layanan,,
+87,Skrining Fungsi Ginjal Laki-Laki (hanya untuk =>40 tahun dengan risiko HT DM),"Skrining Laboratorium =>40 thn Laki-laki Gula Darah, Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,FRM000244,1,Hasil Pemeriksaan Kreatinin,number,LPM000166|FRM000244|PPM00000112|number,
+87,Skrining Fungsi Ginjal Laki-Laki (hanya untuk =>40 tahun dengan risiko HT DM),"Skrining Laboratorium =>40 thn Laki-laki Gula Darah, Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,FRM000244,2,Hasil Pemeriksaan Ureum,Layanan,LPM000166|FRM000244|PPM00000099|number,
+87,Skrining Fungsi Ginjal Laki-Laki (hanya untuk =>40 tahun dengan risiko HT DM),"Skrining Laboratorium =>40 thn Laki-laki Gula Darah, Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,FRM000244,3,Usia,number,LPM000166|FRM000244|PPM00000691|number,
+87,Skrining Fungsi Ginjal Laki-Laki (hanya untuk =>40 tahun dengan risiko HT DM),"Skrining Laboratorium =>40 thn Laki-laki Gula Darah, Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,FRM000244,4,Nilai Hasil pemeriksaan (e-LFG (CKD-EPI)),number,LPM000166|FRM000244|PPM00000761|number,
+88,Skrining Fungsi Ginjal Perempuan (hanya untuk =>40 tahun dengan risiko HT DM),"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,FRM000245,1,Hasil Pemeriksaan Kreatinin,number,LPM000167|FRM000245|PPM00000112|number,
+88,Skrining Fungsi Ginjal Perempuan (hanya untuk =>40 tahun dengan risiko HT DM),"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,FRM000245,2,Hasil Pemeriksaan Ureum,number,LPM000167|FRM000245|PPM00000099|number,
+88,Skrining Fungsi Ginjal Perempuan (hanya untuk =>40 tahun dengan risiko HT DM),"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,FRM000245,3,Usia,number,LPM000167|FRM000245|PPM00000691|number,
+88,Skrining Fungsi Ginjal Perempuan (hanya untuk =>40 tahun dengan risiko HT DM),"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,FRM000245,4,Nilai Hasil pemeriksaan (e-LFG (CKD-EPI)),number,LPM000167|FRM000245|PPM00000730|number,
+88,Skrining Fungsi Ginjal Perempuan (hanya untuk =>40 tahun dengan risiko HT DM),"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,FRM000245,5,Fungsi Ginjal  (Ureum),Layanan,,
+88,Skrining Fungsi Ginjal Perempuan (hanya untuk =>40 tahun dengan risiko HT DM),"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,FRM000245,6,Fungsi Ginjal  (Kreatinin),,,
+88,Skrining Fungsi Ginjal Perempuan (hanya untuk =>40 tahun dengan risiko HT DM),"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,FRM000245,7,Fungsi Ginjal (e-LFG-PGK) diambil dari kalkulator online eLFG Perempuan,,,
+89,Skrining Gigi - Balita dan Anak Prasekolah,Skrining Gigi - Balita dan Anak Prasekolah,SKRINING GIGI,FRM000022,1,Gigi karies,Layanan,,
+90,Penapisan Risiko Kanker Paru,Skrining Kanker Paru (Laki-Laki >=45 Tahun) - Penapisan Risiko Kanker Paru,Kanker Paru,FRM000138,1,Apakah Anda merokok dalam setahun terakhir ini?,Skrining Mandiri,LPM000105|FRM000138|PPM00000561|text,
+90,Penapisan Risiko Kanker Paru,Skrining Kanker Paru (Laki-Laki >=45 Tahun) - Penapisan Risiko Kanker Paru,Kanker Paru,FRM000138,2,Apakah Anda pernah memiliki riwayat merokok dalam 15 tahun terakhir?,,,
+90,Penapisan Risiko Kanker Paru,Skrining Kanker Paru (Laki-Laki >=45 Tahun) - Penapisan Risiko Kanker Paru,Kanker Paru,FRM000138,3,"Apakah Anda terpapar atau menghirup asap rokok dari orang lain di rumah, lingkungan atau tempat kerja dalam 1 bulan terakhir?",radio,LPM000105|FRM000138|PPM00000563|text,
+90,Penapisan Risiko Kanker Paru,Skrining Kanker Paru (Laki-Laki >=45 Tahun) - Penapisan Risiko Kanker Paru,Kanker Paru,FRM000138,4,Apakah memiliki riwayat kanker paru pada keluarga (ayah/ibu/saudara kandung)?,radio,LPM000105|FRM000138|PPM00000402|text,
+90,Penapisan Risiko Kanker Paru,Skrining Kanker Paru (Laki-Laki >=45 Tahun) - Penapisan Risiko Kanker Paru,Kanker Paru,FRM000138,5,Apakah Anda sedang mengalami salah satu atau lebih gejala berikut dan telah diobati tetapi tidak sembuh-sembuh : batuk dalam jangka waktu yang lama / batuk berdarah/ sesak napas/ nyeri dada/ leher bengkak/ terdapat benjolan pada leher?,radio,LPM000105|FRM000138|PPM00000564|text,
+90,Penapisan Risiko Kanker Paru,Skrining Kanker Paru (Laki-Laki >=45 Tahun) - Penapisan Risiko Kanker Paru,Kanker Paru,FRM000138,6,Apakah Anda pernah memiliki riwayat penyakit TBC atau PPOK?,radio,LPM000105|FRM000138|PPM00000565|text,
+90,Penapisan Risiko Kanker Paru,Skrining Kanker Paru (Laki-Laki >=45 Tahun) - Penapisan Risiko Kanker Paru,Kanker Paru,FRM000138,7,Hasil Penapisan Risiko Kanker Paru,,,
+91,Skrining Kanker Paru (Usia =>45 thn),Skrining Kanker Paru (Laki-laki =>45 tahun),Kanker Paru,FRM000041,1,Jenis Kelamin - skor APCS,Layanan,,
+91,Skrining Kanker Paru (Usia =>45 thn),Skrining Kanker Paru (Laki-laki =>45 tahun),Kanker Paru,FRM000041,2,Usia - skor APCS,,,
+91,Skrining Kanker Paru (Usia =>45 thn),Skrining Kanker Paru (Laki-laki =>45 tahun),Kanker Paru,FRM000041,3,Apakah pernah didiagnosis/menderita kanker?,radio,LPM000028|FRM000041|PPM00000017|text,
+91,Skrining Kanker Paru (Usia =>45 thn),Skrining Kanker Paru (Laki-laki =>45 tahun),Kanker Paru,FRM000041,4,Apakah ada keluarga (ayah/ibu/saudara kandung) didiagnosis/menderita kanker sebelumnya?,radio,LPM000028|FRM000041|PPM00000028|text,
+91,Skrining Kanker Paru (Usia =>45 thn),Skrining Kanker Paru (Laki-laki =>45 tahun),Kanker Paru,FRM000041,5,Riwayat merokok/paparan asap rokok,radio,LPM000028|FRM000041|PPM00000291|text,
+91,Skrining Kanker Paru (Usia =>45 thn),Skrining Kanker Paru (Laki-laki =>45 tahun),Kanker Paru,FRM000041,6,"Riwayat tempat kerja mengandung zat karsinogenik (Pertambangan/ pabrik/ bengkel/ garmen/ bangunan/ laboratorium/ sopir/ galangan kapal, dll)?",radio,LPM000028|FRM000041|PPM00000041|text,
+91,Skrining Kanker Paru (Usia =>45 thn),Skrining Kanker Paru (Laki-laki =>45 tahun),Kanker Paru,FRM000041,7,"Lingkungan tempat tinggal berpotensi tinggi (lingkungan dekat pabrik/pertambangan/buangan sampah, dll)?",radio,LPM000028|FRM000041|PPM00000050|text,
+91,Skrining Kanker Paru (Usia =>45 thn),Skrining Kanker Paru (Laki-laki =>45 tahun),Kanker Paru,FRM000041,8,"Lingkungan dalam rumah yang tidak sehat (ventilasi buruk/atap dari asbes/lantai tanah, dapur tungku, dll)?",radio,LPM000028|FRM000041|PPM00000055|text,
+91,Skrining Kanker Paru (Usia =>45 thn),Skrining Kanker Paru (Laki-laki =>45 tahun),Kanker Paru,FRM000041,9,Pernah didiagnosis penyakit paru kronik?,radio,LPM000028|FRM000041|PPM00000057|text,
+91,Skrining Kanker Paru (Usia =>45 thn),Skrining Kanker Paru (Laki-laki =>45 tahun),Kanker Paru,FRM000041,10,Interpretasi Ca Paru,,,
+91,Skrining Kanker Paru (Usia =>45 thn),Skrining Kanker Paru (Laki-laki =>45 tahun),Kanker Paru,FRM000041,11,Foto Torax,radio,LPM000028|FRM000041|PPM00000084|text,
+92,Skrining Kanker Payudara,Skrining Kanker Payudara,Kanker Payudara,FRM000059,1,Pemeriksaan yang dilakukan,Layanan,LPM000035|FRM000059|PPM00000067|text,Tetap
+92,Skrining Kanker Payudara,Skrining Kanker Payudara,Kanker Payudara,FRM000059,2,Hasil pemeriksaan SADANIS,,,Tetap
+92,Skrining Kanker Payudara,Skrining Kanker Payudara,Kanker Payudara,FRM000059,3,Hasil pemeriksaan USG Payudara,,,Tetap
+93,Skrining Karies dan Gigi Hilang,Skrining Gigi - Dewasa >=25 tahun,Gigi,FRM000055,1,Gigi karies,Layanan,LPM000032|FRM000055|PPM00000025|text,Tetap
+93,Skrining Karies dan Gigi Hilang,Skrining Gigi - Dewasa >=25 tahun,Gigi,FRM000055,2,Gigi hilang/dicabut,radio,LPM000032|FRM000055|PPM00000035|text,Tetap
+94,Skrining Kelainan Saluran Empedu (2-4 bulan),Skrining Kelainan Saluran Empedu (2-4 bulan),Kelainan Saluran Empedu,FRM000081,1,Skrining BBL_tanggal,Layanan,,Dihapus
+94,Skrining Kelainan Saluran Empedu (2-4 bulan),Skrining Kelainan Saluran Empedu (2-4 bulan),Kelainan Saluran Empedu,FRM000081,2,Skrining BBL_Memeriksa adanya ikterus pada bayi,,,
+94,Skrining Kelainan Saluran Empedu (2-4 bulan),Skrining Kelainan Saluran Empedu (2-4 bulan),Kelainan Saluran Empedu,FRM000081,3,Skrining BBL_warna tinja,,,
+95,Skrining Kerusakan Ginjal (hanya untuk =>40 tahun dengan risiko HT DM),"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,FRM000248,1,Konsentrasi Albumin Urin,number,LPM000166|FRM000248|PPM00000595|number,
+95,Skrining Kerusakan Ginjal (hanya untuk =>40 tahun dengan risiko HT DM),"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,FRM000248,2,Konsentrasi Kreatinin Urin,number,LPM000166|FRM000248|PPM00000596|number,
+95,Skrining Kerusakan Ginjal (hanya untuk =>40 tahun dengan risiko HT DM),"Skrining Laboratorium =>40 thn Perempuan Fungsi Ginjal, Hati, Profil Lipid",Hati/Hepatitis,FRM000248,3,Rasio Albumin Kreatinin Urin (UACR),,,
+96,Skrining Lanjutan Talasemia - Balita dan Anak Prasekolah,Skrining Lanjutan Talasemia - Balita dan Anak Prasekolah,SKRINING LANJUTAN TALASEMIA,FRM000024,1,Hasil Pemeriksaan Hemoglobin (Hb) dalam g/dL,Layanan,,Berubah
+96,Skrining Lanjutan Talasemia - Balita dan Anak Prasekolah,Skrining Lanjutan Talasemia - Balita dan Anak Prasekolah,SKRINING LANJUTAN TALASEMIA,FRM000024,2,Hasil Pemeriksaan MCV,,,
+96,Skrining Lanjutan Talasemia - Balita dan Anak Prasekolah,Skrining Lanjutan Talasemia - Balita dan Anak Prasekolah,SKRINING LANJUTAN TALASEMIA,FRM000024,3,Hasil Pemeriksaan MCH,,,
+96,Skrining Lanjutan Talasemia - Balita dan Anak Prasekolah,Skrining Lanjutan Talasemia - Balita dan Anak Prasekolah,SKRINING LANJUTAN TALASEMIA,FRM000024,4,Hasil Pemeriksaan Eritrosit / RBC Count,,,
+96,Skrining Lanjutan Talasemia - Balita dan Anak Prasekolah,Skrining Lanjutan Talasemia - Balita dan Anak Prasekolah,SKRINING LANJUTAN TALASEMIA,FRM000024,5,Hasil Pemeriksaan Red cell distribution width (RDW),,,
+96,Skrining Lanjutan Talasemia - Balita dan Anak Prasekolah,Skrining Lanjutan Talasemia - Balita dan Anak Prasekolah,SKRINING LANJUTAN TALASEMIA,FRM000024,6,Indeks Mentzer,,,
+96,Skrining Lanjutan Talasemia - Balita dan Anak Prasekolah,Skrining Lanjutan Talasemia - Balita dan Anak Prasekolah,SKRINING LANJUTAN TALASEMIA,FRM000024,7,Indeks Shine & LAL,,,
+96,Skrining Lanjutan Talasemia - Balita dan Anak Prasekolah,Skrining Lanjutan Talasemia - Balita dan Anak Prasekolah,SKRINING LANJUTAN TALASEMIA,FRM000024,8,Curiga Talasemia,,,
+97,SKILAS Malnutrisi,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000034,1,Apakah berat badan Anda berkurang >3 kg dalam 3 bulan terakhir atau pakaian menjadi lebih longgar?,radio,LPM000025|FRM000034|PPM00000126|text,
+97,SKILAS Malnutrisi,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000034,2,"Apakah Anda hilang nafsu makan Atau mengalami kesulitan makan (misal batuk atau tersedak saat makan, menggunakan selang makan/sonde)?",radio,LPM000025|FRM000034|PPM00000128|text,
+97,SKILAS Malnutrisi,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000034,3,SKILAS-Malnutrisi-02,,,
+97,SKILAS Malnutrisi,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000034,4,Apakah ukuran lingkar lengan atas (LiLA) <21 cm?,radio,LPM000025|FRM000034|PPM00000129|text,
+97,SKILAS Malnutrisi,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000034,5,SKILAS-Malnutrisi-03,,,
+97,SKILAS Malnutrisi,Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000034,6,Interpretasi SKILAS Malnutrisi,,,
+98,Skrining Malnutrisi - Pemeriksaan Lanjutan (MNA-SF),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000035,1,"Apakah anda mengalami penurunan asupan makanan dalam 3 bulan terakhir disebabkan kehilangan nafsu makan, gangguan saluran cerna, kesulitan mengunyah atau menelan?",dropdown,LPM000025|FRM000035|PPM00000131|text,
+98,Skrining Malnutrisi - Pemeriksaan Lanjutan (MNA-SF),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000035,2,Penurunan berat badan dalam tiga bulan terakhir ?,dropdown,LPM000025|FRM000035|PPM00000134|text,
+98,Skrining Malnutrisi - Pemeriksaan Lanjutan (MNA-SF),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000035,3,SKILAS Lanjutan-Malnutrisi-02 (MNASF),,,
+98,Skrining Malnutrisi - Pemeriksaan Lanjutan (MNA-SF),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000035,4,Kemampuan melakukan mobilitas ?,dropdown,LPM000025|FRM000035|PPM00000136|text,
+98,Skrining Malnutrisi - Pemeriksaan Lanjutan (MNA-SF),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000035,5,SKILAS Lanjutan-Malnutrisi-03 (MNASF),,,
+98,Skrining Malnutrisi - Pemeriksaan Lanjutan (MNA-SF),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000035,6,Menderita stress psikologis atau penyakit akut dalam tiga bulan terakhir ?,radio,LPM000025|FRM000035|PPM00000137|text,
+98,Skrining Malnutrisi - Pemeriksaan Lanjutan (MNA-SF),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000035,7,SKILAS Lanjutan-Malnutrisi-04 (MNASF),,,
+98,Skrining Malnutrisi - Pemeriksaan Lanjutan (MNA-SF),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000035,8,Mengalami masalah neuropsikologis?,dropdown,LPM000025|FRM000035|PPM00000138|text,
+98,Skrining Malnutrisi - Pemeriksaan Lanjutan (MNA-SF),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000035,9,SKILAS Lanjutan-Malnutrisi-05 (MNASF),,,
+98,Skrining Malnutrisi - Pemeriksaan Lanjutan (MNA-SF),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000035,10,Berapa Nilai IMT (Indeks Massa Tubuh)?,dropdown,LPM000025|FRM000035|PPM00000140|text,
+98,Skrining Malnutrisi - Pemeriksaan Lanjutan (MNA-SF),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000035,11,SKILAS Lanjutan-Malnutrisi-06 (MNASF),,,
+98,Skrining Malnutrisi - Pemeriksaan Lanjutan (MNA-SF),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000035,12,"""Berapa Lingkar Betis? Pertanyaan ini hanya berlaku jika dilapangan tidak ada pengukuran BB dan TB (IMT), jika sdh ada IMT, maka pertanyaan ini tidak perlu ada""",dropdown,LPM000025|FRM000035|PPM00000143|text,
+98,Skrining Malnutrisi - Pemeriksaan Lanjutan (MNA-SF),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000035,13,SKILAS Lanjutan-Malnutrisi-07 (MNASF),,,
+98,Skrining Malnutrisi - Pemeriksaan Lanjutan (MNA-SF),Skrining Geriatri (Usia >=60 thn/lansia),Geriatri,FRM000035,14,Interpretasi MNASF,,,
+99,Skrining Penyakit Periodontal,Skrining Gigi - Dewasa >=25 tahun,Gigi,FRM000056,1,Penyakit Periodontal,radio,LPM000032|FRM000056|PPM00000044|text,Tetap
+99,Skrining Penyakit Periodontal,Skrining Gigi - Dewasa >=25 tahun,Gigi,FRM000056,2,Gigi Goyang,radio,LPM000032|FRM000056|PPM00000070|text,Tetap
+100,Skrining Pertumbuhan - Balita dan Anak Prasekolah 1-5 Tahun,Skrining Pertumbuhan - Balita dan Anak Prasekolah 1- 5 Tahun,SKRINING PERTUMBUHAN,FRM000016,1,Berat Badan Balita,Layanan,,
+100,Skrining Pertumbuhan - Balita dan Anak Prasekolah 1-5 Tahun,Skrining Pertumbuhan - Balita dan Anak Prasekolah 1- 5 Tahun,SKRINING PERTUMBUHAN,FRM000016,2,Pengukuran Tinggi Badan (cm),,,
+100,Skrining Pertumbuhan - Balita dan Anak Prasekolah 1-5 Tahun,Skrining Pertumbuhan - Balita dan Anak Prasekolah 1- 5 Tahun,SKRINING PERTUMBUHAN,FRM000016,3,Posisi Pengukuran,,,
+100,Skrining Pertumbuhan - Balita dan Anak Prasekolah 1-5 Tahun,Skrining Pertumbuhan - Balita dan Anak Prasekolah 1- 5 Tahun,SKRINING PERTUMBUHAN,FRM000016,4,Hasil BB/U,,,
+100,Skrining Pertumbuhan - Balita dan Anak Prasekolah 1-5 Tahun,Skrining Pertumbuhan - Balita dan Anak Prasekolah 1- 5 Tahun,SKRINING PERTUMBUHAN,FRM000016,5,Hasil TB/U,,,
+100,Skrining Pertumbuhan - Balita dan Anak Prasekolah 1-5 Tahun,Skrining Pertumbuhan - Balita dan Anak Prasekolah 1- 5 Tahun,SKRINING PERTUMBUHAN,FRM000016,6,Hasil BB/TB,,,
+100,Skrining Pertumbuhan - Balita dan Anak Prasekolah 1-5 Tahun,Skrining Pertumbuhan - Balita dan Anak Prasekolah 1- 5 Tahun,SKRINING PERTUMBUHAN,FRM000016,7,Pilih Status Lingkar Kepala,,,Tetap
+101,Skrining Telinga dan Mata (1-2 tahun),Skrining Telinga dan Mata (1-2 tahun),SKRINING TELINGA DAN MATA,FRM000085,1,Hasil Tes Daya Dengar,Layanan,,Berubah
+101,Skrining Telinga dan Mata (1-2 tahun),Skrining Telinga dan Mata (1-2 tahun),SKRINING TELINGA DAN MATA,FRM000085,2,Apakah ditemukan serumen impaksi?,,,Baru
+101,Skrining Telinga dan Mata (1-2 tahun),Skrining Telinga dan Mata (1-2 tahun),SKRINING TELINGA DAN MATA,FRM000085,3,Apakah ditemukan infeksi telinga?,,,Baru
+101,Skrining Telinga dan Mata (1-2 tahun),Skrining Telinga dan Mata (1-2 tahun),SKRINING TELINGA DAN MATA,FRM000085,4,Masukkan hasil pemeriksaan pupil putih,,,Berubah
+101,Skrining Telinga dan Mata (1-2 tahun),Skrining Telinga dan Mata (1-2 tahun),SKRINING TELINGA DAN MATA,FRM000085,5,Apakah ditemukan selaput mata merah atau kornea keruh atau kelopak mata ada benjolan atau susah berkedip atau posisi bola mata juling atau pupil putih?,,,Baru
+102,Skrining Telinga dan Mata (18-39 tahun),Skrining Telinga dan Mata (18-39 tahun),Telinga dan Mata,FRM000042,1,Apa Hasil Pemeriksaan Telinga Luar (serumen impaksi)?,Layanan,LPM000031|FRM000042|PPM00000559|text,Baru
+102,Skrining Telinga dan Mata (18-39 tahun),Skrining Telinga dan Mata (18-39 tahun),Telinga dan Mata,FRM000042,2,Apa Hasil Pemeriksaan Telinga Luar (infeksi telinga)?,dropdown,LPM000031|FRM000042|PPM00000560|text,Baru
+102,Skrining Telinga dan Mata (18-39 tahun),Skrining Telinga dan Mata (18-39 tahun),Telinga dan Mata,FRM000042,3,Hasil pemeriksaan tajam pendengaran,radio,LPM000031|FRM000042|PPM00000020|text,
+102,Skrining Telinga dan Mata (18-39 tahun),Skrining Telinga dan Mata (18-39 tahun),Telinga dan Mata,FRM000042,4,Apa hasil tes penala?,,,
+102,Skrining Telinga dan Mata (18-39 tahun),Skrining Telinga dan Mata (18-39 tahun),Telinga dan Mata,FRM000042,5,Apa hasil skrining tajam penglihatan?,radio,LPM000031|FRM000042|PPM00000040|text,
+102,Skrining Telinga dan Mata (18-39 tahun),Skrining Telinga dan Mata (18-39 tahun),Telinga dan Mata,FRM000042,6,Hasil pemeriksaan visus (snellen chart),,,Berubah
+102,Skrining Telinga dan Mata (18-39 tahun),Skrining Telinga dan Mata (18-39 tahun),Telinga dan Mata,FRM000042,7,Pemeriksaan Pinhole,,,Baru
+102,Skrining Telinga dan Mata (18-39 tahun),Skrining Telinga dan Mata (18-39 tahun),Telinga dan Mata,FRM000042,8,Apa hasil pemeriksaan refraksi?,,,Baru
+102,Skrining Telinga dan Mata (18-39 tahun),Skrining Telinga dan Mata (18-39 tahun),Telinga dan Mata,FRM000042,9,Apa hasil pemeriksaan funduskopi?,,,
+103,Skrining Telinga dan Mata (=>40 tahun),Skrining Telinga dan Mata (=>40 tahun),Telinga dan Mata,FRM000099,1,Apa Hasil Pemeriksaan Telinga Luar (serumen impaksi)?,Layanan,LPM000054|FRM000099|PPM00000559|text,Baru
+103,Skrining Telinga dan Mata (=>40 tahun),Skrining Telinga dan Mata (=>40 tahun),Telinga dan Mata,FRM000099,2,Apa Hasil Pemeriksaan Telinga Luar (infeksi telinga)?,dropdown,LPM000054|FRM000099|PPM00000560|text,Baru
+103,Skrining Telinga dan Mata (=>40 tahun),Skrining Telinga dan Mata (=>40 tahun),Telinga dan Mata,FRM000099,3,Hasil pemeriksaan tajam pendengaran,radio,LPM000054|FRM000099|PPM00000020|text,Berubah
+103,Skrining Telinga dan Mata (=>40 tahun),Skrining Telinga dan Mata (=>40 tahun),Telinga dan Mata,FRM000099,4,Apa hasil tes penala?,,,Berubah
+103,Skrining Telinga dan Mata (=>40 tahun),Skrining Telinga dan Mata (=>40 tahun),Telinga dan Mata,FRM000099,5,Apa hasil skrining tajam penglihatan?,radio,LPM000054|FRM000099|PPM00000040|text,Berubah
+103,Skrining Telinga dan Mata (=>40 tahun),Skrining Telinga dan Mata (=>40 tahun),Telinga dan Mata,FRM000099,6,Hasil pemeriksaan visus (snellen chart),,,Baru
+103,Skrining Telinga dan Mata (=>40 tahun),Skrining Telinga dan Mata (=>40 tahun),Telinga dan Mata,FRM000099,7,Pemeriksaan Pinhole,,,Baru
+103,Skrining Telinga dan Mata (=>40 tahun),Skrining Telinga dan Mata (=>40 tahun),Telinga dan Mata,FRM000099,8,Apa hasil pemeriksaan refraksi?,,,Baru
+103,Skrining Telinga dan Mata (=>40 tahun),Skrining Telinga dan Mata (=>40 tahun),Telinga dan Mata,FRM000099,9,Apa hasil pemeriksaan funduskopi?,,,Baru
+103,Skrining Telinga dan Mata (=>40 tahun),Skrining Telinga dan Mata (=>40 tahun),Telinga dan Mata,FRM000099,10,Hasil pemeriksaan pupil,radio,LPM000054|FRM000099|PPM00000072|text,Baru
+104,Skrining telinga dan mata (anak sekolah),,Skrining telinga dan mata (anak sekolah),FRM000137,1,Pemeriksaan Telinga Luar (serumen impaksi) anak sekolah,Layanan,,Tetap
+104,Skrining telinga dan mata (anak sekolah),,Skrining telinga dan mata (anak sekolah),FRM000137,2,Pemeriksaan Telinga Luar (infeksi telinga) anak sekolah,Layanan,,Tetap
+104,Skrining telinga dan mata (anak sekolah),,Skrining telinga dan mata (anak sekolah),FRM000137,3,Pemeriksaan tajam pendengaran,Layanan,,Tetap
+104,Skrining telinga dan mata (anak sekolah),,Skrining telinga dan mata (anak sekolah),FRM000137,4,Pemeriksaan penala,Layanan,,Baru
+104,Skrining telinga dan mata (anak sekolah),,Skrining telinga dan mata (anak sekolah),FRM000137,5,Hasil Pemeriksaan Mata Luar - Anak Sekolah,Layanan,,Tetap
+104,Skrining telinga dan mata (anak sekolah),,Skrining telinga dan mata (anak sekolah),FRM000137,6,Pemeriksaan tajam penglihatan,Layanan,,Tetap
+104,Skrining telinga dan mata (anak sekolah),,Skrining telinga dan mata (anak sekolah),FRM000137,7,Tes Snellen Chart - anak sekolah,Layanan,,Baru
+104,Skrining telinga dan mata (anak sekolah),,Skrining telinga dan mata (anak sekolah),FRM000137,8,Tes Pinhole - anak sekolah,Layanan,,Baru
+105,Skrining Telinga dan Mata - Balita dan Anak Prasekolah,Skrining Telinga dan Mata - Balita dan Anak Prasekolah,SKRINING TELINGA DAN MATA,FRM000021,1,Hasil Tes Daya Dengar,Layanan,,Berubah
+105,Skrining Telinga dan Mata - Balita dan Anak Prasekolah,Skrining Telinga dan Mata - Balita dan Anak Prasekolah,SKRINING TELINGA DAN MATA,FRM000021,2,Apakah ditemukan serumen impaksi?,,,Baru
+105,Skrining Telinga dan Mata - Balita dan Anak Prasekolah,Skrining Telinga dan Mata - Balita dan Anak Prasekolah,SKRINING TELINGA DAN MATA,FRM000021,3,Apakah ditemukan infeksi telinga?,,,Baru
+105,Skrining Telinga dan Mata - Balita dan Anak Prasekolah,Skrining Telinga dan Mata - Balita dan Anak Prasekolah,SKRINING TELINGA DAN MATA,FRM000021,4,Hasil pemeriksaan Tes Daya Lihat,,,
+105,Skrining Telinga dan Mata - Balita dan Anak Prasekolah,Skrining Telinga dan Mata - Balita dan Anak Prasekolah,SKRINING TELINGA DAN MATA,FRM000021,5,Apakah ditemukan selaput mata merah atau kornea keruh atau kelopak mata ada benjolan atau susah berkedip atau posisi bola mata juling atau pupil putih?,,,Baru
+106,Skrining Tuberkulosis Anak (Kelas 1-8),Tuberkulosis - Skrining Mandiri Kelas 1-8,SKRINING TUBERKULOSIS,FRM000133,1,Tuberkolosis - Gejala TB 01b - Batuk (Anak),Skrining Mandiri,,Dihapus
+106,Skrining Tuberkulosis Anak (Kelas 1-8),Tuberkulosis - Skrining Mandiri Kelas 1-8,SKRINING TUBERKULOSIS,FRM000133,2,Tuberkolosis - Gejala TB 02b - BB Turun (Anak),,,
+106,Skrining Tuberkulosis Anak (Kelas 1-8),Tuberkulosis - Skrining Mandiri Kelas 1-8,SKRINING TUBERKULOSIS,FRM000133,3,Tuberkolosis - Gejala TB 03b - Demam (Anak),,,
+106,Skrining Tuberkulosis Anak (Kelas 1-8),Tuberkulosis - Skrining Mandiri Kelas 1-8,SKRINING TUBERKULOSIS,FRM000133,4,Tuberkolosis - Gejala TB 04b - Lesu (Anak),,,
+106,Skrining Tuberkulosis Anak (Kelas 1-8),Tuberkulosis - Skrining Mandiri Kelas 1-8,SKRINING TUBERKULOSIS,FRM000133,5,Riwayat Kontak Tuberkulosis (Mandiri),,,
+106,Skrining Tuberkulosis Anak (Kelas 1-8),Tuberkulosis - Skrining Mandiri Kelas 1-8,SKRINING TUBERKULOSIS,FRM000133,6,Faktor Risiko Tuberkulosis Sekolah (Kelas 1-8),,,
+107,Skrining Tuberkulosis Anak Sekolah (Kelas 9-12),Tuberkulosis - Skrining Mandiri Kelas 9-12,SKRINING TUBERKULOSIS,FRM000134,1,Tuberkolosis - Gejala TB 01a - Batuk (Dewasa),Skrining Mandiri,,Dihapus
+107,Skrining Tuberkulosis Anak Sekolah (Kelas 9-12),Tuberkulosis - Skrining Mandiri Kelas 9-12,SKRINING TUBERKULOSIS,FRM000134,2,Tuberkolosis - Gejala TB 02a - BB Turun (Dewasa),,,
+107,Skrining Tuberkulosis Anak Sekolah (Kelas 9-12),Tuberkulosis - Skrining Mandiri Kelas 9-12,SKRINING TUBERKULOSIS,FRM000134,3,Tuberkolosis - Gejala TB 03a - Demam (Dewasa),,,
+107,Skrining Tuberkulosis Anak Sekolah (Kelas 9-12),Tuberkulosis - Skrining Mandiri Kelas 9-12,SKRINING TUBERKULOSIS,FRM000134,4,Tuberkulosis - Gejala TB 04a - Berkeringat (Dewasa),,,
+107,Skrining Tuberkulosis Anak Sekolah (Kelas 9-12),Tuberkulosis - Skrining Mandiri Kelas 9-12,SKRINING TUBERKULOSIS,FRM000134,5,Riwayat Kontak Tuberkulosis (Mandiri),,,
+107,Skrining Tuberkulosis Anak Sekolah (Kelas 9-12),Tuberkulosis - Skrining Mandiri Kelas 9-12,SKRINING TUBERKULOSIS,FRM000134,6,Faktor Risiko Tuberkulosis Sekolah (Kelas 9-12),,,
+108,Talasemia,Faktor Risiko Talasemia,SKRINING TALASEMIA DAN DIABETES,FRM000097,1,"Apakah ada anggota keluarga kandung  Anda dinyatakan menderita Talasemia,  atau kelainan darah atau pernah menjalani transfusi darah secara rutin?",Skrining Mandiri,,
+108,Talasemia,Faktor Risiko Talasemia,SKRINING TALASEMIA DAN DIABETES,FRM000097,2,Apakah ada anggota keluarga  kandung Anda dinyatakan sebagai pembawa sifat talasemia (mereka yang memiliki genetik yang tidak normal sehingga berpotensi menurunkan penyakit Talasemia)?,,,
+108,Talasemia,Faktor Risiko Talasemia,SKRINING TALASEMIA DAN DIABETES,FRM000097,3,Faktor Risiko Talasemia,,,
+109,Tekanan Darah Dewasa Lansia,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Tekanan Darah,FRM000265,1,Apakah Anda pernah dinyatakan tekanan darah tinggi?,radio,LPM000073|FRM000265|PPM00000203|text,Baru
+109,Tekanan Darah Dewasa Lansia,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Tekanan Darah,FRM000265,2,Riwayat Tekanan Darah,,,Baru
+109,Tekanan Darah Dewasa Lansia,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Tekanan Darah,FRM000265,3,"Sudah Berapa Bulan Anda Didiagnosis Hipertensi Oleh Dokter? Isi Total Bulan Sejak didiagnosis dokter hingga saat ini, misal didiagnosis 1 tahun yang lalu = 12, dst",,,Baru
+109,Tekanan Darah Dewasa Lansia,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Tekanan Darah,FRM000265,4,Tekanan Darah Sistolik,number,LPM000073|FRM000265|PPM00000012|number,Baru
+109,Tekanan Darah Dewasa Lansia,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Tekanan Darah,FRM000265,5,Tekanan darah diastolik,number,LPM000073|FRM000265|PPM00000019|number,Baru
+109,Tekanan Darah Dewasa Lansia,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Tekanan Darah,FRM000265,6,Tekanan Darah Sistolik Ke-2,number,LPM000073|FRM000265|PPM00000540|number,Baru
+109,Tekanan Darah Dewasa Lansia,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Tekanan Darah,FRM000265,7,Tekanan darah diastolik ke-2,number,LPM000073|FRM000265|PPM00000541|number,Baru
+109,Tekanan Darah Dewasa Lansia,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Tekanan Darah,FRM000265,8,Tekanan Darah Dewasa Lansia Ke-1,,,Baru
+109,Tekanan Darah Dewasa Lansia,"Skrining Gizi, Tekanan Darah, dan Gula Darah Laki-laki => 40 Tahun",Tekanan Darah,FRM000265,9,Tekanan Darah,,,Baru
+110,"Tes Konfirmasi Pemeriksaan SHK, G6PD, HAK","Skrining SHK, Defisiensi Enzim G6PD, Sindrom HAK,","Skrining SHK,  Defisiensi Enzim G6PD, Sindrom HAK,",FRM000083,1,Apakah dilakukan tes konfrimasi SHK (hanya untuk TSH >20),Layanan,,Tetap
+110,"Tes Konfirmasi Pemeriksaan SHK, G6PD, HAK","Skrining SHK, Defisiensi Enzim G6PD, Sindrom HAK,","Skrining SHK,  Defisiensi Enzim G6PD, Sindrom HAK,",FRM000083,2,Skrining Hipotiroid Kongenital (SHK) - Tes konfirmasi,,,
+110,"Tes Konfirmasi Pemeriksaan SHK, G6PD, HAK","Skrining SHK, Defisiensi Enzim G6PD, Sindrom HAK,","Skrining SHK,  Defisiensi Enzim G6PD, Sindrom HAK,",FRM000083,3,Apakah dilakukan tes konfirmasi Defisiensi G6PD?,,,
+110,"Tes Konfirmasi Pemeriksaan SHK, G6PD, HAK","Skrining SHK, Defisiensi Enzim G6PD, Sindrom HAK,","Skrining SHK,  Defisiensi Enzim G6PD, Sindrom HAK,",FRM000083,4,Hasil tes konfirmasi Defisiensi G6PD,,,
+110,"Tes Konfirmasi Pemeriksaan SHK, G6PD, HAK","Skrining SHK, Defisiensi Enzim G6PD, Sindrom HAK,","Skrining SHK,  Defisiensi Enzim G6PD, Sindrom HAK,",FRM000083,5,Apakah dilakukan tes konfirmasi skrining HAK?,,,
+110,"Tes Konfirmasi Pemeriksaan SHK, G6PD, HAK","Skrining SHK, Defisiensi Enzim G6PD, Sindrom HAK,","Skrining SHK,  Defisiensi Enzim G6PD, Sindrom HAK,",FRM000083,6,Hasil tes konfirmasi Defisiensi HAK,,,
+111,Tindak Lanjut Pemeriksaan Talasemia - Anak Sekolah,Tindak Lanjut Pemeriksaan Talasemia - Anak Sekolah,SKRINING LANJUTAN TALASEMIA,FRM000132,1,Hasil Pemeriksaan Hemoglobin,Layanan,,
+111,Tindak Lanjut Pemeriksaan Talasemia - Anak Sekolah,Tindak Lanjut Pemeriksaan Talasemia - Anak Sekolah,SKRINING LANJUTAN TALASEMIA,FRM000132,2,Hasil Pemeriksaan MCV,,,
+111,Tindak Lanjut Pemeriksaan Talasemia - Anak Sekolah,Tindak Lanjut Pemeriksaan Talasemia - Anak Sekolah,SKRINING LANJUTAN TALASEMIA,FRM000132,3,Hasil Pemeriksaan MCH,,,
+111,Tindak Lanjut Pemeriksaan Talasemia - Anak Sekolah,Tindak Lanjut Pemeriksaan Talasemia - Anak Sekolah,SKRINING LANJUTAN TALASEMIA,FRM000132,4,Hasil Pemeriksaan Eritrosit / RBC Count,,,
+111,Tindak Lanjut Pemeriksaan Talasemia - Anak Sekolah,Tindak Lanjut Pemeriksaan Talasemia - Anak Sekolah,SKRINING LANJUTAN TALASEMIA,FRM000132,5,Indeks Mentzer,,,
+111,Tindak Lanjut Pemeriksaan Talasemia - Anak Sekolah,Tindak Lanjut Pemeriksaan Talasemia - Anak Sekolah,SKRINING LANJUTAN TALASEMIA,FRM000132,6,Indeks Shine & LAL,,,
+111,Tindak Lanjut Pemeriksaan Talasemia - Anak Sekolah,Tindak Lanjut Pemeriksaan Talasemia - Anak Sekolah,SKRINING LANJUTAN TALASEMIA,FRM000132,7,Curiga Talasemia,,,
+112,Tingkat Aktivitas Fisik,Tingkat Aktivitas Fisik,Aktivitas Fisik,FRM000002,1,"Apakah Anda rutin melakukan olahraga, (seperti jalan cepat, lari, bersepeda, senam, berenang, bulutangkis, sepakbola atau olahraga lainnya)?",Skrining Mandiri,,Dihapus
+112,Tingkat Aktivitas Fisik,Tingkat Aktivitas Fisik,Aktivitas Fisik,FRM000002,2,"Dalam seminggu terakhir, berapa kali Anda berolahraga?",,,Dihapus
+112,Tingkat Aktivitas Fisik,Tingkat Aktivitas Fisik,Aktivitas Fisik,FRM000002,3,Berapa menit biasanya anda melakukan olahraga tersebut setiap satu kali olahraga?,,,Dihapus
+112,Tingkat Aktivitas Fisik,Tingkat Aktivitas Fisik,Aktivitas Fisik,FRM000002,4,Tingkat Aktivitas Fisik,,,Dihapus
+113,Tingkat Aktivitas Fisik (sedang dan berat),Tingkat Aktivitas Fisik,Aktivitas Fisik,FRM000169,1,"Apakah Anda melakukan aktivitas fisik sedang pada kegiatan rumah tangga/domestik seperti membersihkan rumah/lingkungan (menyapu, menata perabotan), mencuci baju manual, memasak, mengasuh anak, atau mengangkat beban dengan berat < 20 kg?",Skrining Mandiri,LPM000002|FRM000169|PPM00000706|text,Baru
+113,Tingkat Aktivitas Fisik (sedang dan berat),Tingkat Aktivitas Fisik,Aktivitas Fisik,FRM000169,2,Berapa hari dalam satu minggu Anda melakukan aktivitas tersebut?,,,
+113,Tingkat Aktivitas Fisik (sedang dan berat),Tingkat Aktivitas Fisik,Aktivitas Fisik,FRM000169,3,Dalam satu hari berapa menit waktu yang digunakan untuk melakukan aktivitas tersebut?,,,
+113,Tingkat Aktivitas Fisik (sedang dan berat),Tingkat Aktivitas Fisik,Aktivitas Fisik,FRM000169,4,"Apakah Anda melakukan aktivitas fisik sedang pada tempat kerja seperti pekerjaan dengan mengangkat beban, memberi makan ternak, berkebun dan membersihkan kendaraan (motor/mobil/perahu)?",dropdown,LPM000002|FRM000169|PPM00000709|text,
+113,Tingkat Aktivitas Fisik (sedang dan berat),Tingkat Aktivitas Fisik,Aktivitas Fisik,FRM000169,5,"Apakah Anda melakukan olahraga intensitas sedang seperti latihan beban < 20 kg, senam aerobic, yoga, bermain bola, bersepeda dan berenang (santai)?",dropdown,LPM000002|FRM000169|PPM00000715|text,
+113,Tingkat Aktivitas Fisik (sedang dan berat),Tingkat Aktivitas Fisik,Aktivitas Fisik,FRM000169,6,Aktivitas fisik intensitas berat adalah aktivitas yang membuat anda terengah-engah dan kesulitan berbicara,,,
+113,Tingkat Aktivitas Fisik (sedang dan berat),Tingkat Aktivitas Fisik,Aktivitas Fisik,FRM000169,7,"Apakah Anda melakukan olahraga intensitas berat seperti bersepeda cepat (>16 km/jam), jalan cepat (>7 km/jam), lari, sepak bola, futsal, bulutangkis, tenis, basket dan lompat tali?",dropdown,LPM000002|FRM000169|PPM00000721|text,
+113,Tingkat Aktivitas Fisik (sedang dan berat),Tingkat Aktivitas Fisik,Aktivitas Fisik,FRM000169,8,Hasil Aktivitas Fisik Sedang Menit,,,
+113,Tingkat Aktivitas Fisik (sedang dan berat),Tingkat Aktivitas Fisik,Aktivitas Fisik,FRM000169,9,Hasil Aktivitas Fisik Berat Menit,,,
+113,Tingkat Aktivitas Fisik (sedang dan berat),Tingkat Aktivitas Fisik,Aktivitas Fisik,FRM000169,10,Tingkat Aktivitas Fisik,,,
+114,Tuberkulosis,Tuberkulosis Dewasa & Lansia,SKRINING TUBERKULOSIS,FRM000065,1,Paru - Tuberkulosis 01,Skrining Mandiri,,Dihapus
+114,Tuberkulosis,Tuberkulosis Dewasa & Lansia,SKRINING TUBERKULOSIS,FRM000065,2,Paru - Tuberkulosis 02,,,Dihapus
+114,Tuberkulosis,Tuberkulosis Dewasa & Lansia,SKRINING TUBERKULOSIS,FRM000065,3,Gejala/Riwayat Kontak Tuberkulosis,,,Dihapus
+115,Tuberkulosis Bayi & Anak Pra Sekolah,"Tuberkulosis Bayi & Anak Pra Sekolah
+Tuberkulosis Bayi Balita & Anak Pra Sekolah",SKRINING TUBERKULOSIS,FRM000094,1,Apakah anak Anda pernah atau sedang mengalami batuk yang tidak sembuh-sembuh selama lebih dari 2 minggu?,Skrining Mandiri,,Dihapus
+115,Tuberkulosis Bayi & Anak Pra Sekolah,"Tuberkulosis Bayi & Anak Pra Sekolah
+Tuberkulosis Bayi Balita & Anak Pra Sekolah",SKRINING TUBERKULOSIS,FRM000094,2,Apakah berat badan anak Anda turun tanpa alasan yang jelas?,,,
+115,Tuberkulosis Bayi & Anak Pra Sekolah,"Tuberkulosis Bayi & Anak Pra Sekolah
+Tuberkulosis Bayi Balita & Anak Pra Sekolah",SKRINING TUBERKULOSIS,FRM000094,3,Apakah berat badan anak Anda tidak naik dalam dua bulan terakhir?,,,
+115,Tuberkulosis Bayi & Anak Pra Sekolah,"Tuberkulosis Bayi & Anak Pra Sekolah
+Tuberkulosis Bayi Balita & Anak Pra Sekolah",SKRINING TUBERKULOSIS,FRM000094,4,Apakah anak Anda tidak atau berkurang nafsu makan?,,,
+115,Tuberkulosis Bayi & Anak Pra Sekolah,"Tuberkulosis Bayi & Anak Pra Sekolah
+Tuberkulosis Bayi Balita & Anak Pra Sekolah",SKRINING TUBERKULOSIS,FRM000094,5,Apakah Anda tinggal serumah atau sering bertemu dengan orang yang menderita Tuberkulosis (TBC) atau batuk berkepanjangan?,,,
+115,Tuberkulosis Bayi & Anak Pra Sekolah,"Tuberkulosis Bayi & Anak Pra Sekolah
+Tuberkulosis Bayi Balita & Anak Pra Sekolah",SKRINING TUBERKULOSIS,FRM000094,6,Risiko Tuberkulosis Anak,,,
+116,Gizi Anak Sekolah,Gizi Anak Sekolah,PEDIATRIK,,1,Berat Badan,,,
+116,Gizi Anak Sekolah,Gizi Anak Sekolah,PEDIATRIK,,2,Tinggi Badan,,,
+117,Tekanan Darah Anak dan Remaja,Tekanan Darah Anak dan Remaja,PEDIATRIK,,1,Tekanan Darah Sistol,,,
+117,Tekanan Darah Anak dan Remaja,Tekanan Darah Anak dan Remaja,PEDIATRIK,,2,Tekanan Darah Diastol,,,
+118,Skrining Pertumbuhan - Balita dan Anak Prasekolah 5-6 Tahun,Skrining Pertumbuhan - Balita dan Anak Prasekolah 5-6 Tahun,PEDIATRIK,,1,Pengukuran Tinggi Badan (cm),,,
+118,Skrining Pertumbuhan - Balita dan Anak Prasekolah 5-6 Tahun,Skrining Pertumbuhan - Balita dan Anak Prasekolah 5-6 Tahun,PEDIATRIK,,2,Pilih hasil IMT/U,,,
+118,Skrining Pertumbuhan - Balita dan Anak Prasekolah 5-6 Tahun,Skrining Pertumbuhan - Balita dan Anak Prasekolah 5-6 Tahun,PEDIATRIK,,3,Pilih Status Lingkar Kepala,,,
+119,Faktor Risiko dan Skrining X-Ray TB (Anak 1-9 tahun),Faktor Risiko dan Skrining X-Ray TB (Anak 1-9 tahun),PEDIATRIK,,1,Apakah anak Anda pernah atau sedang mengalami batuk yang tidak sembuh-sembuh?,,,
+119,Faktor Risiko dan Skrining X-Ray TB (Anak 1-9 tahun),Faktor Risiko dan Skrining X-Ray TB (Anak 1-9 tahun),PEDIATRIK,,2,Apakah berat badan anak Anda turun tanpa penyebab jelas/ BB tidak naik dalam 2 bulan sebelumnya/ nafsu makan turun?,,,
+119,Faktor Risiko dan Skrining X-Ray TB (Anak 1-9 tahun),Faktor Risiko dan Skrining X-Ray TB (Anak 1-9 tahun),PEDIATRIK,,3,Apakah anak anda mengalami demam hilang timbul tanpa sebab yang jelas lebih dari 2 minggu?,,,
+119,Faktor Risiko dan Skrining X-Ray TB (Anak 1-9 tahun),Faktor Risiko dan Skrining X-Ray TB (Anak 1-9 tahun),PEDIATRIK,,4,"Apakah anak Anda mengalami lesu atau malaise, anak kurang aktif bermain?",,,
+119,Faktor Risiko dan Skrining X-Ray TB (Anak 1-9 tahun),Faktor Risiko dan Skrining X-Ray TB (Anak 1-9 tahun),PEDIATRIK,,5,Apakah pasien memiliki pembesaran kelenjar getah bening?,,,
+119,Faktor Risiko dan Skrining X-Ray TB (Anak 1-9 tahun),Faktor Risiko dan Skrining X-Ray TB (Anak 1-9 tahun),PEDIATRIK,,6,Apakah dilakukan pemeriksaan radiografi toraks?,,,

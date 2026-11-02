@@ -13,12 +13,18 @@ scraper subprocess, so it is not unit-tested here.
 from datetime import date
 from types import SimpleNamespace
 
+import httpx
 import pytest
 
+from app.celery_app import celery_app
+from app.config import settings
 from app.services.simpus_jawaban import pendaftaran_from_row
 from app.tasks.create_patient import (
     _build_step2,
     _derive_from_nik,
+    _post_registration_failure_event,
+    _queue_registration_failure_webhook,
+    _registration_failure_payload,
     _title_case_name,
     _wali_block_reason,
     _whatsapp_from_epus,
@@ -179,3 +185,89 @@ def test_wali_block_adult_mismatch_not_gated():
 
 def test_wali_block_missing_birth_date():
     assert _wali_block_reason("3275041505180001", None, _EXAM) is not None
+
+
+def test_registration_failure_webhook_uses_bearer_and_idempotency_headers():
+    received = {}
+
+    def handle(request):
+        received["request"] = request
+        return httpx.Response(202)
+
+    client = httpx.Client(transport=httpx.MockTransport(handle))
+    try:
+        status = _post_registration_failure_event(
+            client,
+            url="https://receiver.example/events",
+            token="test-token",
+            event_id="job-123",
+            payload={"event": "asik.registration.failed"},
+        )
+    finally:
+        client.close()
+
+    assert status == 202
+    request = received["request"]
+    assert request.method == "POST"
+    assert request.headers["Authorization"] == "Bearer test-token"
+    assert request.headers["Idempotency-Key"] == "job-123"
+    assert request.read() == b'{"event":"asik.registration.failed"}'
+
+
+def test_registration_failure_webhook_payload_has_expected_validation_fields():
+    patient = SimpleNamespace(
+        id="patient-456",
+        nama="Example Patient",
+        nik="1234567890123456",
+        puskesmas_id="puskesmas-789",
+    )
+
+    payload = _registration_failure_payload(
+        job_id="job-123",
+        patient=patient,
+        outcome="dukcapil_invalid",
+        message="Dukcapil validation failed.",
+    )
+
+    assert payload["event"] == "asik.registration.failed"
+    assert payload["event_id"] == payload["job_id"] == "job-123"
+    assert payload["patient_id"] == "patient-456"
+    assert payload["patient_name"] == "Example Patient"
+    assert payload["nik"] == "1234567890123456"
+    assert payload["puskesmas_id"] == "puskesmas-789"
+    assert payload["outcome"] == "dukcapil_invalid"
+    assert payload["message"] == "Dukcapil validation failed."
+    assert payload["occurred_at"]
+
+
+def test_registration_failure_webhook_is_queued_without_patient_data(monkeypatch):
+    sent = []
+    monkeypatch.setattr(settings, "ASIK_CREATE_WEBHOOK_URL", "https://receiver.example/events")
+    monkeypatch.setattr(
+        celery_app,
+        "send_task",
+        lambda *args, **kwargs: sent.append((args, kwargs)),
+    )
+    job = SimpleNamespace(id="job-123")
+    patient = SimpleNamespace(id="patient-456", nik="not-in-broker")
+
+    _queue_registration_failure_webhook(
+        job=job,
+        patient=patient,
+        outcome="dukcapil_invalid",
+        message="Dukcapil validation failed.",
+    )
+
+    assert sent == [
+        (
+            ("create.notify_registration_failure",),
+            {
+                "args": [
+                    "job-123",
+                    "patient-456",
+                    "dukcapil_invalid",
+                    "Dukcapil validation failed.",
+                ]
+            },
+        )
+    ]

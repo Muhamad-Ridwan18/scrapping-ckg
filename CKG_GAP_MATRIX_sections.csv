@@ -1,0 +1,104 @@
+﻿ilp_grup,section_nama,match_how,match_score,asik_title,asik_frm_sample
+bayi_baru_lahir,Skrining Bayi Kuning 0-2 hari,exact,1.000,Skrining Bayi Kuning (0-2 hari),FRM000079
+bayi_baru_lahir,Skrining Bayi Kuning 14-28 hari,exact,1.000,Skrining Bayi Kuning (14- 28 hari),FRM000252
+bayi_2_11_bulan,SKRINING PERTUMBUHAN,exact,1.000,Skrining Pertumbuhan,FRM000010
+bayi_2_11_bulan,SKRINING PERKEMBANGAN,exact,1.000,SKRINING PERKEMBANGAN,FRM000086
+bayi_2_11_bulan,SKRINING TUBERCULOSIS,fuzzy,0.952,SKRINING TUBERKULOSIS,FRM000179
+bayi_2_11_bulan,SKRINING PENDENGARAN,none,0.780,,
+bayi_2_11_bulan,SKRINING PENGLIHATAN,none,0.732,,
+bayi_2_11_bulan,RIWAYAT IMUNISASI RUTIN BALITA,exact,1.000,Riwayat Imunisasi Rutin Balita,FRM000171
+bayi_2_11_bulan,PENYAKIT KULIT,none,0.600,,
+bayi_2_11_bulan,SKRINING MALARIA,none,0.759,,
+bayi_2_11_bulan,SKRINING ISPA,none,0.846,,
+anak_1_6,SKRINING PERTUMBUHAN,exact,1.000,Skrining Pertumbuhan,FRM000010
+anak_1_6,SKRINING PERKEMBANGAN,exact,1.000,SKRINING PERKEMBANGAN,FRM000086
+anak_1_6,SKRINING TUBERCULOSIS,fuzzy,0.952,SKRINING TUBERKULOSIS,FRM000179
+anak_1_6,SKRINING PENDENGARAN,none,0.780,,
+anak_1_6,SKRINING PENGLIHATAN,none,0.732,,
+anak_1_6,GIGI DAN MULUT,none,0.533,,
+anak_1_6,ANEMIA DAN THALASEMIA,none,0.600,,
+anak_1_6,GEJALA DM ANAK,none,0.839,,
+anak_1_6,RIWAYAT IMUNISASI RUTIN BALITA,exact,1.000,Riwayat Imunisasi Rutin Balita,FRM000171
+anak_1_6,PENYAKIT KULIT,none,0.600,,
+anak_1_6,SKRINING MALARIA,none,0.759,,
+anak_1_6,SKRINING ISPA,none,0.846,,
+remaja_7_17,SKRINING MEROKOK,none,0.649,,
+remaja_7_17,SKRINING JIWA,none,0.800,,
+remaja_7_17,SKRINING RIWAYAT IMUNISASI,none,0.723,,
+remaja_7_17,SKRINING AKTIVITAS FISIK,none,0.809,,
+remaja_7_17,SKRINING KEBUGARAN,none,0.769,,
+remaja_7_17,STATUS GIZI,none,0.533,,
+remaja_7_17,SKRINING TUBERCULOSIS,fuzzy,0.952,SKRINING TUBERKULOSIS,FRM000179
+remaja_7_17,KESEHATAN REPRODUKSI,none,0.647,,
+remaja_7_17,SKRINING HIPERTENSI,none,0.718,,
+remaja_7_17,SKRINING DIABATES MELLITUS,none,0.652,,
+remaja_7_17,SKRINING HEPATITIS,none,0.774,,
+remaja_7_17,SKRINING TELINGA DAN MATA (7-17 tahun),fuzzy,0.930,Skrining Telinga dan Mata (1-2 tahun),FRM000085
+remaja_7_17,SKRINING GIGI DAN MULUT,none,0.780,,
+remaja_7_17,SKRINING PENYAKIT KULIT,none,0.731,,
+remaja_7_17,SKRINING MALARIA,none,0.759,,
+remaja_7_17,SKRINING LAIN-LAIN,none,0.737,,
+dewasa_18_39,SKRINING MEROKOK,none,0.649,,
+dewasa_18_39,SKRINING JIWA,none,0.800,,
+dewasa_18_39,SKRINING AKTIVITAS FISIK,none,0.809,,
+dewasa_18_39,STATUS GIZI,none,0.533,,
+dewasa_18_39,SKRINING TUBERCULOSIS,fuzzy,0.952,SKRINING TUBERKULOSIS,FRM000179
+dewasa_18_39,SKRINING HIPERTENSI,none,0.718,,
+dewasa_18_39,SKRINING DIABATES MELLITUS,none,0.652,,
+dewasa_18_39,SKRINING HATI,none,0.846,,
+dewasa_18_39,SKRINING TELINGA DAN MATA (18-39 tahun),exact,1.000,Skrining Telinga dan Mata (18-39 tahun),FRM000042
+dewasa_18_39,SKRINING GIGI DAN MULUT,none,0.780,,
+dewasa_18_39,SKRINING PENYAKIT KULIT,none,0.731,,
+dewasa_18_39,SKRINING MALARIA,none,0.759,,
+dewasa_18_39,SKRINING CATIN,none,0.815,,
+dewasa_18_39,SKRINING KANKER PAYUDARA,exact,1.000,Skrining Kanker Payudara,FRM000059
+dewasa_18_39,SKRINING KANKER LEHER RAHIM,exact,1.000,Skrining Kanker Leher Rahim,FRM000061
+dewasa_18_39,SKRINING LAIN-LAIN,none,0.737,,
+dewasa_18_39,Skrining Tambahan Faktor Risiko PTM,none,0.576,,
+dewasa_18_39,Skrining Lupus Eritematosus Sistemik (Khusus Perempuan >=18 tahun),none,0.485,,
+dewasa_40_59,SKRINING MEROKOK,none,0.649,,
+dewasa_40_59,SKRINING JIWA,none,0.800,,
+dewasa_40_59,SKRINING AKTIVITAS FISIK,none,0.809,,
+dewasa_40_59,STATUS GIZI,none,0.533,,
+dewasa_40_59,SKRINING TUBERCULOSIS,fuzzy,0.952,SKRINING TUBERKULOSIS,FRM000179
+dewasa_40_59,SKRINING HIPERTENSI,none,0.718,,
+dewasa_40_59,SKRINING DIABATES MELLITUS,none,0.652,,
+dewasa_40_59,SKRINING HATI,none,0.846,,
+dewasa_40_59,SKRINING TELINGA DAN MATA (18-39 tahun),exact,1.000,Skrining Telinga dan Mata (18-39 tahun),FRM000042
+dewasa_40_59,SKRINING GIGI DAN MULUT,none,0.780,,
+dewasa_40_59,SKRINING PENYAKIT KULIT,none,0.731,,
+dewasa_40_59,SKRINING MALARIA,none,0.759,,
+dewasa_40_59,SKRINING CATIN,none,0.815,,
+dewasa_40_59,SKRINING KANKER USUS,fuzzy,0.920,Skrining Kanker Usus (TL APCS),FRM000050
+dewasa_40_59,SKRINING KANKER PAYUDARA,exact,1.000,Skrining Kanker Payudara,FRM000059
+dewasa_40_59,SKRINING KANKER LEHER RAHIM,exact,1.000,Skrining Kanker Leher Rahim,FRM000061
+dewasa_40_59,SKRINING KANKER PARU,fuzzy,0.864,Skrining Kanker Payudara,FRM000059
+dewasa_40_59,SKRINING PPOK,none,0.800,,
+dewasa_40_59,SKRINING FAKTOR RISIKO STROKE (Skrining dilakukan bagi penyandang HT dan DM),none,0.522,,
+dewasa_40_59,SKRINING GINJAL(Skrining dilakukan bagi penyandang HT dan DM),none,0.600,,
+dewasa_40_59,SKRINING JANTUNG(Skrining dilakukan bagi penyandang HT dan DM),none,0.645,,
+dewasa_40_59,SKRINING LAIN-LAIN,none,0.737,,
+dewasa_40_59,Skrining Tambahan Faktor Risiko PTM,none,0.576,,
+lansia,SKRINING MEROKOK,none,0.649,,
+lansia,SKRINING JIWA,none,0.800,,
+lansia,SKRINING AKTIVITAS FISIK,none,0.809,,
+lansia,STATUS GIZI,none,0.533,,
+lansia,SKRINING TUBERCULOSIS,fuzzy,0.952,SKRINING TUBERKULOSIS,FRM000179
+lansia,SKRINING HIPERTENSI,none,0.718,,
+lansia,SKRINING DIABATES MELLITUS,none,0.652,,
+lansia,SKRINING HATI,none,0.846,,
+lansia,SKRINING TELINGA DAN MATA (18-39 tahun),exact,1.000,Skrining Telinga dan Mata (18-39 tahun),FRM000042
+lansia,SKRINING GIGI DAN MULUT,none,0.780,,
+lansia,SKRINING PENYAKIT KULIT,none,0.731,,
+lansia,SKRINING MALARIA,none,0.759,,
+lansia,SKRINING CATIN,none,0.815,,
+lansia,SKRINING KANKER USUS,fuzzy,0.920,Skrining Kanker Usus (TL APCS),FRM000050
+lansia,SKRINING KANKER LEHER RAHIM,exact,1.000,Skrining Kanker Leher Rahim,FRM000061
+lansia,SKRINING KANKER PAYUDARA,exact,1.000,Skrining Kanker Payudara,FRM000059
+lansia,SKRINING KANKER PARU,fuzzy,0.864,Skrining Kanker Payudara,FRM000059
+lansia,SKRINING PPOK,none,0.800,,
+lansia,SKRINING FAKTOR RISIKO STROKE (Skrining dilakukan bagi penyandang HT dan DM),none,0.522,,
+lansia,SKRINING GINJAL(Skrining dilakukan bagi penyandang HT dan DM),none,0.600,,
+lansia,SKRINING JANTUNG(Skrining dilakukan bagi penyandang HT dan DM),none,0.645,,
+lansia,SKRINING LANSIA,none,0.786,,
+lansia,SKRINING LAIN-LAIN,none,0.737,,

@@ -1,4 +1,5 @@
 from typing import Literal
+from urllib.parse import urlsplit
 
 from cryptography.fernet import Fernet
 from pydantic import model_validator
@@ -54,6 +55,8 @@ class Settings(BaseSettings):
     LOGIN_RATE_LIMIT_WINDOW_SECONDS: int = 60
     SCRAPERS_ROOT: str | None = None
     SCRAPER_SESSIONS_ROOT: str | None = None
+    ASIK_CREATE_WEBHOOK_URL: str | None = None
+    ASIK_CREATE_WEBHOOK_TOKEN: str | None = None
 
     # ---- Loop agent (self-maintaining EPUS scraper/converter agent, PLAN §8.1) ----
     # The throwaway container image the loop task launches per run, built from
@@ -158,6 +161,15 @@ class Settings(BaseSettings):
         unaffected. A forgeable JWT secret is a full auth bypass; an invalid
         Fernet key means stored credentials can't be decrypted at all.
         """
+        if self.ASIK_CREATE_WEBHOOK_URL:
+            if not self.ASIK_CREATE_WEBHOOK_TOKEN or not self.ASIK_CREATE_WEBHOOK_TOKEN.strip():
+                raise ValueError(
+                    "ASIK_CREATE_WEBHOOK_TOKEN is required when "
+                    "ASIK_CREATE_WEBHOOK_URL is set"
+                )
+            parsed_url = urlsplit(self.ASIK_CREATE_WEBHOOK_URL)
+            if parsed_url.scheme != "https" or not parsed_url.netloc:
+                raise ValueError("ASIK_CREATE_WEBHOOK_URL must be a valid HTTPS URL")
         if not self.is_production:
             return self
         if (
