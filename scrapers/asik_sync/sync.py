@@ -453,6 +453,63 @@ def _rows_showing_nik(page: Page, nik: str) -> list[str]:
     ) or []
 
 
+def _name_tokens_for_row_match(expected_name: str) -> list[str]:
+    """Tokens that can identify a truncated ASIK list name (ANAMARIA → ANAMARI)."""
+    name = re.sub(r"\s+", " ", (expected_name or "").strip())
+    if not name:
+        return []
+    out = [name]
+    # ASIK often drops the last character(s) of long given names in the table.
+    if len(name) >= 6:
+        out.append(name[:6])
+        out.append(name[:7])
+    for token in name.split(" "):
+        if len(token) >= 4:
+            out.append(token)
+            if len(token) >= 6:
+                out.append(token[:6])
+    # Dedupe case-insensitively, longest first so exact beats prefix.
+    seen: set[str] = set()
+    uniq: list[str] = []
+    for item in sorted(out, key=len, reverse=True):
+        key = item.casefold()
+        if key not in seen:
+            seen.add(key)
+            uniq.append(item)
+    return uniq
+
+
+def _rows_matching_patient_name(page: Page, expected_name: str) -> list[str]:
+    """Visible Mulai/Lanjutkan rows that fuzzy-match the patient name.
+
+    ASIK list rows usually omit the NIK and may truncate the display name, so
+    exact ``includes(fullName)`` misses. A unique truncated match is enough to
+    identify the patient when the encrypted list-kunjungan body cannot be parsed.
+    """
+    tokens = _name_tokens_for_row_match(expected_name)
+    if not tokens:
+        return []
+    return page.evaluate(
+        """(tokens) => {
+            const norms = tokens.map(t => (t || '').trim().toLowerCase()).filter(Boolean);
+            if (!norms.length) return [];
+            return Array.from(document.querySelectorAll('tr'))
+                .filter(r => {
+                    if (r.offsetParent === null) return false;
+                    const hasBtn = Array.from(r.querySelectorAll('button')).some(b =>
+                        /^(Mulai|Lanjutkan)$/.test((b.innerText || '').trim()) && b.offsetParent
+                    );
+                    if (!hasBtn) return false;
+                    const text = (r.innerText || '').replace(/\\s+/g, ' ').trim().toLowerCase();
+                    return norms.some(t => text.includes(t));
+                })
+                .map(r => (r.innerText || '').replace(/\\s+/g, ' ').trim())
+                .slice(0, 5);
+        }""",
+        tokens,
+    ) or []
+
+
 def _date_from_row_text(text: str) -> str | None:
     iso = re.search(r"(\d{4}-\d{2}-\d{2})", text or "")
     if iso:
@@ -484,33 +541,34 @@ def _click_mulai_for_nik(page: Page, nik: str) -> bool:
 
 
 def _click_mulai_by_name(page: Page, expected_name: str) -> bool:
-    """Click Mulai for the row whose first cell text matches expected_name.
+    """Click Mulai for the row whose text fuzzy-matches expected_name.
 
     Falls back to clicking btns[0] only when there's exactly one Mulai button
     visible (i.e. filter narrowed to one row).
     """
+    tokens = _name_tokens_for_row_match(expected_name)
     return page.evaluate(
-        """(expectedName) => {
-            const norm = (s) => (s || '').trim().toLowerCase().replace(/\\s+/g, ' ');
-            const target = norm(expectedName);
-            const btns = Array.from(document.querySelectorAll('button')).filter(b => b.innerText.trim() === 'Mulai' && b.offsetParent);
+        """(tokens) => {
+            const norms = (tokens || []).map(t => (t || '').trim().toLowerCase()).filter(Boolean);
+            const btns = Array.from(document.querySelectorAll('button')).filter(b => {
+                const t = (b.innerText || '').trim();
+                return (t === 'Mulai' || t === 'Lanjutkan') && b.offsetParent;
+            });
             if (btns.length === 0) return false;
-            // An empty target makes `rowText.includes(target)` vacuously true, so
-            // the name loop would "match" the first row it walks. Skip straight to
-            // the single-button fallback instead of pretending we matched a name.
-            if (target) {
-            // Try exact name match by walking up to TR and checking row text
-            for (const b of btns) {
-                let p = b;
-                while (p && p.tagName !== 'TR') p = p.parentElement;
-                if (!p) continue;
-                const rowText = norm(p.innerText);
-                if (rowText.includes(target)) {
-                    b.scrollIntoView({block:'center'});
-                    b.click();
+            if (norms.length) {
+                const hits = [];
+                for (const b of btns) {
+                    let p = b;
+                    while (p && p.tagName !== 'TR') p = p.parentElement;
+                    if (!p) continue;
+                    const rowText = (p.innerText || '').trim().toLowerCase().replace(/\\s+/g, ' ');
+                    if (norms.some(t => rowText.includes(t))) hits.push(b);
+                }
+                if (hits.length === 1) {
+                    hits[0].scrollIntoView({block:'center'});
+                    hits[0].click();
                     return true;
                 }
-            }
             }
             // Fallback: only one Mulai → click it
             if (btns.length === 1) {
@@ -520,7 +578,7 @@ def _click_mulai_by_name(page: Page, expected_name: str) -> bool:
             }
             return false;
         }""",
-        expected_name,
+        tokens,
     )
 
 
@@ -2616,6 +2674,22 @@ def run(args) -> dict:
                     }]
                     saw_any_search = True
                     break
+                # list-kunjungan bodies are encrypted (`_d`) so NIK search cannot
+                # be verified from JSON. Fall back to a unique fuzzy name match
+                # on Mulai/Lanjutkan rows (ASIK truncates names in the table).
+                named = _rows_matching_patient_name(page, expected_name)
+                if len(named) == 1:
+                    console.print(
+                        "    [green]unique name match on this pelayanan tab[/green]"
+                    )
+                    patient_tab = tab
+                    matched_rows = [{
+                        "nik": nik,
+                        "screening_date": _date_from_row_text(named[0]) or filter_date,
+                        "name": expected_name or "",
+                    }]
+                    saw_any_search = True
+                    break
                 # Tab switch can reset the dropdown back to Nama; re-select NIK
                 # and re-fire the search.
                 _select_nik_filter(page)
@@ -2637,6 +2711,19 @@ def run(args) -> dict:
                         }]
                         saw_any_search = True
                         break
+                    named = _rows_matching_patient_name(page, expected_name)
+                    if len(named) == 1:
+                        console.print(
+                            "    [green]unique name match after search[/green]"
+                        )
+                        patient_tab = tab
+                        matched_rows = [{
+                            "nik": nik,
+                            "screening_date": _date_from_row_text(named[0]) or filter_date,
+                            "name": expected_name or "",
+                        }]
+                        saw_any_search = True
+                        break
                 search_niks = None if search_rows is None else [r["nik"] for r in search_rows]
                 badge = _read_active_tab_count(page)
                 mulai_count = _find_mulai_button_count(page)
@@ -2645,27 +2732,50 @@ def run(args) -> dict:
                     f"    filter={cur_filter} badge={badge} mulai_buttons={mulai_count} "
                     f"search_rows={'?' if search_niks is None else len(search_niks)}"
                 )
-                if search_niks is None and expected_name and badge == 1 and mulai_count == 1:
+                if search_niks is None and badge == 1 and mulai_count == 1:
                     row_text = page.evaluate(
                         """() => {
                             const rows = Array.from(document.querySelectorAll('tr')).filter(r =>
                                 r.offsetParent && Array.from(r.querySelectorAll('button')).some(
-                                    b => b.innerText.trim() === 'Mulai' && b.offsetParent
+                                    b => {
+                                        const t = (b.innerText || '').trim();
+                                        return (t === 'Mulai' || t === 'Lanjutkan') && b.offsetParent;
+                                    }
                                 )
                             );
                             return rows.length === 1 ? (rows[0].innerText || '').replace(/\\s+/g, ' ') : '';
                         }"""
                     ) or ""
-                    if expected_name.lower() in row_text.lower():
-                        console.print("    [green]single Mulai row matches the patient name[/green]")
+                    row_l = row_text.lower()
+                    name_l = expected_name.lower() if expected_name else ""
+                    # ASIK truncates long names in the list ("ANAMARIA" → "ANAMARI").
+                    name_hit = bool(name_l) and (
+                        name_l in row_l
+                        or row_l.find(name_l[:6]) >= 0
+                        or any(
+                            token and token in row_l
+                            for token in name_l.split()
+                            if len(token) >= 4
+                        )
+                    )
+                    nik_hit = bool(nik) and nik in row_text
+                    if name_hit or nik_hit:
+                        why = "name" if name_hit else "NIK"
+                        console.print(
+                            f"    [green]single Mulai/Lanjutkan row matches patient {why}[/green]"
+                        )
                         patient_tab = tab
                         matched_rows = [{
                             "nik": nik,
                             "screening_date": _date_from_row_text(row_text) or filter_date,
-                            "name": expected_name,
+                            "name": expected_name or "",
                         }]
                         saw_any_search = True
                         break
+                    console.print(
+                        f"    [dim]single-row fallback missed "
+                        f"(name_hit={name_hit} nik_hit={nik_hit} row={row_text[:120]!r})[/dim]"
+                    )
                 if search_niks is None:
                     # No parseable specific-search for THIS search. We cannot prove the
                     # filter applied, so we must not accept the tab on the DOM

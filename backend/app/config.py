@@ -58,6 +58,10 @@ class Settings(BaseSettings):
     ASIK_CREATE_WEBHOOK_URL: str | None = None
     ASIK_CREATE_WEBHOOK_TOKEN: str | None = None
     ASIK_CREATE_TRIGGER_TOKEN: str | None = None
+    # Shared Bearer for POST /hooks/simpus (kliksimpus "Kirim ke CKG").
+    # Default matches kliksimpus CkgOutboundService::CKG_HOOK_BEARER. Override
+    # in .env for local/dev if needed.
+    SIMPUS_HOOK_BEARER: str = "ckg-simpus-hook-kliksimpus-shared-2026"
 
     # ---- Loop agent (self-maintaining EPUS scraper/converter agent, PLAN §8.1) ----
     # The throwaway container image the loop task launches per run, built from

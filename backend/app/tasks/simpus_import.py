@@ -41,6 +41,74 @@ LOG_RING_MAX = 500
 LOG_TTL_SECONDS = 86400
 
 
+def finalize_simpus_hook_job(
+    scrape_job_id: str | None,
+    *,
+    errors: list[str] | None = None,
+    import_stats: dict | None = None,
+) -> None:
+    """Close the inbound SIMPUS hook ScrapeJob after ASIK create/sync finishes.
+
+    SIMPUS polls GET /hooks/simpus/jobs/{id} and stops once status leaves
+    pending. Import used to mark SUCCESS before ASIK ran, so Dukcapil / form
+    failures never reached /laporan/ckg-kirim. Keep the scrape job RUNNING
+    until this finalizer runs.
+    """
+    if not scrape_job_id:
+        return
+    try:
+        job_uuid = uuid.UUID(scrape_job_id)
+    except ValueError:
+        return
+    errors = [e for e in (errors or []) if e]
+    stats = import_stats or {}
+    db: Session = SessionLocal()
+    try:
+        job = db.scalar(
+            select(ScrapeJob)
+            .options(
+                load_only(
+                    ScrapeJob.id,
+                    ScrapeJob.status,
+                    ScrapeJob.kind,
+                    ScrapeJob.error_message,
+                    ScrapeJob.scraped_count,
+                    ScrapeJob.inserted_count,
+                    ScrapeJob.updated_count,
+                    ScrapeJob.duration_seconds,
+                    ScrapeJob.notes,
+                )
+            )
+            .where(ScrapeJob.id == job_uuid, ScrapeJob.kind == ScrapeKind.SIMPUS)
+        )
+        if job is None:
+            return
+        if job.status not in (ScrapeStatus.PENDING, ScrapeStatus.RUNNING):
+            return
+        now = datetime.now(UTC)
+        if errors:
+            scrape_job_crud.mark_failed(db, job, "; ".join(errors)[:2000], now)
+            return
+        scrape_job_crud.mark_success(
+            db,
+            job,
+            scraped_count=int(stats.get("scraped_count") or job.scraped_count or 0),
+            inserted_count=int(stats.get("inserted_count") or job.inserted_count or 0),
+            updated_count=int(stats.get("updated_count") or job.updated_count or 0),
+            duration_seconds=float(
+                stats.get("duration_seconds")
+                if stats.get("duration_seconds") is not None
+                else (job.duration_seconds or 0.0)
+            ),
+            finished_at=now,
+            notes=stats.get("notes") if stats.get("notes") is not None else job.notes,
+        )
+    except Exception:
+        log.exception("finalize_simpus_hook_job failed id=%s", scrape_job_id)
+    finally:
+        db.close()
+
+
 def _log_key(job_id: str) -> str:
     return f"scrape:job:{job_id}:log"
 
@@ -447,16 +515,21 @@ def import_jawaban(
 
         finished = datetime.now(UTC)
         note = f"dilewati {skipped}" if skipped else None
-        scrape_job_crud.mark_success(
-            db,
-            job,
-            scraped_count=scraped,
-            inserted_count=inserted,
-            updated_count=updated,
-            duration_seconds=(finished - started).total_seconds(),
-            finished_at=finished,
-            notes=note,
-        )
+        import_stats = {
+            "scraped_count": scraped,
+            "inserted_count": inserted,
+            "updated_count": updated,
+            "duration_seconds": (finished - started).total_seconds(),
+            "notes": note,
+        }
+        # Persist import counts while status stays RUNNING so SIMPUS keeps
+        # polling until ASIK create/sync finalizes the hook job.
+        job.scraped_count = scraped
+        job.inserted_count = inserted
+        job.updated_count = updated
+        job.duration_seconds = import_stats["duration_seconds"]
+        job.notes = note
+        db.commit()
         _publish(
             rc, job_id,
             f"[ok] {scraped} kunjungan, {inserted} baru, {updated} diperbarui",
@@ -466,6 +539,7 @@ def import_jawaban(
                 rc, job_id,
                 f"[info] {sekolah} kunjungan sekolah disimpan, belum ada isi form sekolah di ASIK",
             )
+        asik_task: str | None = None
         if umum_ids:
             asik_ready = db.scalar(
                 select(Puskesmas.id).where(
@@ -493,26 +567,47 @@ def import_jawaban(
                             rc, job_id,
                             "[skip] alamat default ASIK kosong, pasien baru tidak didaftarkan",
                         )
+                        task_name = None
                     else:
                         task_name = "simpus.create_asik"
-                verb = (
-                    "mendaftarkan dan mengisi"
-                    if task_name == "simpus.create_asik"
-                    else "mengirim"
-                )
-                _publish(
-                    rc, job_id,
-                    f"[run] {verb} {len(umum_ids)} kunjungan umum ke ASIK",
-                )
-                celery_app.send_task(
-                    task_name,
-                    kwargs={
-                        "puskesmas_id": str(job.puskesmas_id),
-                        "patient_ids": umum_ids,
-                        "triggered_by_id": str(job.triggered_by_id),
-                        "triggered_by_type": job.triggered_by_type.value,
-                    },
-                )
+                if task_name:
+                    asik_task = task_name
+                    verb = (
+                        "mendaftarkan dan mengisi"
+                        if task_name == "simpus.create_asik"
+                        else "mengirim"
+                    )
+                    _publish(
+                        rc, job_id,
+                        f"[run] {verb} {len(umum_ids)} kunjungan umum ke ASIK",
+                    )
+                    celery_app.send_task(
+                        task_name,
+                        kwargs={
+                            "puskesmas_id": str(job.puskesmas_id),
+                            "patient_ids": umum_ids,
+                            "triggered_by_id": str(job.triggered_by_id),
+                            "triggered_by_type": job.triggered_by_type.value,
+                            "scrape_job_id": job_id,
+                            "import_stats": import_stats,
+                        },
+                    )
+        if asik_task is None:
+            scrape_job_crud.mark_success(
+                db,
+                job,
+                scraped_count=scraped,
+                inserted_count=inserted,
+                updated_count=updated,
+                duration_seconds=import_stats["duration_seconds"],
+                finished_at=finished,
+                notes=note,
+            )
+        else:
+            _publish(
+                rc, job_id,
+                "[wait] menunggu hasil ASIK sebelum status akhir dikirim ke SIMPUS",
+            )
         cron_outcome = "success"
     except SimpusApiError as exc:
         cron_outcome = "failed"

@@ -821,17 +821,27 @@ def sync_simpus_patients(
     patient_ids: list[str],
     triggered_by_id: str,
     triggered_by_type: str = "cron",
+    scrape_job_id: str | None = None,
+    import_stats: dict | None = None,
 ) -> None:
     """Push SIMPUS jawaban into ASIK, one patient at a time, one login.
 
     Called after a jawaban import. Only CKG umum rows are passed in. A patient
     must already exist in ASIK on that visit date; this fills forms, it does
     not register a new ASIK patient. Per-patient failures stay on their SyncJob.
+
+    When ``scrape_job_id`` is set (inbound SIMPUS hook), finalize that scrape
+    job so ASIK fill failures reach GET /hooks/simpus/jobs/{id}.
     """
+    from app.services import simpus_user_messages as simpus_msg
+    from app.tasks.simpus_import import finalize_simpus_hook_job
+
     if not patient_ids:
+        finalize_simpus_hook_job(scrape_job_id, errors=[], import_stats=import_stats)
         return
     db = SessionLocal()
     redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
+    hook_errors: list[str] = []
     try:
         pk_uuid = uuid.UUID(puskesmas_id)
         puskesmas = db.scalar(
@@ -841,10 +851,12 @@ def sync_simpus_patients(
         )
         if puskesmas is None or not puskesmas.asik_url:
             log.info("simpus sync skipped pk=%s — asik url missing", puskesmas_id)
+            hook_errors.append(simpus_msg.config("asik_url_missing"))
             return
         creds = puskesmas_crud.get_cred_decrypted(puskesmas, "asik")
         if creds is None:
             log.info("simpus sync skipped pk=%s — asik credentials missing", puskesmas_id)
+            hook_errors.append(simpus_msg.config("asik_cred_missing"))
             return
         try:
             trigger = TriggererType(triggered_by_type)
@@ -872,6 +884,11 @@ def sync_simpus_patients(
                 blob = patient_crud.decrypt_field(patient, ScrapeKind.ASIK)
             except Exception:
                 log.warning("simpus sync decrypt failed patient=%s", pid)
+                hook_errors.append(
+                    simpus_msg.for_patient(
+                        patient.nama, simpus_msg.config("decrypt_failed"), nik=patient.nik,
+                    )
+                )
                 continue
             preview = simpus_blob_to_sync_preview(blob if isinstance(blob, dict) else None)
             forms_total = _count_preview_forms(preview)
@@ -888,7 +905,7 @@ def sync_simpus_patients(
             except IntegrityError:
                 db.rollback()
                 continue
-            _execute_sync(
+            fill_status = _execute_sync(
                 db=db,
                 redis_client=redis_client,
                 job=job,
@@ -902,7 +919,29 @@ def sync_simpus_patients(
                 celery_task_id=raw_id,
                 cancel_key_str=_cancel_key(str(job.id)),
             )
+            if fill_status not in ("success", "cancelled", None, ""):
+                hook_errors.append(
+                    simpus_msg.for_patient(
+                        patient.nama,
+                        simpus_msg.fill_status(fill_status, job.error_message),
+                        nik=patient.nik,
+                    )
+                )
+            elif fill_status == "cancelled":
+                hook_errors.append(
+                    simpus_msg.for_patient(
+                        patient.nama,
+                        simpus_msg.fill_status("cancelled"),
+                        nik=patient.nik,
+                    )
+                )
+    except Exception as exc:
+        log.exception("simpus sync_asik crashed pk=%s", puskesmas_id)
+        hook_errors.append(simpus_msg.config("sync_crashed"))
     finally:
+        finalize_simpus_hook_job(
+            scrape_job_id, errors=hook_errors, import_stats=import_stats,
+        )
         db.close()
 
 

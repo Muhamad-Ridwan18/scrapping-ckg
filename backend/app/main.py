@@ -29,9 +29,10 @@ from app.api.routes import (
     report,
     report_dashboards,
     school_cron_config,
-    simpus_schedule,
     school_patients,
     scrape,
+    simpus_hook,
+    simpus_schedule,
     stats,
     sync,
     users,
@@ -101,6 +102,7 @@ app.include_router(patients.router)
 app.include_router(school_patients.router)
 app.include_router(school_cron_config.router)
 app.include_router(simpus_schedule.router)
+app.include_router(simpus_hook.router)
 app.include_router(scrape.router)
 app.include_router(loop_runs.router)
 app.include_router(merge.router)

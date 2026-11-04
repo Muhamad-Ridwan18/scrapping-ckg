@@ -302,11 +302,20 @@ def _build_step2(patient: Patient, epus: dict, puskesmas: Puskesmas) -> dict[str
     }
 
 
+def _normalize_wilayah_name(name: str) -> str:
+    """Collapse letter-spaced Kemkes labels (e.g. 'P A P U A' → 'PAPUA')."""
+    text = re.sub(r"\s+", " ", str(name or "")).strip()
+    parts = text.split(" ")
+    if len(parts) >= 3 and all(len(p) == 1 for p in parts):
+        return "".join(parts)
+    return text
+
+
 def _alamat_levels(raw: object) -> dict[str, str] | None:
     if not isinstance(raw, dict):
         return None
     levels = {
-        key: str(raw.get(key) or "").strip()
+        key: _normalize_wilayah_name(str(raw.get(key) or ""))
         for key in ("provinsi", "kota", "kecamatan", "kelurahan")
     }
     if any(not levels[key] for key in levels):
@@ -334,6 +343,12 @@ def step2_from_simpus(pendaftaran: object, puskesmas: Puskesmas) -> dict[str, An
         return None
     status = _status_perkawinan(pend.get("status_pernikahan")) or _DEFAULT_STATUS_PERNIKAHAN
     pekerjaan = str(pend.get("pekerjaan") or "").strip() or _SIMPUS_DEFAULT_PEKERJAAN
+    _job = pekerjaan.casefold().replace("-", " ").replace("/", " ")
+    _job = " ".join(_job.split())
+    if _job in {"irt", "i r t"}:
+        pekerjaan = "Ibu Rumah Tangga"
+    elif "petani" in _job or "pekebun" in _job:
+        pekerjaan = "Petani/Pekebun"
     detail = re.sub(r"\s+", " ", str(pend.get("alamat") or "")).strip()
     if not detail:
         detail = alamat["kelurahan"]
@@ -1426,20 +1441,29 @@ def create_simpus_patients(
     patient_ids: list[str],
     triggered_by_id: str,
     triggered_by_type: str = "cron",
+    scrape_job_id: str | None = None,
+    import_stats: dict | None = None,
 ) -> None:
     """Register SIMPUS CKG umum visits that ASIK does not have yet, then fill.
 
     Identity uses the SIMPUS name. DOB and gender come from the NIK. Domicile
     uses the puskesmas default address. A visit ASIK already has is not
     registered again; its exam is still filled from the SIMPUS answers.
+
+    When ``scrape_job_id`` is set (inbound SIMPUS hook), finalize that scrape
+    job so failure reasons like Dukcapil reach GET /hooks/simpus/jobs/{id}.
     """
+    from app.services import simpus_user_messages as simpus_msg
     from app.services.simpus_jawaban import simpus_blob_to_sync_preview
+    from app.tasks.simpus_import import finalize_simpus_hook_job
     from app.tasks.sync import _cancel_key, _count_preview_forms, _execute_sync
 
     if not patient_ids:
+        finalize_simpus_hook_job(scrape_job_id, errors=[], import_stats=import_stats)
         return
     db = SessionLocal()
     redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
+    hook_errors: list[str] = []
     try:
         pk_uuid = uuid.UUID(puskesmas_id)
         puskesmas = db.scalar(
@@ -1452,10 +1476,16 @@ def create_simpus_patients(
         )
         if puskesmas is None or not puskesmas.asik_url or not puskesmas.asik_default_alamat:
             log.info("simpus create skipped pk=%s — asik url or default alamat missing", puskesmas_id)
+            hook_errors.append(
+                simpus_msg.config("asik_alamat_missing")
+                if puskesmas is not None and puskesmas.asik_url
+                else simpus_msg.config("asik_url_missing")
+            )
             return
         creds = puskesmas_crud.get_cred_decrypted(puskesmas, "asik")
         if creds is None:
             log.info("simpus create skipped pk=%s — asik credentials missing", puskesmas_id)
+            hook_errors.append(simpus_msg.config("asik_cred_missing"))
             return
         try:
             trigger = TriggererType(triggered_by_type)
@@ -1485,6 +1515,11 @@ def create_simpus_patients(
                 blob = patient_crud.decrypt_field(patient, ScrapeKind.ASIK)
             except Exception:
                 log.warning("simpus create decrypt failed patient=%s", pid)
+                hook_errors.append(
+                    simpus_msg.for_patient(
+                        patient.nama, simpus_msg.config("decrypt_failed"), nik=patient.nik,
+                    )
+                )
                 continue
             preview = simpus_blob_to_sync_preview(blob if isinstance(blob, dict) else None)
             forms_total = _count_preview_forms(preview)
@@ -1532,6 +1567,11 @@ def create_simpus_patients(
                 if block or step2 is None:
                     reason = block or "alamat default ASIK kosong"
                     sync_job_crud.mark_failed(db, job, reason[:2000], datetime.now(UTC))
+                    hook_errors.append(
+                        simpus_msg.for_patient(
+                            patient.nama, simpus_msg.wali_or_alamat(block), nik=patient.nik,
+                        )
+                    )
                     _queue_registration_result_webhook(
                         job=job,
                         patient=patient,
@@ -1560,6 +1600,11 @@ def create_simpus_patients(
                     )
                 except ValueError as exc:
                     sync_job_crud.mark_failed(db, job, str(exc)[:2000], datetime.now(UTC))
+                    hook_errors.append(
+                        simpus_msg.for_patient(
+                            patient.nama, simpus_msg.identity_error(exc), nik=patient.nik,
+                        )
+                    )
                     _queue_registration_result_webhook(
                         job=job,
                         patient=patient,
@@ -1585,11 +1630,25 @@ def create_simpus_patients(
                 outcome = out.get("outcome") or "error"
                 if outcome == "cancelled":
                     sync_job_crud.mark_cancelled(db, job)
+                    hook_errors.append(
+                        simpus_msg.for_patient(
+                            patient.nama,
+                            simpus_msg.register_outcome("cancelled"),
+                            nik=patient.nik,
+                        )
+                    )
                     continue
                 registration_outcome = outcome
                 if outcome not in ("created", "already_served"):
                     reason = _REGISTER_FAIL_REASON.get(outcome) or out.get("error") or outcome
                     sync_job_crud.mark_failed(db, job, f"{outcome}: {reason}"[:2000], datetime.now(UTC))
+                    hook_errors.append(
+                        simpus_msg.for_patient(
+                            patient.nama,
+                            simpus_msg.register_outcome(outcome, reason),
+                            nik=patient.nik,
+                        )
+                    )
                     _queue_registration_result_webhook(
                         job=job,
                         patient=patient,
@@ -1619,6 +1678,22 @@ def create_simpus_patients(
                 celery_task_id=raw_id,
                 cancel_key_str=cancel_key_str,
             )
+            if fill_status not in ("success", "cancelled", None, ""):
+                hook_errors.append(
+                    simpus_msg.for_patient(
+                        patient.nama,
+                        simpus_msg.fill_status(fill_status, job.error_message),
+                        nik=patient.nik,
+                    )
+                )
+            elif fill_status == "cancelled":
+                hook_errors.append(
+                    simpus_msg.for_patient(
+                        patient.nama,
+                        simpus_msg.fill_status("cancelled"),
+                        nik=patient.nik,
+                    )
+                )
             if registration_outcome == "created" and fill_status != "cancelled":
                 _queue_registration_result_webhook(
                     job=job,
@@ -1631,7 +1706,13 @@ def create_simpus_patients(
                         else "Patient registered in ASIK, but filling examination data failed."
                     ),
                 )
+    except Exception as exc:
+        log.exception("simpus create_asik crashed pk=%s", puskesmas_id)
+        hook_errors.append(simpus_msg.config("create_crashed"))
     finally:
+        finalize_simpus_hook_job(
+            scrape_job_id, errors=hook_errors, import_stats=import_stats,
+        )
         db.close()
 
 

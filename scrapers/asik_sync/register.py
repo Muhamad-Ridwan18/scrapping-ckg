@@ -958,9 +958,21 @@ def _select_step2_dropdown(page: Page, trigger_text: str, value: str) -> None:
 
 def _pekerjaan_candidates(value: str) -> list[str]:
     text = value.strip()
-    folded = text.lower().replace("-", " ")
+    folded = text.lower().replace("-", " ").replace("/", " ")
+    folded = " ".join(folded.split())
     if folded in ("lainnya", "lain lain"):
         return ["Lain-lain", "Lainnya"]
+    # SIMPUS often stores short labels; ASIK's picker lists the full option text.
+    if folded in ("irt", "i r t", "ibu rumah tangga"):
+        return ["Ibu Rumah Tangga", text]
+    if "petani" in folded or "pekebun" in folded:
+        return ["Petani/Pekebun", "Petani / Pekebun", "Petani", text]
+    if "nelayan" in folded:
+        return ["Nelayan", text]
+    if folded in ("pns", "pegawai negeri", "pegawai negeri sipil"):
+        return ["Pegawai Negeri Sipil", "PNS", text]
+    if "wiraswasta" in folded or "wira swasta" in folded:
+        return ["Wiraswasta", text]
     return [text]
 
 
@@ -992,6 +1004,30 @@ def _select_pekerjaan(page: Page, value: str) -> None:
     raise RuntimeError(f"Pekerjaan option '{value}' not found")
 
 
+def _location_name_candidates(name: str) -> list[str]:
+    text = " ".join(str(name or "").split()).strip()
+    if not text:
+        return []
+    parts = text.split(" ")
+    out = [text]
+    # Letter-spaced labels from some source dumps ("P A P U A" → "PAPUA").
+    if len(parts) >= 3 and all(len(p) == 1 for p in parts):
+        out.insert(0, "".join(parts))
+    # Drop common administrative prefixes so search still hits ASIK options.
+    for prefix in ("KAB. ", "KAB ", "KOTA ", "KOTA. "):
+        if text.upper().startswith(prefix):
+            out.append(text[len(prefix):].strip())
+    # Dedupe, preserve order.
+    seen: set[str] = set()
+    uniq: list[str] = []
+    for item in out:
+        key = item.casefold()
+        if item and key not in seen:
+            seen.add(key)
+            uniq.append(item)
+    return uniq
+
+
 def _pick_location_level(page: Page, search_placeholder: str, name: str) -> None:
     """One level of the Alamat cascade: type the name into this level's search
     box, wait for the async list, then click the exact-name option. prefer_last
@@ -999,14 +1035,19 @@ def _pick_location_level(page: Page, search_placeholder: str, name: str) -> None
     search = page.get_by_placeholder(search_placeholder)
     if not search.count():
         raise RuntimeError(f"location search box '{search_placeholder}' not found")
-    _fill_field(page, search, name)
-    page.wait_for_timeout(1200)  # per-level list is fetched async ("Memuat data..")
-    if not (
-        _click_text(page, name, exact=True, prefer_last=True)
-        or _click_text_ci(page, name)
-    ):
-        raise RuntimeError(f"location '{name}' not found under '{search_placeholder}'")
-    page.wait_for_timeout(1000)
+    candidates = _location_name_candidates(name)
+    last_err = name
+    for candidate in candidates:
+        last_err = candidate
+        _fill_field(page, search, candidate)
+        page.wait_for_timeout(1200)  # per-level list is fetched async ("Memuat data..")
+        if (
+            _click_text(page, candidate, exact=True, prefer_last=True)
+            or _click_text_ci(page, candidate)
+        ):
+            page.wait_for_timeout(1000)
+            return
+    raise RuntimeError(f"location '{last_err}' not found under '{search_placeholder}'")
 
 
 def _fill_alamat_cascade(page: Page, provinsi: str, kota: str, kecamatan: str, kelurahan: str) -> None:
