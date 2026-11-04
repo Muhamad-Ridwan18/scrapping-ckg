@@ -4,7 +4,7 @@ SIMPUS POSTs here when a petugas clicks "Kirim ke CKG". Auth is a shared
 Bearer (default in settings.SIMPUS_HOOK_BEARER; override via env). Public
 prod URL:
 
-  https://admin-ckg.kliksimpus.com/api/hooks/simpus
+  https://api-ckg.kliksimpus.com/hooks/simpus
 
 Local SIMPUS points its Setting → Alamat CKG at this process, e.g.
 http://127.0.0.1:8001/hooks/simpus
