@@ -1,4 +1,5 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
+import { ZodError } from "zod";
 import { API_URL } from "@/lib/env";
 import { readAuth, clearAuth } from "@/lib/auth/storage";
 
@@ -49,6 +50,23 @@ export function asApiError(err: unknown): ApiError {
       if (match) fieldErrors[match[1]] = match[2];
     }
     return { status: err.response?.status ?? 0, message: messages.join("\n"), messages, fieldErrors };
+  }
+  // Zod failures (stale client schema vs API) are not AxiosErrors — surface the
+  // path so "Job scrape terbaru" etc. don't collapse to a blank "Unknown error".
+  if (err instanceof ZodError) {
+    const messages = err.issues.map((i) => {
+      const path = i.path.length ? `${i.path.join(".")}: ` : "";
+      return `${path}${i.message}`;
+    });
+    return {
+      status: 0,
+      message: messages.join("\n") || "Invalid API response",
+      messages: messages.length ? messages : ["Invalid API response"],
+      fieldErrors: {},
+    };
+  }
+  if (err instanceof Error && err.message) {
+    return { status: 0, message: err.message, messages: [err.message], fieldErrors: {} };
   }
   return { status: 0, message: "Unknown error", messages: ["Unknown error"], fieldErrors: {} };
 }
