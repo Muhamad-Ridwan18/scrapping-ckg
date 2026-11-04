@@ -103,3 +103,57 @@ def test_simpus_hook_job_status(monkeypatch):
     assert body["status"] == "failed"
     assert body["results"][0]["nik"] == "1234567890123456"
     assert "token SIMPUS" in body["results"][0]["error_message"]
+
+
+def test_simpus_nik_status_returns_latest_sync(monkeypatch):
+    from app.models.sync_job import SyncStatus
+
+    puskesmas_id = uuid.uuid4()
+    patient_id = uuid.uuid4()
+    sync_id = uuid.uuid4()
+    pk = SimpleNamespace(
+        id=puskesmas_id,
+        name="Puskesmas Contoh",
+        simpus_api_url="https://app.kliksimpus.com",
+        simpus_api_cred=b"x",
+        asik_url="https://asik.example",
+        asik_cred=b"y",
+        asik_default_alamat={"provinsi": {}},
+    )
+    patient = SimpleNamespace(id=patient_id, nik="1234567890123456")
+    sync_job = SimpleNamespace(
+        id=sync_id,
+        patient_id=patient_id,
+        status=SyncStatus.SUCCESS,
+        error_message=None,
+        finished_at=datetime(2026, 11, 4, 12, 0, tzinfo=UTC),
+        created_at=datetime(2026, 11, 4, 12, 0, tzinfo=UTC),
+    )
+
+    fake_db = MagicMock()
+    # _find_puskesmas uses scalars().all(); nik-status then scalars().all() for patients,
+    # then scalars().all() for sync jobs.
+    fake_db.scalars.side_effect = [
+        MagicMock(all=MagicMock(return_value=[pk])),
+        MagicMock(all=MagicMock(return_value=[patient])),
+        MagicMock(all=MagicMock(return_value=[sync_job])),
+    ]
+    app.dependency_overrides[get_db] = lambda: fake_db
+    try:
+        client = TestClient(app)
+        res = client.post(
+            "/hooks/simpus/nik-status",
+            headers={"Authorization": f"Bearer {settings.SIMPUS_HOOK_BEARER}"},
+            json={
+                "simpus_url": "https://app.kliksimpus.com",
+                "nama_instansi": "Puskesmas Contoh",
+                "niks": ["1234567890123456", "999"],
+            },
+        )
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+    assert res.status_code == 200
+    items = {row["nik"]: row for row in res.json()["items"]}
+    assert items["1234567890123456"]["status"] == "success"
+    assert items["1234567890123456"]["sync_job_id"] == str(sync_id)
