@@ -150,10 +150,13 @@ def _build_config(
     filter_date: str | None = None,
     default_values: dict[str, Any] | None = None,
     session_mode: str = "persistent",
+    school_name: str | None = None,
+    class_name: str | None = None,
 ) -> dict[str, Any]:
-    return {
+    school = bool(school_name and class_name)
+    cfg = {
         "base_url": base_url,
-        "target_path": "/ckg-pelayanan",
+        "target_path": "/ckg-pelayanan-sekolah" if school else "/ckg-pelayanan",
         "login_path": "/login",
         "headless": headless,
         "slow_mo": 0,
@@ -185,6 +188,10 @@ def _build_config(
         # entirely on the happy path.
         "captcha_solver": captcha_solver,
     }
+    if school:
+        cfg["school_name"] = school_name
+        cfg["class_name"] = class_name
+    return cfg
 
 
 def _count_preview_forms(preview: dict) -> int:
@@ -221,6 +228,8 @@ def _execute_sync(
     celery_task_id: str,
     cancel_key_str: str,
     session_mode: str = "persistent",
+    school_name: str | None = None,
+    class_name: str | None = None,
 ) -> str:
     """Run the sync scraper subprocess for ONE patient's SyncJob and finalize it.
 
@@ -265,6 +274,8 @@ def _execute_sync(
                 ),
                 default_values=build_default_values_map(),
                 session_mode=session_mode,
+                school_name=school_name,
+                class_name=class_name,
             )
             cfg_path.write_text(json.dumps(cfg))
             os.chmod(cfg_path, 0o600)
@@ -815,6 +826,107 @@ def run_sync(self, job_id: str, headless: bool = True) -> None:
         db.close()
 
 
+def fill_simpus_patient_ids(
+    *,
+    db,
+    redis_client,
+    pk_uuid: uuid.UUID,
+    patient_ids: list[str],
+    actor: uuid.UUID,
+    trigger: TriggererType,
+    base_url_full: str,
+    creds: dict,
+    captcha_solver: dict,
+    hook_errors: list[str],
+) -> None:
+    """Fill ASIK forms for SIMPUS visits. Sekolah rows use school name + class."""
+    from app.services import simpus_user_messages as simpus_msg
+
+    for raw_id in patient_ids:
+        pid = uuid.UUID(raw_id)
+        patient = db.scalar(
+            select(Patient)
+            .options(load_only(
+                Patient.id, Patient.puskesmas_id, Patient.nik, Patient.nama,
+                Patient.filter_date, Patient.from_simpus, Patient.scraped_asik_data,
+            ))
+            .where(Patient.id == pid, Patient.from_simpus.is_(True))
+        )
+        if patient is None or patient.scraped_asik_data is None:
+            continue
+        try:
+            blob = patient_crud.decrypt_field(patient, ScrapeKind.ASIK)
+        except Exception:
+            log.warning("simpus sync decrypt failed patient=%s", pid)
+            hook_errors.append(
+                simpus_msg.for_patient(
+                    patient.nama, simpus_msg.config("decrypt_failed"), nik=patient.nik,
+                )
+            )
+            continue
+        school = blob.get("sekolah") if isinstance(blob, dict) else None
+        school_name = class_name = None
+        if isinstance(school, dict):
+            school_name = school.get("school_name") or None
+            class_name = school.get("class_name") or None
+            if not school_name or not class_name:
+                hook_errors.append(
+                    simpus_msg.for_patient(
+                        patient.nama,
+                        "nama sekolah atau kelas kosong, form sekolah tidak diisi",
+                        nik=patient.nik,
+                    )
+                )
+                continue
+        preview = simpus_blob_to_sync_preview(blob if isinstance(blob, dict) else None)
+        forms_total = _count_preview_forms(preview)
+        if forms_total == 0:
+            continue
+        try:
+            job = sync_job_crud.create(
+                db,
+                puskesmas_id=pk_uuid,
+                patient_id=pid,
+                triggered_by_id=actor,
+                triggered_by_type=trigger,
+            )
+        except IntegrityError:
+            db.rollback()
+            continue
+        fill_status = _execute_sync(
+            db=db,
+            redis_client=redis_client,
+            job=job,
+            patient=patient,
+            base_url_full=base_url_full,
+            creds=creds,
+            captcha_solver=captcha_solver,
+            merged=preview,
+            forms_total=forms_total,
+            headless=True,
+            celery_task_id=raw_id,
+            cancel_key_str=_cancel_key(str(job.id)),
+            school_name=school_name,
+            class_name=class_name,
+        )
+        if fill_status not in ("success", "cancelled", None, ""):
+            hook_errors.append(
+                simpus_msg.for_patient(
+                    patient.nama,
+                    simpus_msg.fill_status(fill_status, job.error_message),
+                    nik=patient.nik,
+                )
+            )
+        elif fill_status == "cancelled":
+            hook_errors.append(
+                simpus_msg.for_patient(
+                    patient.nama,
+                    simpus_msg.fill_status("cancelled"),
+                    nik=patient.nik,
+                )
+            )
+
+
 @celery_app.task(name="simpus.sync_asik")
 def sync_simpus_patients(
     puskesmas_id: str,
@@ -826,9 +938,10 @@ def sync_simpus_patients(
 ) -> None:
     """Push SIMPUS jawaban into ASIK, one patient at a time, one login.
 
-    Called after a jawaban import. Only CKG umum rows are passed in. A patient
-    must already exist in ASIK on that visit date; this fills forms, it does
-    not register a new ASIK patient. Per-patient failures stay on their SyncJob.
+    Called after a jawaban import. Umum patients must already exist in ASIK
+    CKG Umum. Sekolah patients are opened by school name and class on CKG
+    Sekolah. This fills forms; it does not register a new ASIK patient.
+    Per-patient failures stay on their SyncJob.
 
     When ``scrape_job_id`` is set (inbound SIMPUS hook), finalize that scrape
     job so ASIK fill failures reach GET /hooks/simpus/jobs/{id}.
@@ -868,73 +981,18 @@ def sync_simpus_patients(
             actor = pk_uuid
         captcha_solver = _build_captcha_solver(db)
         base_url_full = f"https://{puskesmas.asik_url}"
-        for raw_id in patient_ids:
-            pid = uuid.UUID(raw_id)
-            patient = db.scalar(
-                select(Patient)
-                .options(load_only(
-                    Patient.id, Patient.puskesmas_id, Patient.nik, Patient.nama,
-                    Patient.filter_date, Patient.from_simpus, Patient.scraped_asik_data,
-                ))
-                .where(Patient.id == pid, Patient.from_simpus.is_(True))
-            )
-            if patient is None or patient.scraped_asik_data is None:
-                continue
-            try:
-                blob = patient_crud.decrypt_field(patient, ScrapeKind.ASIK)
-            except Exception:
-                log.warning("simpus sync decrypt failed patient=%s", pid)
-                hook_errors.append(
-                    simpus_msg.for_patient(
-                        patient.nama, simpus_msg.config("decrypt_failed"), nik=patient.nik,
-                    )
-                )
-                continue
-            preview = simpus_blob_to_sync_preview(blob if isinstance(blob, dict) else None)
-            forms_total = _count_preview_forms(preview)
-            if forms_total == 0:
-                continue
-            try:
-                job = sync_job_crud.create(
-                    db,
-                    puskesmas_id=pk_uuid,
-                    patient_id=pid,
-                    triggered_by_id=actor,
-                    triggered_by_type=trigger,
-                )
-            except IntegrityError:
-                db.rollback()
-                continue
-            fill_status = _execute_sync(
-                db=db,
-                redis_client=redis_client,
-                job=job,
-                patient=patient,
-                base_url_full=base_url_full,
-                creds=creds,
-                captcha_solver=captcha_solver,
-                merged=preview,
-                forms_total=forms_total,
-                headless=True,
-                celery_task_id=raw_id,
-                cancel_key_str=_cancel_key(str(job.id)),
-            )
-            if fill_status not in ("success", "cancelled", None, ""):
-                hook_errors.append(
-                    simpus_msg.for_patient(
-                        patient.nama,
-                        simpus_msg.fill_status(fill_status, job.error_message),
-                        nik=patient.nik,
-                    )
-                )
-            elif fill_status == "cancelled":
-                hook_errors.append(
-                    simpus_msg.for_patient(
-                        patient.nama,
-                        simpus_msg.fill_status("cancelled"),
-                        nik=patient.nik,
-                    )
-                )
+        fill_simpus_patient_ids(
+            db=db,
+            redis_client=redis_client,
+            pk_uuid=pk_uuid,
+            patient_ids=patient_ids,
+            actor=actor,
+            trigger=trigger,
+            base_url_full=base_url_full,
+            creds=creds,
+            captcha_solver=captcha_solver,
+            hook_errors=hook_errors,
+        )
     except Exception as exc:
         log.exception("simpus sync_asik crashed pk=%s", puskesmas_id)
         hook_errors.append(simpus_msg.config("sync_crashed"))

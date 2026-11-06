@@ -92,7 +92,11 @@ export function SchoolCronCard({ puskesmasId }: { puskesmasId: string }) {
               men-scrape setiap sekolah × kelas (tanpa tanggal).
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-wrap gap-2">
+            <Button size="sm" onClick={() => setRunNowOpen(true)} disabled={runNow.isPending}>
+              <PlayCircle className="h-4 w-4" />
+              Jalankan sekarang
+            </Button>
             <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
               <GraduationCap className="h-4 w-4" />
               Atur cron sekolah
@@ -104,6 +108,15 @@ export function SchoolCronCard({ puskesmasId }: { puskesmasId: string }) {
           onOpenChange={setEditOpen}
           puskesmasId={puskesmasId}
           existing={null}
+        />
+        <ConfirmDialog
+          open={runNowOpen}
+          onOpenChange={setRunNowOpen}
+          title="Jalankan scrape CKG Sekolah sekarang?"
+          description="Men-scrape setiap sekolah × kelas untuk puskesmas ini sekarang juga (bisa lama). Tidak membuat jadwal."
+          confirmLabel="Jalankan sekarang"
+          loading={runNow.isPending}
+          onConfirm={onRunNow}
         />
       </>
     );

@@ -1443,6 +1443,7 @@ def create_simpus_patients(
     triggered_by_type: str = "cron",
     scrape_job_id: str | None = None,
     import_stats: dict | None = None,
+    sekolah_patient_ids: list[str] | None = None,
 ) -> None:
     """Register SIMPUS CKG umum visits that ASIK does not have yet, then fill.
 
@@ -1458,7 +1459,8 @@ def create_simpus_patients(
     from app.tasks.simpus_import import finalize_simpus_hook_job
     from app.tasks.sync import _cancel_key, _count_preview_forms, _execute_sync
 
-    if not patient_ids:
+    sekolah_patient_ids = list(sekolah_patient_ids or [])
+    if not patient_ids and not sekolah_patient_ids:
         finalize_simpus_hook_job(scrape_job_id, errors=[], import_stats=import_stats)
         return
     db = SessionLocal()
@@ -1706,6 +1708,20 @@ def create_simpus_patients(
                         else "Patient registered in ASIK, but filling examination data failed."
                     ),
                 )
+        if sekolah_patient_ids:
+            from app.tasks.sync import fill_simpus_patient_ids
+            fill_simpus_patient_ids(
+                db=db,
+                redis_client=redis_client,
+                pk_uuid=pk_uuid,
+                patient_ids=sekolah_patient_ids,
+                actor=actor,
+                trigger=trigger,
+                base_url_full=base_url,
+                creds=creds,
+                captcha_solver=captcha_solver,
+                hook_errors=hook_errors,
+            )
     except Exception as exc:
         log.exception("simpus create_asik crashed pk=%s", puskesmas_id)
         hook_errors.append(simpus_msg.config("create_crashed"))

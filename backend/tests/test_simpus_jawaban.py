@@ -7,6 +7,7 @@ from app.services.simpus_jawaban import (
     jawaban_endpoint,
     jawaban_to_asik_blob,
     pendaftaran_from_row,
+    sekolah_from_row,
     login_endpoint,
     simpus_blob_to_sync_preview,
 )
@@ -114,3 +115,25 @@ def test_pendaftaran_is_stored_beside_answers():
     assert blob["pendaftaran"]["status_pernikahan"] == "Menikah"
     assert blob["pendaftaran"]["alamat_domisili"]["provinsi"] == "DKI JAKARTA"
     assert "pendaftaran" not in simpus_blob_to_sync_preview(blob)
+
+
+def test_sekolah_identity_is_kept_off_the_form_preview():
+    identitas = sekolah_from_row({
+        "jenis": "sekolah",
+        "nama_sekolah": "  SD Negeri 1  ",
+        "kelas": 4,
+        "klaster": "Kelas 3 & 4 Laki-laki",
+    })
+    assert identitas == {
+        "school_name": "SD Negeri 1",
+        "class_name": "Kelas 4",
+        "klaster": "Kelas 3 & 4 Laki-laki",
+    }
+    blob = jawaban_to_asik_blob(
+        "3201000000000001",
+        {"FRM000119": {"Berat Badan": "25"}},
+        sekolah=identitas,
+    )
+    assert blob["sekolah"]["class_name"] == "Kelas 4"
+    assert "sekolah" not in simpus_blob_to_sync_preview(blob)
+    assert sekolah_from_row({"jenis": "umum", "nama_sekolah": "SD", "kelas": 1}) == {}

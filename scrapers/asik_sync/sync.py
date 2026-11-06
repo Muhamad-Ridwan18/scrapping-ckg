@@ -2473,6 +2473,7 @@ def _process_form_inner(
 # Main flow
 # ---------------------------------------------------------------------------
 def run(args) -> dict:
+    global DETAIL_PATH_PREFIX
     cfg_path = Path(args.config) if args.config else Path(os.environ.get("SCRAPER_CONFIG", ""))
     cfg = _load_config(cfg_path)
     base_url = cfg.get("base_url", "https://sehatindonesiaku.kemkes.go.id")
@@ -2587,10 +2588,13 @@ def run(args) -> dict:
                 if cfg.get("use_session", True):
                     save_auth_state(context, page, base_url)
 
-            navigate_to_pelayanan(page, base_url)
-            close_popups(page)
-            # Cold-session privacy-consent modal that close_popups doesn't target.
-            _dismiss_consent_modal(page)
+            _school_name = str(cfg.get("school_name") or "").strip()
+            _class_name = str(cfg.get("class_name") or "").strip()
+            if not (_school_name and _class_name):
+                navigate_to_pelayanan(page, base_url)
+                close_popups(page)
+                # Cold-session privacy-consent modal that close_popups doesn't target.
+                _dismiss_consent_modal(page)
             # Deliberately NO date filter. ASIK's screening for this NIK lands
             # days/weeks off the ePus date (and sometimes in a different year),
             # so scoping the list to the ePus date hides it — the "NIK tidak
@@ -2617,92 +2621,86 @@ def run(args) -> dict:
                 if (it.get("merged_key") or "").lower().strip() == "nama":
                     expected_name = str(it.get("merged_value") or "").strip() or expected_name
                     break
-            console.print(f"\n[bold cyan]Searching NIK={nik} (expected name='{expected_name}')[/bold cyan]")
-
-            _select_nik_filter(page)
-            _mark = len(interceptor.all_responses)
-            _fill_search_input(page, nik)
-            page.wait_for_timeout(2500)
-            _wait_search_rows(page, interceptor, _mark)
-
-            # Find patient across tabs — only accept when filter is provably applied:
-            # tab badge count == visible Mulai count == 1 (or row text contains name).
-            #
-            # Try the tab the patient is most likely to be in FIRST — each miss
-            # costs >=4 s of fixed waits below. Which tab that is depends on how
-            # old the target date is, and getting this backwards makes things
-            # slower, so it keys off the date rather than a fixed order:
-            #   * old date (backfill) -> screening long finished -> "Selesai".
-            #     Measured 11/11 on sampled prod jobs, and a live Cipondoh probe
-            #     on 2026-06-14 returned Belum=0, Sedang=0, Selesai=12.
-            #   * recent date (daily cron, 3-day lookback) -> often still open ->
-            #     "Belum". Confirmed on a live dry run: a 2-day-old patient was
-            #     found in "Belum Pemeriksaan".
-            # Only the ORDER changes; all three are still tried, and the
-            # badge/mulai predicate that decides acceptance is untouched.
-            _age_days = None
-            if filter_date:
-                try:
-                    _age_days = (
-                        datetime.now().date() - datetime.strptime(filter_date, "%Y-%m-%d").date()
-                    ).days
-                except ValueError:
-                    _age_days = None
-            if _age_days is not None and _age_days >= 7:
-                tabs = ["Selesai Pemeriksaan", "Sedang Pemeriksaan", "Belum Pemeriksaan"]
-            else:
-                tabs = ["Belum Pemeriksaan", "Sedang Pemeriksaan", "Selesai Pemeriksaan"]
-            patient_tab = None
-            matched_rows: list[dict] = []
-            saw_any_search = False
-            for tab in tabs:
-                console.print(f"  Trying tab: {tab}")
-                _click_tab(page, tab)
-                page.wait_for_timeout(1500)
-                # The pelayanan list the user sees (Belum Pemeriksaan) already
-                # shows the NIK. Accept that row before the search box, which
-                # can clear the table when its JSON response is not the old
-                # specific-search URL.
-                visible = _rows_showing_nik(page, nik)
-                if len(visible) == 1:
-                    console.print("    [green]NIK is on this pelayanan tab[/green]")
-                    patient_tab = tab
-                    matched_rows = [{
-                        "nik": nik,
-                        "screening_date": _date_from_row_text(visible[0]) or filter_date,
-                        "name": "",
-                    }]
-                    saw_any_search = True
-                    break
-                # list-kunjungan bodies are encrypted (`_d`) so NIK search cannot
-                # be verified from JSON. Fall back to a unique fuzzy name match
-                # on Mulai/Lanjutkan rows (ASIK truncates names in the table).
-                named = _rows_matching_patient_name(page, expected_name)
-                if len(named) == 1:
-                    console.print(
-                        "    [green]unique name match on this pelayanan tab[/green]"
+            school_name = str(cfg.get("school_name") or "").strip()
+            class_name = str(cfg.get("class_name") or "").strip()
+            school_ready = False
+            if school_name and class_name:
+                DETAIL_PATH_PREFIX = "/ckg-pelayanan-sekolah/detail-pemeriksaan"
+                from asik_sekolah.locate import open_school_student
+                console.print(
+                    f"\n[bold cyan]CKG Sekolah {school_name} / {class_name} "
+                    f"NIK={nik}[/bold cyan]"
+                )
+                opened = open_school_student(
+                    page, interceptor, base_url, school_name, class_name, nik,
+                )
+                if not opened.get("found"):
+                    result["patient_found"] = False
+                    result["skipped"] = True
+                    result["skip_reason"] = "not_found"
+                    result["error"] = opened.get("error") or (
+                        "siswa tidak ditemukan di CKG Sekolah"
                     )
-                    patient_tab = tab
-                    matched_rows = [{
-                        "nik": nik,
-                        "screening_date": _date_from_row_text(named[0]) or filter_date,
-                        "name": expected_name or "",
-                    }]
-                    saw_any_search = True
-                    break
-                # Tab switch can reset the dropdown back to Nama; re-select NIK
-                # and re-fire the search.
+                    console.print(f"[yellow]{result['error']}[/yellow]")
+                    return result
+                school_ready = True
+                patient_tab = opened.get("tab")
+                result["patient_found"] = True
+                result["patient_tab"] = patient_tab
+                console.print(
+                    f"  [green]Siswa ditemukan di: {patient_tab}[/green]"
+                )
+
+            if not school_ready:
+                console.print(f"\n[bold cyan]Searching NIK={nik} (expected name='{expected_name}')[/bold cyan]")
+
                 _select_nik_filter(page)
-                mark = len(interceptor.all_responses)
+                _mark = len(interceptor.all_responses)
                 _fill_search_input(page, nik)
                 page.wait_for_timeout(2500)
-                search_rows = _wait_search_rows(page, interceptor, mark)
-                if search_rows is None:
-                    search_rows = _json_rows_for_nik(interceptor, mark, nik)
-                if search_rows is None:
+                _wait_search_rows(page, interceptor, _mark)
+
+                # Find patient across tabs — only accept when filter is provably applied:
+                # tab badge count == visible Mulai count == 1 (or row text contains name).
+                #
+                # Try the tab the patient is most likely to be in FIRST — each miss
+                # costs >=4 s of fixed waits below. Which tab that is depends on how
+                # old the target date is, and getting this backwards makes things
+                # slower, so it keys off the date rather than a fixed order:
+                #   * old date (backfill) -> screening long finished -> "Selesai".
+                #     Measured 11/11 on sampled prod jobs, and a live Cipondoh probe
+                #     on 2026-06-14 returned Belum=0, Sedang=0, Selesai=12.
+                #   * recent date (daily cron, 3-day lookback) -> often still open ->
+                #     "Belum". Confirmed on a live dry run: a 2-day-old patient was
+                #     found in "Belum Pemeriksaan".
+                # Only the ORDER changes; all three are still tried, and the
+                # badge/mulai predicate that decides acceptance is untouched.
+                _age_days = None
+                if filter_date:
+                    try:
+                        _age_days = (
+                            datetime.now().date() - datetime.strptime(filter_date, "%Y-%m-%d").date()
+                        ).days
+                    except ValueError:
+                        _age_days = None
+                if _age_days is not None and _age_days >= 7:
+                    tabs = ["Selesai Pemeriksaan", "Sedang Pemeriksaan", "Belum Pemeriksaan"]
+                else:
+                    tabs = ["Belum Pemeriksaan", "Sedang Pemeriksaan", "Selesai Pemeriksaan"]
+                patient_tab = None
+                matched_rows: list[dict] = []
+                saw_any_search = False
+                for tab in tabs:
+                    console.print(f"  Trying tab: {tab}")
+                    _click_tab(page, tab)
+                    page.wait_for_timeout(1500)
+                    # The pelayanan list the user sees (Belum Pemeriksaan) already
+                    # shows the NIK. Accept that row before the search box, which
+                    # can clear the table when its JSON response is not the old
+                    # specific-search URL.
                     visible = _rows_showing_nik(page, nik)
                     if len(visible) == 1:
-                        console.print("    [green]NIK is on this pelayanan tab after search[/green]")
+                        console.print("    [green]NIK is on this pelayanan tab[/green]")
                         patient_tab = tab
                         matched_rows = [{
                             "nik": nik,
@@ -2711,10 +2709,13 @@ def run(args) -> dict:
                         }]
                         saw_any_search = True
                         break
+                    # list-kunjungan bodies are encrypted (`_d`) so NIK search cannot
+                    # be verified from JSON. Fall back to a unique fuzzy name match
+                    # on Mulai/Lanjutkan rows (ASIK truncates names in the table).
                     named = _rows_matching_patient_name(page, expected_name)
                     if len(named) == 1:
                         console.print(
-                            "    [green]unique name match after search[/green]"
+                            "    [green]unique name match on this pelayanan tab[/green]"
                         )
                         patient_tab = tab
                         matched_rows = [{
@@ -2724,171 +2725,207 @@ def run(args) -> dict:
                         }]
                         saw_any_search = True
                         break
-                search_niks = None if search_rows is None else [r["nik"] for r in search_rows]
-                badge = _read_active_tab_count(page)
-                mulai_count = _find_mulai_button_count(page)
-                cur_filter = _current_filter_label(page)
-                console.print(
-                    f"    filter={cur_filter} badge={badge} mulai_buttons={mulai_count} "
-                    f"search_rows={'?' if search_niks is None else len(search_niks)}"
-                )
-                if search_niks is None and badge == 1 and mulai_count == 1:
-                    row_text = page.evaluate(
-                        """() => {
-                            const rows = Array.from(document.querySelectorAll('tr')).filter(r =>
-                                r.offsetParent && Array.from(r.querySelectorAll('button')).some(
-                                    b => {
-                                        const t = (b.innerText || '').trim();
-                                        return (t === 'Mulai' || t === 'Lanjutkan') && b.offsetParent;
-                                    }
-                                )
-                            );
-                            return rows.length === 1 ? (rows[0].innerText || '').replace(/\\s+/g, ' ') : '';
-                        }"""
-                    ) or ""
-                    row_l = row_text.lower()
-                    name_l = expected_name.lower() if expected_name else ""
-                    # ASIK truncates long names in the list ("ANAMARIA" → "ANAMARI").
-                    name_hit = bool(name_l) and (
-                        name_l in row_l
-                        or row_l.find(name_l[:6]) >= 0
-                        or any(
-                            token and token in row_l
-                            for token in name_l.split()
-                            if len(token) >= 4
-                        )
+                    # Tab switch can reset the dropdown back to Nama; re-select NIK
+                    # and re-fire the search.
+                    _select_nik_filter(page)
+                    mark = len(interceptor.all_responses)
+                    _fill_search_input(page, nik)
+                    page.wait_for_timeout(2500)
+                    search_rows = _wait_search_rows(page, interceptor, mark)
+                    if search_rows is None:
+                        search_rows = _json_rows_for_nik(interceptor, mark, nik)
+                    if search_rows is None:
+                        visible = _rows_showing_nik(page, nik)
+                        if len(visible) == 1:
+                            console.print("    [green]NIK is on this pelayanan tab after search[/green]")
+                            patient_tab = tab
+                            matched_rows = [{
+                                "nik": nik,
+                                "screening_date": _date_from_row_text(visible[0]) or filter_date,
+                                "name": "",
+                            }]
+                            saw_any_search = True
+                            break
+                        named = _rows_matching_patient_name(page, expected_name)
+                        if len(named) == 1:
+                            console.print(
+                                "    [green]unique name match after search[/green]"
+                            )
+                            patient_tab = tab
+                            matched_rows = [{
+                                "nik": nik,
+                                "screening_date": _date_from_row_text(named[0]) or filter_date,
+                                "name": expected_name or "",
+                            }]
+                            saw_any_search = True
+                            break
+                    search_niks = None if search_rows is None else [r["nik"] for r in search_rows]
+                    badge = _read_active_tab_count(page)
+                    mulai_count = _find_mulai_button_count(page)
+                    cur_filter = _current_filter_label(page)
+                    console.print(
+                        f"    filter={cur_filter} badge={badge} mulai_buttons={mulai_count} "
+                        f"search_rows={'?' if search_niks is None else len(search_niks)}"
                     )
-                    nik_hit = bool(nik) and nik in row_text
-                    if name_hit or nik_hit:
-                        why = "name" if name_hit else "NIK"
+                    if search_niks is None and badge == 1 and mulai_count == 1:
+                        row_text = page.evaluate(
+                            """() => {
+                                const rows = Array.from(document.querySelectorAll('tr')).filter(r =>
+                                    r.offsetParent && Array.from(r.querySelectorAll('button')).some(
+                                        b => {
+                                            const t = (b.innerText || '').trim();
+                                            return (t === 'Mulai' || t === 'Lanjutkan') && b.offsetParent;
+                                        }
+                                    )
+                                );
+                                return rows.length === 1 ? (rows[0].innerText || '').replace(/\\s+/g, ' ') : '';
+                            }"""
+                        ) or ""
+                        row_l = row_text.lower()
+                        name_l = expected_name.lower() if expected_name else ""
+                        # ASIK truncates long names in the list ("ANAMARIA" → "ANAMARI").
+                        name_hit = bool(name_l) and (
+                            name_l in row_l
+                            or row_l.find(name_l[:6]) >= 0
+                            or any(
+                                token and token in row_l
+                                for token in name_l.split()
+                                if len(token) >= 4
+                            )
+                        )
+                        nik_hit = bool(nik) and nik in row_text
+                        if name_hit or nik_hit:
+                            why = "name" if name_hit else "NIK"
+                            console.print(
+                                f"    [green]single Mulai/Lanjutkan row matches patient {why}[/green]"
+                            )
+                            patient_tab = tab
+                            matched_rows = [{
+                                "nik": nik,
+                                "screening_date": _date_from_row_text(row_text) or filter_date,
+                                "name": expected_name or "",
+                            }]
+                            saw_any_search = True
+                            break
                         console.print(
-                            f"    [green]single Mulai/Lanjutkan row matches patient {why}[/green]"
+                            f"    [dim]single-row fallback missed "
+                            f"(name_hit={name_hit} nik_hit={nik_hit} row={row_text[:120]!r})[/dim]"
                         )
-                        patient_tab = tab
-                        matched_rows = [{
-                            "nik": nik,
-                            "screening_date": _date_from_row_text(row_text) or filter_date,
-                            "name": expected_name or "",
-                        }]
-                        saw_any_search = True
-                        break
-                    console.print(
-                        f"    [dim]single-row fallback missed "
-                        f"(name_hit={name_hit} nik_hit={nik_hit} row={row_text[:120]!r})[/dim]"
-                    )
-                if search_niks is None:
-                    # No parseable specific-search for THIS search. We cannot prove the
-                    # filter applied, so we must not accept the tab on the DOM
-                    # heuristic alone — that is the wrong-patient path.
-                    paths = []
-                    for entry in interceptor.all_responses[mark:]:
-                        url = (entry.get("url") or "").split("?")[0]
-                        if url and url not in paths:
-                            paths.append(url)
-                    console.print(
-                        "    [yellow]no parseable specific-search response — cannot verify "
-                        "the NIK filter applied; skipping this tab[/yellow]"
-                    )
-                    if paths:
-                        console.print(f"    [dim]responses: {paths[-8:]}[/dim]")
-                    continue
-                saw_any_search = True
-                if not search_niks:
-                    continue  # genuinely empty tab
-                foreign = sorted({n for n in search_niks if n != nik})
-                if foreign:
-                    # Filter did not (fully) apply: rows for other patients are
-                    # still listed. Clicking Mulai here could open someone else.
-                    console.print(
-                        f"    [yellow]filter not applied — {len(foreign)} foreign NIK(s) "
-                        f"still listed; skipping this tab[/yellow]"
-                    )
-                    continue
-                patient_tab = tab
-                matched_rows = [r for r in search_rows if r["nik"] == nik]
-                break
+                    if search_niks is None:
+                        # No parseable specific-search for THIS search. We cannot prove the
+                        # filter applied, so we must not accept the tab on the DOM
+                        # heuristic alone — that is the wrong-patient path.
+                        paths = []
+                        for entry in interceptor.all_responses[mark:]:
+                            url = (entry.get("url") or "").split("?")[0]
+                            if url and url not in paths:
+                                paths.append(url)
+                        console.print(
+                            "    [yellow]no parseable specific-search response — cannot verify "
+                            "the NIK filter applied; skipping this tab[/yellow]"
+                        )
+                        if paths:
+                            console.print(f"    [dim]responses: {paths[-8:]}[/dim]")
+                        continue
+                    saw_any_search = True
+                    if not search_niks:
+                        continue  # genuinely empty tab
+                    foreign = sorted({n for n in search_niks if n != nik})
+                    if foreign:
+                        # Filter did not (fully) apply: rows for other patients are
+                        # still listed. Clicking Mulai here could open someone else.
+                        console.print(
+                            f"    [yellow]filter not applied — {len(foreign)} foreign NIK(s) "
+                            f"still listed; skipping this tab[/yellow]"
+                        )
+                        continue
+                    patient_tab = tab
+                    matched_rows = [r for r in search_rows if r["nik"] == nik]
+                    break
 
-            if patient_tab is None:
-                result["patient_found"] = False
-                if not saw_any_search:
-                    # Distinct from "not on ASIK": we never got a readable
-                    # specific-search, so this is a scraper/site problem and a
-                    # retry is worthwhile — not a missing patient.
-                    result["error"] = (
-                        "could not verify the NIK filter in any tab: no parseable "
-                        "specific-search response was captured"
-                    )
-                    console.print(f"[red]{result['error']}[/red]")
-                else:
-                    # Parseable search, NIK in no tab → the screening genuinely is
-                    # not in ASIK. Product rule: skip (their data problem), not a
-                    # retry-worthy failure.
+                if patient_tab is None:
+                    result["patient_found"] = False
+                    if not saw_any_search:
+                        # Distinct from "not on ASIK": we never got a readable
+                        # specific-search, so this is a scraper/site problem and a
+                        # retry is worthwhile — not a missing patient.
+                        result["error"] = (
+                            "could not verify the NIK filter in any tab: no parseable "
+                            "specific-search response was captured"
+                        )
+                        console.print(f"[red]{result['error']}[/red]")
+                    else:
+                        # Parseable search, NIK in no tab → the screening genuinely is
+                        # not in ASIK. Product rule: skip (their data problem), not a
+                        # retry-worthy failure.
+                        result["skipped"] = True
+                        result["skip_reason"] = "not_found"
+                        result["error"] = (
+                            "NIK not present in any ASIK tab — skip (ASIK data missing)"
+                        )
+                        console.print(f"[yellow]{result['error']}[/yellow]")
+                    return result
+
+                result["patient_found"] = True
+                result["patient_tab"] = patient_tab
+
+                # ── ASIK-year gate ──────────────────────────────────────────────
+                # The NIK matched, but ASIK's screening may be a DIFFERENT visit than
+                # the ePus one we hold merged data for (e.g. ePus 2025 vs ASIK 2026).
+                # Fill ONLY when a matched row's screening_date year equals the ePus
+                # (filter_date) year; otherwise skip — never push one year's data onto
+                # another year's screening.
+                epus_year = str(filter_date)[:4] if filter_date else None
+                year_skip, row_years = _asik_year_skip(matched_rows, filter_date)
+                result["asik_screening_dates"] = sorted({
+                    r["screening_date"] for r in matched_rows if r.get("screening_date")
+                })
+                if year_skip:
                     result["skipped"] = True
-                    result["skip_reason"] = "not_found"
+                    result["skip_reason"] = "year_mismatch"
                     result["error"] = (
-                        "NIK not present in any ASIK tab — skip (ASIK data missing)"
+                        f"ASIK screening year(s) {row_years} != ePus year {epus_year} "
+                        f"— different visit, skip"
                     )
-                    console.print(f"[yellow]{result['error']}[/yellow]")
-                return result
-
-            result["patient_found"] = True
-            result["patient_tab"] = patient_tab
-
-            # ── ASIK-year gate ──────────────────────────────────────────────
-            # The NIK matched, but ASIK's screening may be a DIFFERENT visit than
-            # the ePus one we hold merged data for (e.g. ePus 2025 vs ASIK 2026).
-            # Fill ONLY when a matched row's screening_date year equals the ePus
-            # (filter_date) year; otherwise skip — never push one year's data onto
-            # another year's screening.
-            epus_year = str(filter_date)[:4] if filter_date else None
-            year_skip, row_years = _asik_year_skip(matched_rows, filter_date)
-            result["asik_screening_dates"] = sorted({
-                r["screening_date"] for r in matched_rows if r.get("screening_date")
-            })
-            if year_skip:
-                result["skipped"] = True
-                result["skip_reason"] = "year_mismatch"
-                result["error"] = (
-                    f"ASIK screening year(s) {row_years} != ePus year {epus_year} "
-                    f"— different visit, skip"
+                    console.print(f"  [yellow]{result['error']}[/yellow]")
+                    return result
+                if len(row_years) > 1:
+                    # This NIK has ASIK screenings in >1 year (one of which matches
+                    # the ePus year). `_click_mulai_by_name` opens by NAME, which
+                    # cannot tell the years apart, so filling risks landing on the
+                    # wrong year's screening. Rather than guess, skip. (Rare — needs
+                    # the same person screened in two years, both currently listed.)
+                    result["skipped"] = True
+                    result["skip_reason"] = "ambiguous_multi_year"
+                    result["error"] = (
+                        f"NIK has ASIK screenings in multiple years {row_years} "
+                        f"(ePus {epus_year}) — cannot target one safely, skip"
+                    )
+                    console.print(f"  [yellow]{result['error']}[/yellow]")
+                    return result
+                if not row_years:
+                    # No screening_date on the matched row(s) → we cannot verify the
+                    # ASIK year. Never fill on an unverified year (that is how one
+                    # year's data lands on another year's screening). Safe skip. If a
+                    # dry-run shows these EN MASSE the field moved and the search-row
+                    # read needs fixing — but no data was corrupted meanwhile.
+                    result["skipped"] = True
+                    result["skip_reason"] = "no_screening_date"
+                    result["error"] = (
+                        "no screening_date on matched search row(s) — cannot verify "
+                        "year, skip"
+                    )
+                    console.print(f"  [yellow]{result['error']}[/yellow]")
+                    return result
+                console.print(
+                    f"  [green]Patient found in: {patient_tab} "
+                    f"(ASIK {row_years or ['?']} / ePus {epus_year})[/green]"
                 )
-                console.print(f"  [yellow]{result['error']}[/yellow]")
-                return result
-            if len(row_years) > 1:
-                # This NIK has ASIK screenings in >1 year (one of which matches
-                # the ePus year). `_click_mulai_by_name` opens by NAME, which
-                # cannot tell the years apart, so filling risks landing on the
-                # wrong year's screening. Rather than guess, skip. (Rare — needs
-                # the same person screened in two years, both currently listed.)
-                result["skipped"] = True
-                result["skip_reason"] = "ambiguous_multi_year"
-                result["error"] = (
-                    f"NIK has ASIK screenings in multiple years {row_years} "
-                    f"(ePus {epus_year}) — cannot target one safely, skip"
-                )
-                console.print(f"  [yellow]{result['error']}[/yellow]")
-                return result
-            if not row_years:
-                # No screening_date on the matched row(s) → we cannot verify the
-                # ASIK year. Never fill on an unverified year (that is how one
-                # year's data lands on another year's screening). Safe skip. If a
-                # dry-run shows these EN MASSE the field moved and the search-row
-                # read needs fixing — but no data was corrupted meanwhile.
-                result["skipped"] = True
-                result["skip_reason"] = "no_screening_date"
-                result["error"] = (
-                    "no screening_date on matched search row(s) — cannot verify "
-                    "year, skip"
-                )
-                console.print(f"  [yellow]{result['error']}[/yellow]")
-                return result
-            console.print(
-                f"  [green]Patient found in: {patient_tab} "
-                f"(ASIK {row_years or ['?']} / ePus {epus_year})[/green]"
-            )
 
             detail_mark = len(interceptor.all_responses)
-            if not (_click_mulai_for_nik(page, nik) or _click_mulai_by_name(page, expected_name)):
+            if not school_ready and not (
+                _click_mulai_for_nik(page, nik) or _click_mulai_by_name(page, expected_name)
+            ):
                 raise RuntimeError(
                     "Mulai click failed — could not match row by name "
                     f"'{expected_name}' and fallback (single Mulai) did not apply"

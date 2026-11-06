@@ -238,11 +238,41 @@ def pendaftaran_from_row(row: dict) -> dict:
     return {key: value for key, value in out.items() if value}
 
 
+def sekolah_from_row(row: dict) -> dict:
+    """School + class the ASIK sekolah module needs to open the student.
+
+    SIMPUS stores ``kelas`` as 1–12. ASIK's class combobox is ``Kelas 11``.
+    """
+    if row.get("jenis") != "sekolah":
+        return {}
+    name = _clean_text(row.get("nama_sekolah"))
+    raw_kelas = row.get("kelas")
+    class_name = ""
+    if isinstance(raw_kelas, bool):
+        raw_kelas = None
+    if isinstance(raw_kelas, int) or (
+        isinstance(raw_kelas, str) and raw_kelas.strip().isdigit()
+    ):
+        class_name = f"Kelas {int(raw_kelas)}"
+    elif isinstance(raw_kelas, str) and raw_kelas.strip():
+        class_name = _clean_text(raw_kelas)
+    klaster = _clean_text(row.get("klaster"))
+    out: dict[str, str] = {}
+    if name:
+        out["school_name"] = name
+    if class_name:
+        out["class_name"] = class_name
+    if klaster:
+        out["klaster"] = klaster
+    return out
+
+
 def jawaban_to_asik_blob(
     nik: str,
     jawaban: dict,
     nama: str | None = None,
     pendaftaran: dict | None = None,
+    sekolah: dict | None = None,
 ) -> dict:
     """Map one API `jawaban` object into the ASIK patient blob."""
     catalog = _catalog()
@@ -289,6 +319,12 @@ def jawaban_to_asik_blob(
     }
     if pendaftaran:
         blob["pendaftaran"] = pendaftaran
+    if sekolah:
+        blob["sekolah"] = {
+            key: value
+            for key, value in sekolah.items()
+            if key in ("school_name", "class_name", "klaster") and value
+        }
     return blob
 
 

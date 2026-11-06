@@ -32,6 +32,7 @@ from app.services.simpus_jawaban import (
     iter_jawaban,
     jawaban_to_asik_blob,
     pendaftaran_from_row,
+    sekolah_from_row,
     login_instansi,
 )
 
@@ -419,12 +420,14 @@ def import_jawaban(
         _publish(rc, job_id, "[run] menarik jawaban CKG dari SIMPUS")
 
         scraped = inserted = updated = skipped = sekolah = 0
+        sekolah_tanpa_identitas = 0
         umum_ids: list[str] = []
+        sekolah_ids: list[str] = []
         cancel_key = _cancel_key(job_id)
         api_url = puskesmas.simpus_api_url
 
         def consume() -> bool:
-            nonlocal scraped, inserted, updated, skipped, sekolah
+            nonlocal scraped, inserted, updated, skipped, sekolah, sekolah_tanpa_identitas
             for row in iter_jawaban(
                 api_url,
                 token,
@@ -462,11 +465,13 @@ def import_jawaban(
                 except ValueError:
                     birth_date = None
                 is_sekolah = row.get("jenis") == "sekolah"
+                identitas_sekolah = sekolah_from_row(row)
                 blob = jawaban_to_asik_blob(
                     row_nik,
                     jawaban,
                     nama or None,
                     pendaftaran_from_row(row),
+                    identitas_sekolah or None,
                 )
                 has_mandiri = bool(blob.get("pemeriksaan_mandiri"))
                 outcome, patient_id = patient_crud.upsert_simpus_visit(
@@ -489,6 +494,13 @@ def import_jawaban(
                     updated += 1
                 if is_sekolah:
                     sekolah += 1
+                    if (
+                        identitas_sekolah.get("school_name")
+                        and identitas_sekolah.get("class_name")
+                    ):
+                        sekolah_ids.append(str(patient_id))
+                    else:
+                        sekolah_tanpa_identitas += 1
                 else:
                     umum_ids.append(str(patient_id))
             return False
@@ -510,7 +522,9 @@ def import_jawaban(
                 })
                 db.commit()
                 scraped = inserted = updated = skipped = sekolah = 0
+                sekolah_tanpa_identitas = 0
                 umum_ids = []
+                sekolah_ids = []
                 _publish(rc, job_id, "[run] token ditolak, login instansi ulang")
 
         finished = datetime.now(UTC)
@@ -534,13 +548,13 @@ def import_jawaban(
             rc, job_id,
             f"[ok] {scraped} kunjungan, {inserted} baru, {updated} diperbarui",
         )
-        if sekolah:
+        if sekolah_tanpa_identitas:
             _publish(
                 rc, job_id,
-                f"[info] {sekolah} kunjungan sekolah disimpan, belum ada isi form sekolah di ASIK",
+                f"[skip] {sekolah_tanpa_identitas} kunjungan sekolah tanpa nama sekolah atau kelas, tidak dikirim ke ASIK",
             )
         asik_task: str | None = None
-        if umum_ids:
+        if umum_ids or sekolah_ids:
             asik_ready = db.scalar(
                 select(Puskesmas.id).where(
                     Puskesmas.id == job.puskesmas_id,
@@ -551,11 +565,20 @@ def import_jawaban(
             if asik_ready is None:
                 _publish(
                     rc, job_id,
-                    "[skip] URL atau akun ASIK belum diisi, jawaban umum tidak dikirim ke ASIK",
+                    "[skip] URL atau akun ASIK belum diisi, jawaban tidak dikirim ke ASIK",
                 )
             else:
                 task_name = "simpus.sync_asik"
-                if create_new:
+                task_ids = [*umum_ids, *sekolah_ids]
+                task_kwargs: dict = {
+                    "puskesmas_id": str(job.puskesmas_id),
+                    "patient_ids": task_ids,
+                    "triggered_by_id": str(job.triggered_by_id),
+                    "triggered_by_type": job.triggered_by_type.value,
+                    "scrape_job_id": job_id,
+                    "import_stats": import_stats,
+                }
+                if create_new and umum_ids:
                     has_alamat = db.scalar(
                         select(Puskesmas.asik_default_alamat).where(
                             Puskesmas.id == job.puskesmas_id,
@@ -567,31 +590,34 @@ def import_jawaban(
                             rc, job_id,
                             "[skip] alamat default ASIK kosong, pasien baru tidak didaftarkan",
                         )
-                        task_name = None
+                        task_kwargs["patient_ids"] = sekolah_ids
+                        if not sekolah_ids:
+                            task_name = None
                     else:
                         task_name = "simpus.create_asik"
-                if task_name:
+                        task_kwargs["patient_ids"] = umum_ids
+                        task_kwargs["sekolah_patient_ids"] = sekolah_ids
+                if task_name and task_kwargs["patient_ids"]:
                     asik_task = task_name
-                    verb = (
-                        "mendaftarkan dan mengisi"
-                        if task_name == "simpus.create_asik"
-                        else "mengirim"
-                    )
-                    _publish(
-                        rc, job_id,
-                        f"[run] {verb} {len(umum_ids)} kunjungan umum ke ASIK",
-                    )
-                    celery_app.send_task(
-                        task_name,
-                        kwargs={
-                            "puskesmas_id": str(job.puskesmas_id),
-                            "patient_ids": umum_ids,
-                            "triggered_by_id": str(job.triggered_by_id),
-                            "triggered_by_type": job.triggered_by_type.value,
-                            "scrape_job_id": job_id,
-                            "import_stats": import_stats,
-                        },
-                    )
+                    if task_name == "simpus.create_asik":
+                        _publish(
+                            rc, job_id,
+                            f"[run] mendaftarkan dan mengisi {len(umum_ids)} kunjungan umum ke ASIK",
+                        )
+                    elif umum_ids:
+                        _publish(
+                            rc, job_id,
+                            f"[run] mengirim {len(umum_ids)} kunjungan umum ke ASIK",
+                        )
+                    if sekolah_ids and (
+                        task_name == "simpus.sync_asik"
+                        or task_kwargs.get("sekolah_patient_ids")
+                    ):
+                        _publish(
+                            rc, job_id,
+                            f"[run] mengirim {len(sekolah_ids)} kunjungan sekolah ke ASIK",
+                        )
+                    celery_app.send_task(task_name, kwargs=task_kwargs)
         if asik_task is None:
             scrape_job_crud.mark_success(
                 db,
