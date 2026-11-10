@@ -225,6 +225,7 @@ def _click_row_action(page: Page, index: int) -> bool:
 
 def _select_option(page: Page, triggers: list[str], option_text: str, *, search: bool) -> bool:
     if not _open_combobox(page, triggers + [option_text]):
+        print(f"  [locate] _open_combobox failed for triggers={triggers}, option='{option_text}'")
         return False
     if search:
         try:
@@ -243,10 +244,12 @@ def _select_option(page: Page, triggers: list[str], option_text: str, *, search:
         page.wait_for_timeout(800)
         return True
     except Exception:
+        print(f"  [locate] option '{option_text}' not found in dropdown")
         return False
 
 
 def _open_combobox(page: Page, candidate_texts: list[str]) -> bool:
+    # Method 1: click element matching placeholder/selected text
     for text in candidate_texts:
         try:
             el = page.get_by_text(text, exact=True).first
@@ -256,6 +259,26 @@ def _open_combobox(page: Page, candidate_texts: list[str]) -> bool:
                 return True
         except Exception:
             continue
+    # Method 2: try clicking ant-select / rc-select combobox by placeholder attribute
+    for text in candidate_texts:
+        try:
+            sel = page.locator(f'[class*="select"]:has([title="{text}"]):visible, [class*="select"]:has([placeholder="{text}"]):visible').first
+            if sel.is_visible():
+                sel.click(timeout=4000)
+                page.wait_for_timeout(700)
+                return True
+        except Exception:
+            continue
+    # Method 3: try aria/role-based combobox
+    try:
+        combos = page.locator('[role="combobox"]:visible')
+        if combos.count() > 0:
+            combos.first.click(timeout=4000)
+            page.wait_for_timeout(700)
+            return True
+    except Exception:
+        pass
+    print(f"  [locate] _open_combobox: no combobox found for {candidate_texts}")
     return False
 
 
