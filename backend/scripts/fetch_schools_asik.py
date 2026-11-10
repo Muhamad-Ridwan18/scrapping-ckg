@@ -25,6 +25,7 @@ if not SCRAPERS_ROOT.exists():
     SCRAPERS_ROOT = Path("/app/scrapers")
 sys.path.insert(0, str(SCRAPERS_ROOT))
 sys.path.insert(0, str(SCRAPERS_ROOT / "asik"))
+sys.path.insert(0, str(SCRAPERS_ROOT / "asik_sekolah"))
 
 from app.core.security import decrypt_json
 from app.database import SessionLocal
@@ -38,7 +39,11 @@ from helpers import (
     restore_saved_auth_state,
     save_auth_state,
 )
-from locate import _accept_privacy
+
+try:
+    from asik_sekolah.locate import _accept_privacy
+except ImportError:
+    from locate import _accept_privacy
 
 SARANA_URL = "/api/pkg/sarana/get-sarana-sekolah"
 
