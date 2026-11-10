@@ -46,6 +46,28 @@ def open_school_student(
     except Exception as e:
         print(f"  [locate] screenshot failed: {e}")
 
+    # Debug: dump combobox-related elements
+    try:
+        html_snippet = page.evaluate("""() => {
+            const sels = document.querySelectorAll('[class*="select"], [role="combobox"], [class*="combo"], [class*="dropdown"], [class*="ant-select"]');
+            const info = [];
+            sels.forEach((el, i) => {
+                if (i < 15) {
+                    info.push({
+                        tag: el.tagName,
+                        cls: el.className.substring(0, 120),
+                        text: el.innerText.substring(0, 80),
+                        role: el.getAttribute('role'),
+                        visible: el.offsetParent !== null
+                    });
+                }
+            });
+            return JSON.stringify(info, null, 2);
+        }""")
+        print(f"  [locate] combobox elements:\n{html_snippet}")
+    except Exception as e:
+        print(f"  [locate] element dump failed: {e}")
+
     if not _select_school_fuzzy(page, school_name):
         return {"found": False, "error": f"sekolah '{school_name}' tidak ada di ASIK"}
     page.wait_for_timeout(600)
