@@ -110,6 +110,8 @@ def main():
             _accept_privacy(page)
             page.wait_for_timeout(2000)
 
+            captured_schools = []
+
             # Strategy 1: Check if Nuxt 3 in-memory state or Pinia has decrypted school data
             print("Inspecting browser memory for decrypted school list...")
             schools_from_mem = page.evaluate("""() => {
