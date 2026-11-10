@@ -35,6 +35,7 @@ def open_school_student(
     page.wait_for_timeout(2000)
     _accept_privacy(page)
     page.wait_for_timeout(1000)
+    _cache_schools_from_interceptor(interceptor)
 
     if not _select_school_fuzzy(page, school_name):
         return {"found": False, "error": f"sekolah '{school_name}' tidak ada di ASIK"}
@@ -80,6 +81,61 @@ def open_school_student(
             "(Belum, Sedang, maupun Selesai)"
         ),
     }
+
+
+def _cache_schools_from_interceptor(interceptor) -> None:
+    """Extract and save school list from get-sarana-sekolah response."""
+    import json
+    from pathlib import Path
+
+    sarana_url = "/api/pkg/sarana/get-sarana-sekolah"
+    raw_schools = []
+    for entry in reversed(getattr(interceptor, "all_responses", [])):
+        url = str(entry.get("url") or "")
+        if url.endswith(sarana_url) and entry.get("status") == 200:
+            data = (entry.get("body") or {}).get("data")
+            if isinstance(data, list) and data:
+                raw_schools = data
+                break
+
+    if not raw_schools:
+        return
+
+    schools = []
+    seen = set()
+    for s in raw_schools:
+        name = (s.get("school_name") or "").strip()
+        if not name or name in seen:
+            continue
+        seen.add(name)
+        cat = (s.get("category_short_name") or s.get("category_code_name") or "").upper().strip()
+        classes = []
+        if "SD" in cat or "MI" in cat:
+            classes = [f"Kelas {i}" for i in range(1, 7)]
+        elif "SMP" in cat or "MTS" in cat:
+            classes = [f"Kelas {i}" for i in range(7, 10)]
+        elif "SMA" in cat or "SMK" in cat or "MA" in cat:
+            classes = [f"Kelas {i}" for i in range(10, 13)]
+        else:
+            classes = [f"Kelas {i}" for i in range(1, 13)]
+        schools.append({"name": name, "classes": classes})
+
+    schools.sort(key=lambda x: x["name"])
+    candidates = [
+        Path(__file__).resolve().parent.parent.parent / "backend" / "app" / "data",
+        Path("/app/app/data"),
+        Path("/app/backend/app/data"),
+        Path(__file__).resolve().parent,
+    ]
+    for d in candidates:
+        if d.is_dir():
+            try:
+                (d / "asik_schools_cache.json").write_text(
+                    json.dumps(schools, ensure_ascii=False, indent=2), encoding="utf-8"
+                )
+                print(f"  [locate] cached {len(schools)} ASIK schools for SIMPUS")
+            except Exception:
+                pass
 
 
 def _normalize_school(name: str) -> str:

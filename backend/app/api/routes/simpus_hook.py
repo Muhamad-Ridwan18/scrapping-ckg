@@ -512,6 +512,27 @@ def simpus_schools(
         if class_name:
             classes.add(class_name)
 
+    # Also load from cached ASIK get-sarana-sekolah intercepts
+    import json
+    from pathlib import Path
+
+    cache_candidates = [
+        Path(__file__).resolve().parent.parent.parent / "data" / "asik_schools_cache.json",
+        Path(__file__).resolve().parent.parent.parent.parent / "scrapers" / "asik_sekolah" / "asik_schools_cache.json",
+        Path("/app/app/data/asik_schools_cache.json"),
+    ]
+    for cp in cache_candidates:
+        if cp.exists():
+            try:
+                cached = json.loads(cp.read_text(encoding="utf-8"))
+                for s in cached:
+                    name = (s.get("name") or "").strip()
+                    if name and name not in by_school:
+                        by_school[name] = set(s.get("classes") or [])
+            except Exception:
+                pass
+            break
+
     schools = [
         SimpusSchoolClass(name=name, classes=sorted(classes))
         for name, classes in sorted(by_school.items())
