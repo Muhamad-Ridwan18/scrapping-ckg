@@ -32,11 +32,12 @@ from app.models.puskesmas import Puskesmas
 from app.tasks.scrape import _asik_sekolah_session_dir, _build_captcha_solver
 from helpers import (
     APIInterceptor,
+    close_popups,
     launch_persistent_context,
+    login,
     restore_saved_auth_state,
     save_auth_state,
 )
-from helpers.login import close_popups, login
 from locate import _accept_privacy
 
 SARANA_URL = "/api/pkg/sarana/get-sarana-sekolah"
