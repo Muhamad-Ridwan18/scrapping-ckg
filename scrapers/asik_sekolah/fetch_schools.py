@@ -24,6 +24,7 @@ sys.path.insert(0, str(SCRAPERS_ROOT))
 sys.path.insert(0, str(SCRAPERS_ROOT / "asik"))
 
 from helpers import (  # noqa: E402
+    APIInterceptor,
     SESSION_DIR,
     launch_persistent_context,
     restore_saved_auth_state,
@@ -33,8 +34,6 @@ from helpers import (  # noqa: E402
 )
 from locate import _accept_privacy  # noqa: E402
 
-SARANA_URL = "/api/pkg/sarana/get-sarana-sekolah"
-
 
 def main():
     parser = argparse.ArgumentParser(description="Fetch ASIK school list for Puskesmas")
@@ -42,24 +41,13 @@ def main():
     parser.add_argument("--base-url", default="https://sehatindonesiaku.kemkes.go.id")
     args = parser.parse_args()
 
-    captured_schools = []
-
-    def on_response(response):
-        url = response.url or ""
-        if url.endswith(SARANA_URL) and response.status == 200:
-            try:
-                body = response.json()
-                data = body.get("data")
-                if isinstance(data, list) and data:
-                    captured_schools.extend(data)
-            except Exception:
-                pass
+    interceptor = APIInterceptor()
 
     with sync_playwright() as p:
         context = launch_persistent_context(p, headless=args.headless)
         page = context.pages[0] if context.pages else context.new_page()
         restore_saved_auth_state(context, page)
-        context.on("response", on_response)
+        context.on("response", interceptor.on_response)
 
         target_url = f"{args.base_url.rstrip('/')}/ckg-pelayanan-sekolah"
         print(f"Navigating to {target_url}...")
@@ -70,27 +58,60 @@ def main():
         _accept_privacy(page)
         page.wait_for_timeout(1000)
 
-        # Wait for SARANA_URL to fire (up to 10 seconds)
-        deadline = time.time() + 10
-        while not captured_schools and time.time() < deadline:
-            page.wait_for_timeout(500)
+        # Print all intercepted API responses for visibility
+        api_urls = [r.get("url", "") for r in interceptor.all_responses]
+        print(f"Intercepted {len(api_urls)} API calls so far:")
+        for u in api_urls:
+            print(f"  -> {u}")
 
-        # Nudge combobox if still not captured
+        # Check for sarana in interceptor
+        captured_schools = []
+        for entry in reversed(interceptor.all_responses):
+            url = str(entry.get("url") or "")
+            if "sarana" in url.lower() and entry.get("status") == 200:
+                data = (entry.get("body") or {}).get("data")
+                if isinstance(data, list) and data:
+                    captured_schools = data
+                    print(f"Found {len(captured_schools)} schools in response: {url}")
+                    break
+
+        # If still empty, click the combobox to trigger the fetch
         if not captured_schools:
-            try:
-                el = page.get_by_text("Pilih sekolah", exact=True).first
-                if el.is_visible():
-                    el.click(timeout=3000)
-                    page.wait_for_timeout(1500)
-                    page.keyboard.press("Escape")
-            except Exception:
-                pass
+            print("Sarana not found yet. Nudging combobox...")
+            for selector in [
+                "text=Pilih sekolah",
+                "text=Pilih Sekolah",
+                '[class*="select"]:visible',
+                '[role="combobox"]:visible',
+            ]:
+                try:
+                    el = page.locator(selector).first
+                    if el.is_visible():
+                        el.click(timeout=3000)
+                        page.wait_for_timeout(2000)
+                        page.keyboard.press("Escape")
+                        break
+                except Exception:
+                    pass
+
+            # Check interceptor again after click
+            for entry in reversed(interceptor.all_responses):
+                url = str(entry.get("url") or "")
+                if "sarana" in url.lower() and entry.get("status") == 200:
+                    data = (entry.get("body") or {}).get("data")
+                    if isinstance(data, list) and data:
+                        captured_schools = data
+                        print(f"Found {len(captured_schools)} schools after click: {url}")
+                        break
 
         save_auth_state(context, page, args.base_url)
         context.close()
 
     if not captured_schools:
         print("[ERROR] Could not capture school list from ASIK.")
+        print("All intercepted URLs were:")
+        for r in interceptor.all_responses:
+            print(f"  [{r.get('status')}] {r.get('url')}")
         sys.exit(1)
 
     # Format cleanly
