@@ -32,62 +32,9 @@ def open_school_student(
         wait_until="networkidle",
         timeout=60000,
     )
-    page.wait_for_timeout(2500)
+    page.wait_for_timeout(2000)
     _accept_privacy(page)
     page.wait_for_timeout(1000)
-
-    # Debug: dump page state before combobox attempt
-    url = page.url
-    title = page.title()
-    print(f"  [locate] page url={url}  title={title}")
-    try:
-        page.screenshot(path="locate_debug.png", full_page=True)
-        print("  [locate] screenshot saved: locate_debug.png")
-    except Exception as e:
-        print(f"  [locate] screenshot failed: {e}")
-
-    # Debug: dump combobox-related elements
-    try:
-        html_snippet = page.evaluate("""() => {
-            // Broader search: all inputs, selects, buttons, and elements with text containing 'sekolah' or 'Pilih'
-            const info = [];
-            // All interactive elements
-            const inputs = document.querySelectorAll('input, select, button, [class*="select"], [role="combobox"], [class*="combo"], [class*="dropdown"], [class*="ant-select"]');
-            inputs.forEach((el, i) => {
-                if (i < 20) {
-                    info.push({
-                        tag: el.tagName,
-                        type: el.type || '',
-                        cls: el.className.substring(0, 120),
-                        text: (el.innerText || el.placeholder || el.value || '').substring(0, 80),
-                        role: el.getAttribute('role'),
-                        visible: el.offsetParent !== null,
-                        id: el.id || ''
-                    });
-                }
-            });
-            // Also look for any text containing 'sekolah' or 'Pilih'
-            const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-            let found = 0;
-            while (walker.nextNode() && found < 5) {
-                const t = walker.currentNode.textContent.trim();
-                if (t && (t.toLowerCase().includes('sekolah') || t.toLowerCase().includes('pilih'))) {
-                    const p = walker.currentNode.parentElement;
-                    info.push({
-                        tag: 'TEXT_NODE',
-                        parentTag: p ? p.tagName : '?',
-                        parentCls: p ? p.className.substring(0, 100) : '',
-                        text: t.substring(0, 80),
-                        visible: p ? p.offsetParent !== null : false
-                    });
-                    found++;
-                }
-            }
-            return JSON.stringify(info, null, 2);
-        }""")
-        print(f"  [locate] page elements:\n{html_snippet}")
-    except Exception as e:
-        print(f"  [locate] element dump failed: {e}")
 
     if not _select_school_fuzzy(page, school_name):
         return {"found": False, "error": f"sekolah '{school_name}' tidak ada di ASIK"}
@@ -365,25 +312,89 @@ def _click_next_page(page: Page, target_page: int) -> bool:
 
 
 def _accept_privacy(page: Page) -> None:
-    try:
-        page.wait_for_function(_PRIVACY, timeout=6000)
-    except Exception:
-        return
-    for _ in range(3):
+    """Dismiss any privacy/consent modal blocking the page.
+
+    Handles:
+    1. Checkbox #verify + button (Setuju / Lanjutkan / Simpan)
+    2. Fallback DOM removal if modal overlay remains
+    """
+    for attempt in range(3):
+        # 1) Try checking #verify checkbox if visible
         try:
-            if not page.evaluate(_PRIVACY):
-                return
+            cb = page.locator("#verify:visible, input[type=checkbox]:visible").first
+            if cb.is_visible():
+                cb.check(timeout=3000)
+                page.wait_for_timeout(400)
+                print("  [locate] checked privacy #verify checkbox")
         except Exception:
+            pass
+
+        # 2) Try clicking accept button (Setuju / Lanjutkan / Simpan / Ya)
+        clicked = False
+        for btn_text in ["Setuju", "Lanjutkan", "Simpan", "Ya, Saya Setuju", "SAYA TELAH MEMBACA"]:
+            try:
+                btn = page.get_by_role("button", name=re.compile(btn_text, re.I)).first
+                if btn.is_visible() and btn.is_enabled():
+                    btn.click(timeout=3000)
+                    page.wait_for_timeout(800)
+                    print(f"  [locate] clicked privacy button: '{btn_text}'")
+                    clicked = True
+                    break
+            except Exception:
+                pass
+            try:
+                btn = page.locator(f"button:has-text('{btn_text}'):visible").first
+                if btn.is_visible() and btn.is_enabled():
+                    btn.click(timeout=3000)
+                    page.wait_for_timeout(800)
+                    print(f"  [locate] clicked privacy button (selector): '{btn_text}'")
+                    clicked = True
+                    break
+            except Exception:
+                pass
+
+        page.wait_for_timeout(500)
+
+        # 3) Check if #verify or modal overlay is still present
+        still_blocked = page.evaluate("""() => {
+            const cb = document.querySelector('#verify, input[type=checkbox]');
+            return cb && cb.offsetParent !== null;
+        }""")
+
+        if not still_blocked:
+            print("  [locate] privacy modal successfully dismissed")
             return
+
+        # 4) If still blocked on attempt 2+, nuke the modal from DOM
+        print(f"  [locate] modal still up (attempt {attempt + 1}), nuking overlay from DOM...")
         try:
-            box = page.locator("input[type=checkbox]").first
-            if box.is_visible():
-                box.check(timeout=4000)
-                page.wait_for_timeout(250)
-        except Exception:
-            pass
-        try:
-            page.get_by_text("Setuju", exact=True).first.click(timeout=4000)
-            page.wait_for_timeout(900)
-        except Exception:
-            pass
+            page.evaluate("""() => {
+                // Find modal container containing #verify or consent text
+                for (const el of document.querySelectorAll('div, section, modal')) {
+                    const hasVerify = el.querySelector('#verify');
+                    const text = el.innerText || '';
+                    if (hasVerify || /pencatatan layanan kesehatan|Pemberitahuan Privasi|Persetujuan/i.test(text)) {
+                        let m = el;
+                        for (let i = 0; i < 10 && m.parentElement && m.parentElement !== document.body; i++) {
+                            const cs = getComputedStyle(m.parentElement);
+                            if (cs.position === 'fixed' || cs.position === 'absolute') {
+                                m = m.parentElement;
+                            }
+                        }
+                        const s = getComputedStyle(m);
+                        if (s.position === 'fixed' || s.position === 'absolute' || m.clientWidth > 400) {
+                            m.remove();
+                            break;
+                        }
+                    }
+                }
+                // Also remove any backdrop / overlay
+                document.querySelectorAll('.modal-backdrop, [class*="backdrop"], [class*="overlay"]').forEach(e => e.remove());
+                document.body.style.overflow = 'auto';
+                document.documentElement.style.overflow = 'auto';
+            }""")
+            page.wait_for_timeout(800)
+        except Exception as e:
+            print(f"  [locate] nuke overlay error: {e}")
+
+    print("  [locate] _accept_privacy finished")
