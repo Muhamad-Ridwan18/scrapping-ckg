@@ -23,13 +23,14 @@ SCRAPERS_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SCRAPERS_ROOT))
 sys.path.insert(0, str(SCRAPERS_ROOT / "asik"))
 
-from helpers.auth import (  # noqa: E402
+from helpers import (  # noqa: E402
     SESSION_DIR,
     launch_persistent_context,
     restore_saved_auth_state,
     save_auth_state,
+    login,
+    close_popups,
 )
-from helpers.login import close_popups, login  # noqa: E402
 from locate import _accept_privacy  # noqa: E402
 
 SARANA_URL = "/api/pkg/sarana/get-sarana-sekolah"
