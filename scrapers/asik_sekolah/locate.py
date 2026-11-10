@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import re
 import time
+from difflib import SequenceMatcher
 
 from playwright.sync_api import Page
 
@@ -33,7 +34,7 @@ def open_school_student(
     )
     page.wait_for_timeout(1500)
     _accept_privacy(page)
-    if not _select_option(page, ["Pilih sekolah", "Pilih Sekolah"], school_name, search=True):
+    if not _select_school_fuzzy(page, school_name):
         return {"found": False, "error": f"sekolah '{school_name}' tidak ada di ASIK"}
     page.wait_for_timeout(600)
     if not _select_option(page, ["Pilih kelas", "Pilih Kelas"], class_name, search=False):
@@ -77,6 +78,98 @@ def open_school_student(
             "(Belum, Sedang, maupun Selesai)"
         ),
     }
+
+
+def _normalize_school(name: str) -> str:
+    """Normalize a school name for fuzzy comparison."""
+    s = name.upper().strip()
+    # Common variations: SDN/SD NEGERI, SMPN/SMP NEGERI, etc.
+    s = re.sub(r"\bSD\s+NEGERI\b", "SDN", s)
+    s = re.sub(r"\bSMP\s+NEGERI\b", "SMPN", s)
+    s = re.sub(r"\bSMA\s+NEGERI\b", "SMAN", s)
+    s = re.sub(r"\bSMK\s+NEGERI\b", "SMKN", s)
+    s = re.sub(r"\s+", " ", s)
+    return s
+
+
+def _select_school_fuzzy(page: Page, school_name: str) -> bool:
+    """Try exact match first, then fuzzy-match against visible dropdown options.
+
+    ASIK's school dropdown has a search box. We type a keyword, read the
+    visible options, and pick the best match by similarity ratio.
+    """
+    # 1) Try exact match (fast path)
+    if _select_option(page, ["Pilih sekolah", "Pilih Sekolah"], school_name, search=True):
+        return True
+
+    # 2) Fuzzy: re-open dropdown, search with a shorter keyword
+    keywords = re.sub(r"\b(SD|SDN|SMP|SMPN|SMA|SMAN|SMK|SMKN|NEGERI|INPRES|SWASTA)\b", "", school_name, flags=re.I).strip()
+    keywords = re.sub(r"\s+", " ", keywords).strip()
+    if not keywords or len(keywords) < 3:
+        keywords = school_name  # fallback to full name
+
+    if not _open_combobox(page, ["Pilih sekolah", "Pilih Sekolah", school_name]):
+        return False
+
+    try:
+        page.locator("input:visible").last.fill(keywords[:20])
+        page.wait_for_timeout(1200)
+    except Exception:
+        return False
+
+    # 3) Read all visible options from the dropdown
+    try:
+        # ponytail: assumes ant-select / rc-select option class; upgrade if ASIK changes UI framework
+        options = page.locator('[class*="option"]:visible, [role="option"]:visible, .ant-select-item:visible')
+        count = options.count()
+        if count == 0:
+            # Try broader selector
+            options = page.locator("li:visible, div[class*='select']:visible")
+            count = min(options.count(), 30)
+    except Exception:
+        page.keyboard.press("Escape")
+        return False
+
+    if count == 0:
+        page.keyboard.press("Escape")
+        return False
+
+    # 4) Score each option against the input name
+    norm_input = _normalize_school(school_name)
+    best_score = 0.0
+    best_idx = -1
+    best_text = ""
+
+    for i in range(min(count, 30)):
+        try:
+            text = options.nth(i).inner_text(timeout=1000).strip()
+        except Exception:
+            continue
+        if not text or text.startswith("Pilih") or len(text) < 3:
+            continue
+        norm_opt = _normalize_school(text)
+        score = SequenceMatcher(None, norm_input, norm_opt).ratio()
+        # Boost if all significant words from input appear in option
+        input_words = set(norm_input.split()) - {"SD", "SDN", "SMP", "SMPN", "SMA", "SMAN", "SMK", "SMKN"}
+        opt_words = set(norm_opt.split())
+        if input_words and input_words.issubset(opt_words):
+            score += 0.2
+        if score > best_score:
+            best_score = score
+            best_idx = i
+            best_text = text
+
+    # 5) Click best match if similarity >= 0.6
+    if best_idx >= 0 and best_score >= 0.6:
+        try:
+            options.nth(best_idx).click(timeout=5000)
+            page.wait_for_timeout(800)
+            return True
+        except Exception:
+            pass
+
+    page.keyboard.press("Escape")
+    return False
 
 
 def _nik_index(rows: list, nik: str) -> int | None:
