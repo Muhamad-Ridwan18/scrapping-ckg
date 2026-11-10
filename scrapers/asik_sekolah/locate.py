@@ -32,8 +32,20 @@ def open_school_student(
         wait_until="networkidle",
         timeout=60000,
     )
-    page.wait_for_timeout(1500)
+    page.wait_for_timeout(2500)
     _accept_privacy(page)
+    page.wait_for_timeout(1000)
+
+    # Debug: dump page state before combobox attempt
+    url = page.url
+    title = page.title()
+    print(f"  [locate] page url={url}  title={title}")
+    try:
+        page.screenshot(path="locate_debug.png", full_page=True)
+        print("  [locate] screenshot saved: locate_debug.png")
+    except Exception as e:
+        print(f"  [locate] screenshot failed: {e}")
+
     if not _select_school_fuzzy(page, school_name):
         return {"found": False, "error": f"sekolah '{school_name}' tidak ada di ASIK"}
     page.wait_for_timeout(600)
