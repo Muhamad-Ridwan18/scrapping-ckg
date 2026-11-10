@@ -49,22 +49,43 @@ def open_school_student(
     # Debug: dump combobox-related elements
     try:
         html_snippet = page.evaluate("""() => {
-            const sels = document.querySelectorAll('[class*="select"], [role="combobox"], [class*="combo"], [class*="dropdown"], [class*="ant-select"]');
+            // Broader search: all inputs, selects, buttons, and elements with text containing 'sekolah' or 'Pilih'
             const info = [];
-            sels.forEach((el, i) => {
-                if (i < 15) {
+            // All interactive elements
+            const inputs = document.querySelectorAll('input, select, button, [class*="select"], [role="combobox"], [class*="combo"], [class*="dropdown"], [class*="ant-select"]');
+            inputs.forEach((el, i) => {
+                if (i < 20) {
                     info.push({
                         tag: el.tagName,
+                        type: el.type || '',
                         cls: el.className.substring(0, 120),
-                        text: el.innerText.substring(0, 80),
+                        text: (el.innerText || el.placeholder || el.value || '').substring(0, 80),
                         role: el.getAttribute('role'),
-                        visible: el.offsetParent !== null
+                        visible: el.offsetParent !== null,
+                        id: el.id || ''
                     });
                 }
             });
+            // Also look for any text containing 'sekolah' or 'Pilih'
+            const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+            let found = 0;
+            while (walker.nextNode() && found < 5) {
+                const t = walker.currentNode.textContent.trim();
+                if (t && (t.toLowerCase().includes('sekolah') || t.toLowerCase().includes('pilih'))) {
+                    const p = walker.currentNode.parentElement;
+                    info.push({
+                        tag: 'TEXT_NODE',
+                        parentTag: p ? p.tagName : '?',
+                        parentCls: p ? p.className.substring(0, 100) : '',
+                        text: t.substring(0, 80),
+                        visible: p ? p.offsetParent !== null : false
+                    });
+                    found++;
+                }
+            }
             return JSON.stringify(info, null, 2);
         }""")
-        print(f"  [locate] combobox elements:\n{html_snippet}")
+        print(f"  [locate] page elements:\n{html_snippet}")
     except Exception as e:
         print(f"  [locate] element dump failed: {e}")
 
