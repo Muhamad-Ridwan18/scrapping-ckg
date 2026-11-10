@@ -452,3 +452,68 @@ def simpus_nik_sync_status(
             )
         )
     return SimpusNikStatusOut(items=items)
+
+
+# ---------------------------------------------------------------------------
+# School facets — SIMPUS fetches this to populate the "Pilih Sekolah" dropdown
+# ---------------------------------------------------------------------------
+
+class SimpusSchoolClass(BaseModel):
+    name: str
+    classes: list[str]
+
+
+class SimpusSchoolsIn(BaseModel):
+    simpus_url: str = Field(min_length=1)
+    nama_instansi: str | None = None
+
+    @model_validator(mode="after")
+    def _normalize(self) -> "SimpusSchoolsIn":
+        if self.nama_instansi is not None:
+            self.nama_instansi = self.nama_instansi.strip() or None
+        return self
+
+
+class SimpusSchoolsOut(BaseModel):
+    schools: list[SimpusSchoolClass]
+
+
+@router.post("/schools", response_model=SimpusSchoolsOut)
+def simpus_schools(
+    body: SimpusSchoolsIn,
+    db: Session = Depends(get_db),
+    _: None = Depends(_require_simpus_hook_bearer),
+) -> SimpusSchoolsOut:
+    """Return distinct school names + classes from CKG Sekolah scrape data.
+
+    SIMPUS uses this to populate the school dropdown so petugas picks an
+    exact name that matches ASIK, instead of free-typing (which causes
+    the ``[skip] kunjungan sekolah tanpa nama sekolah`` error).
+    """
+    from app.models.school_patient import SchoolPatient
+
+    puskesmas = _find_puskesmas(
+        db, simpus_url=body.simpus_url, nama_instansi=body.nama_instansi
+    )
+    rows = db.execute(
+        select(
+            distinct(SchoolPatient.school_name).label("school_name"),
+            SchoolPatient.class_name,
+        ).where(
+            SchoolPatient.puskesmas_id == puskesmas.id,
+            SchoolPatient.school_name.is_not(None),
+            SchoolPatient.deleted_at.is_(None),
+        )
+    ).all()
+
+    by_school: dict[str, set[str]] = {}
+    for school_name, class_name in rows:
+        classes = by_school.setdefault(school_name, set())
+        if class_name:
+            classes.add(class_name)
+
+    schools = [
+        SimpusSchoolClass(name=name, classes=sorted(classes))
+        for name, classes in sorted(by_school.items())
+    ]
+    return SimpusSchoolsOut(schools=schools)
