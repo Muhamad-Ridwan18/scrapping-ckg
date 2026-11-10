@@ -13,15 +13,45 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import time
 from pathlib import Path
 
-from playwright.sync_api import sync_playwright
-
 SCRAPERS_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SCRAPERS_ROOT))
 sys.path.insert(0, str(SCRAPERS_ROOT / "asik"))
+
+# Auto-discover the Puskesmas session directory
+def _discover_session_dir() -> Path | None:
+    if os.environ.get("SCRAPER_SESSION_DIR"):
+        p = Path(os.environ["SCRAPER_SESSION_DIR"])
+        if p.exists():
+            return p
+
+    candidate_roots = [
+        Path(os.environ.get("SCRAPER_SESSIONS_ROOT") or "/data/scraper-sessions"),
+        SCRAPERS_ROOT.parent / ".scraper-sessions",
+        SCRAPERS_ROOT / "asik" / "session",
+    ]
+    for root in candidate_roots:
+        if not root.exists():
+            continue
+        for prog in ("asik_sekolah", "asik"):
+            prog_dir = root / prog
+            if prog_dir.is_dir():
+                for sub in sorted(prog_dir.iterdir(), key=lambda x: x.stat().st_mtime, reverse=True):
+                    if sub.is_dir():
+                        if (sub / "playwright_state.json").exists() or (sub / "Default").exists():
+                            return sub
+    return None
+
+found_session = _discover_session_dir()
+if found_session:
+    os.environ["SCRAPER_SESSION_DIR"] = str(found_session)
+    print(f"Using saved session at: {found_session}")
+else:
+    print("Warning: No existing session found, will use default.")
 
 from helpers import (  # noqa: E402
     APIInterceptor,
@@ -33,6 +63,7 @@ from helpers import (  # noqa: E402
     close_popups,
 )
 from locate import _accept_privacy  # noqa: E402
+from playwright.sync_api import sync_playwright
 
 
 def main():
