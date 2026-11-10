@@ -108,49 +108,100 @@ def main():
 
             # Dismiss privacy modal
             _accept_privacy(page)
-            page.wait_for_timeout(1000)
+            page.wait_for_timeout(2000)
 
-            # Look for sarana response in interceptor
-            captured_schools = []
-            deadline = time.time() + 10
-            while not captured_schools and time.time() < deadline:
-                for entry in reversed(interceptor.all_responses):
-                    url = str(entry.get("url") or "")
-                    if "sarana" in url.lower() and entry.get("status") == 200:
-                        data = (entry.get("body") or {}).get("data")
-                        if isinstance(data, list) and data:
-                            captured_schools = data
-                            break
-                if not captured_schools:
-                    page.wait_for_timeout(500)
+            # Strategy 1: Check if Nuxt 3 in-memory state or Pinia has decrypted school data
+            print("Inspecting browser memory for decrypted school list...")
+            schools_from_mem = page.evaluate("""() => {
+                const found = [];
+                // Check Pinia stores
+                try {
+                    const pinia = window.__pinia || document.querySelector('#__nuxt')?.__vue_app__?.config?.globalProperties?.$pinia;
+                    if (pinia && pinia._s) {
+                        for (const [storeId, store] of pinia._s.entries()) {
+                            const state = store.$state || {};
+                            for (const [k, v] of Object.entries(state)) {
+                                if (Array.isArray(v) && v.length > 0 && v[0]?.school_name) {
+                                    return v;
+                                }
+                            }
+                        }
+                    }
+                } catch (e) {}
 
-            # Nudge combobox if still not captured
+                // Check Nuxt payload / data
+                try {
+                    const n = window.__NUXT__;
+                    if (n && n.data) {
+                        for (const [k, v] of Object.entries(n.data)) {
+                            if (Array.isArray(v) && v.length > 0 && v[0]?.school_name) {
+                                return v;
+                            }
+                        }
+                    }
+                } catch (e) {}
+
+                return null;
+            }""")
+
+            if schools_from_mem and isinstance(schools_from_mem, list):
+                print(f"Found {len(schools_from_mem)} schools in Vue/Pinia memory!")
+                captured_schools = schools_from_mem
+
+            # Strategy 2: Open the combobox in the UI and read the rendered options from DOM
             if not captured_schools:
-                print("Nudging combobox to trigger sarana fetch...")
-                for selector in ["text=Pilih sekolah", "text=Pilih Sekolah", '[class*="select"]:visible']:
+                print("Opening combobox to read rendered options from DOM...")
+                # Click the combobox trigger
+                opened = False
+                for selector in [
+                    "text=Pilih sekolah",
+                    "text=Pilih Sekolah",
+                    '[placeholder*="sekolah" i]',
+                    '[class*="select"]:visible',
+                ]:
                     try:
                         el = page.locator(selector).first
                         if el.is_visible():
                             el.click(timeout=3000)
-                            page.wait_for_timeout(2000)
-                            page.keyboard.press("Escape")
+                            page.wait_for_timeout(1200)
+                            opened = True
+                            print(f"Clicked combobox trigger: {selector}")
                             break
                     except Exception:
                         pass
 
-                for entry in reversed(interceptor.all_responses):
-                    url = str(entry.get("url") or "")
-                    if "sarana" in url.lower() and entry.get("status") == 200:
-                        data = (entry.get("body") or {}).get("data")
-                        if isinstance(data, list) and data:
-                            captured_schools = data
-                            break
+                # Read all visible options from the popper / dropdown container
+                options_text = page.evaluate("""() => {
+                    const results = [];
+                    const seen = new Set();
+                    // Selectors for Floating Vue / v-popper, Tailwind list items, or dropdown menus
+                    const elements = document.querySelectorAll(
+                        '.v-popper__popper [class*="item"], .v-popper__popper li, .v-popper__popper button, ' +
+                        '[role="option"], [role="listbox"] li, [role="listbox"] div, ' +
+                        'div[class*="dropdown"] li, div[class*="dropdown"] button, ' +
+                        'div[class*="menu"] li, div[class*="menu"] button, ' +
+                        '.v-popper__inner *'
+                    );
+                    elements.forEach(el => {
+                        const t = (el.innerText || '').trim();
+                        // Filter out empty, placeholder, or long blocks
+                        if (t && t.length >= 3 && t.length <= 120 && !t.startsWith('Pilih') && !seen.has(t) && !t.includes('\\n')) {
+                            seen.add(t);
+                            results.push(t);
+                        }
+                    });
+                    return results;
+                }""")
+
+                if options_text:
+                    print(f"Captured {len(options_text)} school options from dropdown DOM!")
+                    captured_schools = [{"school_name": opt} for opt in options_text]
 
             save_auth_state(context, page, base_url)
             context.close()
 
         if not captured_schools:
-            print("[ERROR] Gagal mendapatkan daftar sekolah dari ASIK.")
+            print("[ERROR] Gagal mendapatkan daftar sekolah dari memory atau DOM.")
             print("Intercepted URLs:")
             for r in interceptor.all_responses:
                 print(f"  [{r.get('status')}] {r.get('url')}")
